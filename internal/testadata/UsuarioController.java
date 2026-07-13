@@ -1,7 +1,7 @@
 package com.exemplo;
 
 public class UsuarioController {
-    
+
     private String nomeSistema;
 
     public UsuarioController(String nomeSistema) {
@@ -14,7 +14,7 @@ public class UsuarioController {
             System.out.println("Usuário processado no " + this.nomeSistema);
             return true;
         }
-        
+
         return false;
     }
 }
