@@ -6,7 +6,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/FelipeMCassiano/geanky/internal/parser"
+	"github.com/FelipeMCassiano/geanky/internal/parser/java"
 	"github.com/spf13/cobra"
 )
 
@@ -41,6 +41,6 @@ func read(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		log.Fatalf("passe o caminho da classe java")
 	}
-	parser.Analyze(args[0])
-
+	result := java.Analyze(args[0])
+	java.PrintClassSummary(result)
 }
