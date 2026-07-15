@@ -10,8 +10,11 @@ var statementsHandlers = map[string]StatementHandler{
 }
 
 func parseIfStatement(node *tree_sitter.Node, content []byte) (Statement, error) {
-	// conditionNode := node.ChildByFieldName("condition")
-	return Statement{}, nil
+	conditionNode := node.ChildByFieldName("condition")
+
+	conditionExpr := routeExpression(conditionNode, content)
+
+	return Statement{Expressions: []Expression{IfNode{Condition: conditionExpr}}}, nil
 }
 
 func parseExpressionStatement(node *tree_sitter.Node, content []byte) (Statement, error) {

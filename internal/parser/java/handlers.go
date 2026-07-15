@@ -37,6 +37,9 @@ type Modifier struct {
 type Body struct {
 	Statements []Statement
 }
+type Consquence struct {
+	Statement []Statement
+}
 type Statement struct {
 	Expressions []Expression
 }
@@ -113,7 +116,9 @@ func parseMethod(node *tree_sitter.Node, content []byte, classData *ClassJava) e
 	}
 	parseParameters(node, content, &newMethod)
 
-	parseBody(node, content, &newMethod)
+	bodyNode := node.ChildByFieldName("body")
+
+	parseBody(bodyNode, content, &newMethod)
 
 	classData.Methods = append(classData.Methods, newMethod)
 	return nil
@@ -122,6 +127,12 @@ func parseMethod(node *tree_sitter.Node, content []byte, classData *ClassJava) e
 func parseBody(node *tree_sitter.Node, content []byte, executableData *Executable) error {
 	childCount := node.ChildCount()
 	var newBody Body
+
+	if node == nil {
+		executableData.Body = newBody
+		return nil
+	}
+
 	for i := range childCount {
 		child := node.Child(i)
 		if handler, exists := statementsHandlers[child.Kind()]; exists {

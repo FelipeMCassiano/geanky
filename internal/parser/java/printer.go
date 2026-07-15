@@ -94,20 +94,51 @@ func printExpressionPretty(expr Expression) {
 		fmt.Printf("%s = %s;", leftStr, rightStr)
 	case Identifier:
 		fmt.Printf("%s;", e.Name)
+	case MethodInvocation:
+		fmt.Printf("%s;", formatExpression(e))
+	case IfNode:
+		fmt.Printf("%s", formatExpression(e))
 	default:
 		fmt.Printf("%#v;", expr)
 	}
 }
-
 func formatExpression(expr Expression) string {
+	if expr == nil {
+		return ""
+	}
+
 	switch e := expr.(type) {
-	case Identifier:
-		return e.Name
+	case Assignment:
+		return fmt.Sprintf("%s = %s", formatExpression(e.Left), formatExpression(e.Right))
+	case Binary:
+		return fmt.Sprintf("%s %s %s", formatExpression(e.Left), e.Operator, formatExpression(e.Right))
+	case IfNode:
+		return fmt.Sprintf("if (%s)", formatExpression(e.Condition))
+	case MethodInvocation:
+		// 1. Extraímos e formatamos todos os argumentos
+		var argsStr string
+		for i, arg := range e.Args {
+			argsStr += formatExpression(arg) // Recursão! Funciona para literais, identificadores, etc.
+			if i < len(e.Args)-1 {
+				argsStr += ", " // Adiciona vírgula entre os argumentos
+			}
+		}
+
+		// 2. Montamos a string final colocando os argumentos dentro dos parênteses
+		if e.Accessed.Object != "" {
+			return fmt.Sprintf("%s.%s(%s)", e.Accessed.Object, e.Accessed.Identifier.Name, argsStr)
+		}
+		return fmt.Sprintf("%s(%s)", e.Accessed.Identifier.Name, argsStr)
+
+	case Literal:
+		return e.Value
 	case Access:
 		if e.Object != "" {
 			return fmt.Sprintf("%s.%s", e.Object, e.Identifier.Name)
 		}
 		return e.Identifier.Name
+	case Identifier:
+		return e.Name
 	default:
 		return fmt.Sprintf("%v", expr)
 	}

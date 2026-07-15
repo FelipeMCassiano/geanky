@@ -29,8 +29,8 @@ Instancia e prepara a classe para uso, exigindo a injeção dos seguintes parâm
 
 
 **Fluxo de Execução (Regras do Construtor):**
-1. Executa a seguinte instrução lógica: `{{this {nomeSistema}} {nomeSistema}}`
-1. Executa a seguinte instrução lógica: `{{this {ano}} {ano}}`
+1. Executa a seguinte instrução lógica: `this.nomeSistema = nomeSistema`
+1. Executa a seguinte instrução lógica: `this.ano = ano`
 
 
 ---
