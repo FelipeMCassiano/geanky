@@ -8,9 +8,9 @@
 ## 1. Quick Summary (API & State)
 A high-level overview of the class, its internal state, and available methods.
 
-**Internal State:**
-- `` **nomeBanco** (`String`)
-- `` **conexaoAtiva** (`boolean`)
+**Internal State & Dependencies:**
+- `private ` **nomeBanco** (`String`)
+- `private ` **conexaoAtiva** (`boolean`)
 
 
 **Available Methods:**
@@ -20,43 +20,68 @@ A high-level overview of the class, its internal state, and available methods.
 
 ---
 
-## 2. Data Flow & Navigation Diagram
-Visual representation of how data enters the class, how it is stored, and what is returned to external consumers.
+## 2. Architecture & Data Flow Diagram
+Visual representation of how data enters the class, internal state, and external dependencies.
 
 ```mermaid
 flowchart LR
     %% Styling
-    classDef mainClass fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
+    classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller((External<br>Caller))
-    ThisClass[UsuarioService]:::mainClass
+    Caller((Caller))
+    ThisClass[UsuarioService]:::classNode
 
-    %% API Interactions (Inputs and Outputs)
+    %% Method Calls
     
-    Caller -->|Calls validarEAtivarUsuario(int, String)| ThisClass
+    Caller -->|Calls validarEAtivarUsuario()| ThisClass
     ThisClass -.->|Returns boolean| Caller
     
-    Caller -->|Calls registrarLog(String)| ThisClass
+    Caller -->|Calls registrarLog()| ThisClass
     ThisClass -.->|Returns void| Caller
     
 
-    %% Internal State (Storage)
+    %% State vs External Dependencies
+    
     
     ThisClass ---|Maintains State| State_nomeBanco([String nomeBanco]):::stateNode
     
+    
+    
     ThisClass ---|Maintains State| State_conexaoAtiva([boolean conexaoAtiva]):::stateNode
+    
     
 ```
 
 ---
 
-## 3. Detailed Execution Flow (Deep Dive)
-Expand the sections below to read the exact pseudo-code and business rules inside each method.
+## 3. Deep Dive (Constructors & Methods)
+Expand the sections below to read the exact pseudo-code and business rules.
 
+
+### 🛠️ Constructors
 
 <details>
-<summary><b>⚙️ Function: validarEAtivarUsuario</b> (Click to expand)</summary>
+<summary><b>UsuarioService</b> (Click to expand)</summary>
+
+**Parameters:**
+- **nomeBanco** (`String`)
+
+
+**Step-by-Step Logic:**
+1. `Set 'this.nomeBanco' to 'nomeBanco'`
+1. `Set 'this.conexaoAtiva' to 'true'`
+
+</details>
+
+
+
+
+### ⚙️ Methods
+
+<details>
+<summary><b>validarEAtivarUsuario</b> ➞ `boolean` (Click to expand)</summary>
 
 > **Signature:** `public boolean validarEAtivarUsuario()`
 
@@ -72,11 +97,10 @@ Expand the sections below to read the exact pseudo-code and business rules insid
 1. `Invoke 'System.out.println' with parameters: '"Falha na validacao"'`
 1. `Return the result of: false`
 
-
 </details>
 
 <details>
-<summary><b>⚙️ Function: registrarLog</b> (Click to expand)</summary>
+<summary><b>registrarLog</b> ➞ `void` (Click to expand)</summary>
 
 > **Signature:** `public void registrarLog()`
 
@@ -88,6 +112,6 @@ Expand the sections below to read the exact pseudo-code and business rules insid
 1. `Set 'this.conexaoAtiva' to 'false'`
 1. `Invoke 'System.out.println' with parameters: 'acao'`
 
-
 </details>
+
 

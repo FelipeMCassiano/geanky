@@ -8,8 +8,8 @@
 ## 1. Quick Summary (API & State)
 A high-level overview of the class, its internal state, and available methods.
 
-**Internal State:**
-- `` **nomeSistema** (`String`)
+**Internal State & Dependencies:**
+- `private ` **nomeSistema** (`String`)
 
 
 **Available Methods:**
@@ -18,38 +18,62 @@ A high-level overview of the class, its internal state, and available methods.
 
 ---
 
-## 2. Data Flow & Navigation Diagram
-Visual representation of how data enters the class, how it is stored, and what is returned to external consumers.
+## 2. Architecture & Data Flow Diagram
+Visual representation of how data enters the class, internal state, and external dependencies.
 
 ```mermaid
 flowchart LR
     %% Styling
-    classDef mainClass fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
+    classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller((External<br>Caller))
-    ThisClass[UsuarioController]:::mainClass
+    Caller((Caller))
+    ThisClass[UsuarioController]:::classNode
 
-    %% API Interactions (Inputs and Outputs)
+    %% Method Calls
     
-    Caller -->|Calls processarUsuario(int, String)| ThisClass
+    Caller -->|Calls processarUsuario()| ThisClass
     ThisClass -.->|Returns boolean| Caller
     
 
-    %% Internal State (Storage)
+    %% State vs External Dependencies
+    
     
     ThisClass ---|Maintains State| State_nomeSistema([String nomeSistema]):::stateNode
+    
     
 ```
 
 ---
 
-## 3. Detailed Execution Flow (Deep Dive)
-Expand the sections below to read the exact pseudo-code and business rules inside each method.
+## 3. Deep Dive (Constructors & Methods)
+Expand the sections below to read the exact pseudo-code and business rules.
 
+
+### 🛠️ Constructors
 
 <details>
-<summary><b>⚙️ Function: processarUsuario</b> (Click to expand)</summary>
+<summary><b>UsuarioController</b> (Click to expand)</summary>
+
+**Parameters:**
+- **nomeSistema** (`String`)
+- **service** (`UsuarioService`)
+
+
+**Step-by-Step Logic:**
+1. `Set 'this.nomeSistema' to 'nomeSistema'`
+1. `Set 'this.service' to 'service'`
+
+</details>
+
+
+
+
+### ⚙️ Methods
+
+<details>
+<summary><b>processarUsuario</b> ➞ `boolean` (Click to expand)</summary>
 
 > **Signature:** `public boolean processarUsuario()`
 
@@ -61,6 +85,6 @@ Expand the sections below to read the exact pseudo-code and business rules insid
 **Step-by-Step Logic:**
 1. `Return the result of: false`
 
-
 </details>
+
 
