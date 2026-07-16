@@ -70,12 +70,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <summary><b>UsuarioService</b> (Click to expand)</summary>
 
 **Parameters:**
+
 - **nomeBanco** (`String`)
 
 
 **Step-by-Step Logic:**
-1. `Set 'this.nomeBanco' to 'nomeBanco'`
-1. `Set 'this.conexaoAtiva' to 'true'`
+    1. `Set 'this.nomeBanco' to 'nomeBanco'`
+    1. `Set 'this.conexaoAtiva' to 'true'`
 
 </details>
 
@@ -90,16 +91,18 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:** `public boolean validarEAtivarUsuario()`
 
 **Parameters:**
+
 - **idade** (`int`)
+
 - **status** (`String`)
 
 
 **Step-by-Step Logic:**
-1. `If idade is greater than or equal to 18 AND status is equal to "ativo", then:
+    1. `If idade is greater than or equal to 18 AND status is equal to "ativo", then:
              - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'
              - Return the result of: true`
-1. `Invoke 'System.out.println' with parameters: '"Falha na validacao"'`
-1. `Return the result of: false`
+    1. `Invoke 'System.out.println' with parameters: '"Falha na validacao"'`
+    1. `Return the result of: false`
 
 </details>
 
@@ -109,12 +112,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:** `public void registrarLog()`
 
 **Parameters:**
+
 - **acao** (`String`)
 
 
 **Step-by-Step Logic:**
-1. `Set 'this.conexaoAtiva' to 'false'`
-1. `Invoke 'System.out.println' with parameters: 'acao'`
+    1. `Set 'this.conexaoAtiva' to 'false'`
+    1. `Invoke 'System.out.println' with parameters: 'acao'`
 
 </details>
 

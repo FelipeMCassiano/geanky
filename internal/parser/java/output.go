@@ -21,7 +21,7 @@ A high-level overview of the class, its internal state, and available methods.
 **Internal State & Dependencies:**
 {{if not .Fields}}> *No state properties defined.*
 {{else}}{{range .Fields}}
-{{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double")}}
+{{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double") (eq .TypeName "long") (eq .TypeName "float")}}
 - {{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
 {{else}}
 - {{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ([{{.TypeName}}]({{.TypeName}}.md)) 🔗
@@ -55,7 +55,7 @@ flowchart LR
 
     %% State vs External Dependencies
     {{range .Fields}}
-    {{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double")}}
+    {{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double") (eq .TypeName "long") (eq .TypeName "float")}}
     ThisClass -- "Maintains State" --- State_{{.Declarator}}(["{{.TypeName}} {{.Declarator}}"]):::stateNode
     {{else}}
     ThisClass -- "Depends on" ---> Dep_{{.Declarator}}["{{.TypeName}}"]:::extNode
@@ -77,12 +77,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Parameters:**
 {{if not .Parameters}}> *None.*
-{{else}}{{range .Parameters}}- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
+{{else}}{{range .Parameters}}
+- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
 {{end}}{{end}}
 
 **Step-by-Step Logic:**
 {{if not .Body.Statements}}> *Empty body.*
-{{else}}{{range .Body.Statements}}{{range .Expressions}}1. {{bt}}{{formatExpression .}}{{bt}}
+{{else}}{{range .Body.Statements}}{{range .Expressions}}    1. {{bt}}{{formatExpression .}}{{bt}}
 {{end}}{{end}}{{end}}
 </details>
 {{end}}
@@ -98,12 +99,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Parameters:**
 {{if not .Parameters}}> *None.*
-{{else}}{{range .Parameters}}- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
+{{else}}{{range .Parameters}}
+- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
 {{end}}{{end}}
 
 **Step-by-Step Logic:**
 {{if not .Body.Statements}}> *Empty body.*
-{{else}}{{range .Body.Statements}}{{range .Expressions}}1. {{bt}}{{formatExpression .}}{{bt}}
+{{else}}{{range .Body.Statements}}{{range .Expressions}}    1. {{bt}}{{formatExpression .}}{{bt}}
 {{end}}{{end}}{{end}}
 </details>
 {{end}}

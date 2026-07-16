@@ -67,13 +67,15 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <summary><b>UsuarioController</b> (Click to expand)</summary>
 
 **Parameters:**
+
 - **nomeSistema** (`String`)
+
 - **service** (`UsuarioService`)
 
 
 **Step-by-Step Logic:**
-1. `Set 'this.nomeSistema' to 'nomeSistema'`
-1. `Set 'this.service' to 'service'`
+    1. `Set 'this.nomeSistema' to 'nomeSistema'`
+    1. `Set 'this.service' to 'service'`
 
 </details>
 
@@ -88,15 +90,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:** `public boolean processarUsuario()`
 
 **Parameters:**
+
 - **idade** (`int`)
+
 - **status** (`String`)
 
 
 **Step-by-Step Logic:**
-1. `If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'idade', 'status', then:
+    1. `If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'idade', 'status', then:
              - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
              - Return the result of: true`
-1. `Return the result of: false`
+    1. `Return the result of: false`
 
 </details>
 
