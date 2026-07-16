@@ -39,21 +39,21 @@ flowchart LR
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller((Caller))
-    ThisClass[{{.Name}}]:::classNode
+    Caller(("Caller"))
+    ThisClass["{{.Name}}"]:::classNode
 
     %% Method Calls
     {{range .Methods}}
-    Caller -->|Calls {{.Name}}()| ThisClass
-    ThisClass -.->|Returns {{.ReturnType}}| Caller
+    Caller -- "Calls {{.Name}}()" --> ThisClass
+    ThisClass -. "Returns {{.ReturnType}}" .-> Caller
     {{end}}
 
     %% State vs External Dependencies
     {{range .Fields}}
     {{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double")}}
-    ThisClass ---|Maintains State| State_{{.Declarator}}([{{.TypeName}} {{.Declarator}}]):::stateNode
+    ThisClass -- "Maintains State" --- State_{{.Declarator}}(["{{.TypeName}} {{.Declarator}}"]):::stateNode
     {{else}}
-    ThisClass --->|Depends on| Dep_{{.Declarator}}[{{.TypeName}}]:::extNode
+    ThisClass -- "Depends on" ---> Dep_{{.Declarator}}["{{.TypeName}}"]:::extNode
     {{end}}
     {{end}}
 {{bt}}{{bt}}{{bt}}
