@@ -14,31 +14,27 @@ import (
 )
 
 func AnalyzeDirectory(rootDir string, outputDir string) {
-	// Garante que a pasta de saída (onde os Markdowns vão ficar) exista
 	err := os.MkdirAll(outputDir, os.ModePerm)
 	if err != nil {
 		log.Fatalf("Erro ao criar diretório de saída: %v", err)
 	}
 
-	// WalkDir entra em todas as subpastas magicamente
+	var allClasses []ClassJava
+
 	err = filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// Se for um arquivo e terminar com ".java", nós processamos!
 		if !d.IsDir() && strings.HasSuffix(d.Name(), ".java") {
 			fmt.Printf("🔍 Analisando: %s\n", path)
-
-			// Faz o parse do arquivo
 			classData := Analyze(path)
 
 			if classData.Name != "" {
-				// Cria o nome do arquivo markdown (Ex: UsuarioController.md)
+				allClasses = append(allClasses, classData) // Salva no array global
+
 				outFileName := fmt.Sprintf("%s.md", classData.Name)
 				outFilePath := filepath.Join(outputDir, outFileName)
-
-				// Gera a documentação
 				GenerateMarkdown(classData, outFilePath)
 			}
 		}
@@ -48,6 +44,13 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 	if err != nil {
 		log.Fatalf("Erro ao varrer diretórios: %v", err)
 	}
+
+	// <-- GERA O MAPA GLOBAL AO FINAL DA VARREDURA
+	if len(allClasses) > 0 {
+		globalOutPath := filepath.Join(outputDir, "00_Architecture_Overview.md")
+		GenerateGlobalArchitecture(allClasses, globalOutPath)
+	}
+
 	fmt.Println("🚀 Varredura concluída com sucesso!")
 }
 func Analyze(filePath string) ClassJava {

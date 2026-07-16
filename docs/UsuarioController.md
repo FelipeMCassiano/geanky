@@ -9,6 +9,8 @@
 A high-level overview of the class, its internal state, and available methods.
 
 **Internal State & Dependencies:**
+
+
 - `private ` **nomeSistema** (`String`)
 
 
@@ -26,7 +28,7 @@ flowchart LR
     %% Styling
     classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
-    classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff,cursor:pointer;
     
     Caller(("Caller"))
     ThisClass["UsuarioController"]:::classNode
