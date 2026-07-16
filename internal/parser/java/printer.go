@@ -113,7 +113,30 @@ func formatExpression(expr Expression) string {
 	case Binary:
 		return fmt.Sprintf("%s %s %s", formatExpression(e.Left), e.Operator, formatExpression(e.Right))
 	case IfNode:
-		return fmt.Sprintf("if (%s)", formatExpression(e.Condition))
+		condStr := formatExpression(e.Condition)
+
+		// 1. Se o bloco do IF estiver vazio
+		if len(e.Consequence.Statements) == 0 {
+			return fmt.Sprintf("if (%s) { }", condStr)
+		}
+
+		// 2. Se tiver código, abre a chave e quebra a linha
+		result := fmt.Sprintf("if (%s) {\n", condStr)
+
+		// 3. Itera sobre o novo Block
+		for _, stmt := range e.Consequence.Statements {
+			// Adiciona espaços para identar o que está dentro do IF
+			result += "             "
+			for _, expr := range stmt.Expressions {
+				// Mágica da recursão: vai formatar variáveis, invocações, atribuições...
+				result += formatExpression(expr) + ";"
+			}
+			result += "\n" // Quebra de linha após cada instrução
+		}
+
+		// 4. Fecha a chave do IF alinhando com a margem
+		result += "         }"
+		return result
 	case MethodInvocation:
 		// 1. Extraímos e formatamos todos os argumentos
 		var argsStr string
@@ -124,17 +147,25 @@ func formatExpression(expr Expression) string {
 			}
 		}
 
-		// 2. Montamos a string final colocando os argumentos dentro dos parênteses
-		if e.Accessed.Object != "" {
-			return fmt.Sprintf("%s.%s(%s)", e.Accessed.Object, e.Accessed.Identifier.Name, argsStr)
+		// CORREÇÃO AQUI: != nil em vez de != "", e usar formatExpression no Object
+		if e.Accessed.Object != nil {
+			return fmt.Sprintf("%s.%s(%s)", formatExpression(e.Accessed.Object), e.Accessed.Identifier.Name, argsStr)
 		}
 		return fmt.Sprintf("%s(%s)", e.Accessed.Identifier.Name, argsStr)
+
+	case ReturnNode:
+		// Para imprimir os "return true;" que capturamos!
+		if e.Value != nil {
+			return fmt.Sprintf("return %s", formatExpression(e.Value))
+		}
+		return "return"
 
 	case Literal:
 		return e.Value
 	case Access:
-		if e.Object != "" {
-			return fmt.Sprintf("%s.%s", e.Object, e.Identifier.Name)
+		// CORREÇÃO AQUI: != nil em vez de != "", e usar formatExpression no Object
+		if e.Object != nil {
+			return fmt.Sprintf("%s.%s", formatExpression(e.Object), e.Identifier.Name)
 		}
 		return e.Identifier.Name
 	case Identifier:

@@ -1,41 +1,71 @@
-
-# 📄 Especificação Técnica: `UsuarioController`
-
-> **Documentação gerada automaticamente** pela ferramenta Geanky.
-> Mapeamento estrutural, injeção de dependências e regras de inicialização.
-
+# 📦 <code>public</code> UsuarioController
+ 
+> Documentação gerada automaticamente a partir da análise estática do código-fonte.
+ 
+<p>
+<img src="https://img.shields.io/badge/-public-6f42c1?style=flat-square" alt="public" /> <img src="https://img.shields.io/badge/fields-2-informational?style=flat-square" /> <img src="https://img.shields.io/badge/constructors-1-informational?style=flat-square" /> <img src="https://img.shields.io/badge/methods-1-informational?style=flat-square" />
+</p>
+ 
 ---
+ 
+## 🧩 Atributos
+ 
+| Modificadores | Tipo | Nome |
+|:---|:---|:---|
+|  | <code>String</code> | <code>nomeSistema</code> |
+|  | <code>int</code> | <code>ano</code> |
 
-## 1. Visão Geral e Estado Interno
-Esta seção detalha as propriedades de estado (fields) armazenadas na instância de UsuarioController.
-
-| Acesso | Nome da Propriedade | Tipo da Variável | Descrição / Uso |
-| :--- | :--- | :--- | :--- |
-| `private` | **`nomeSistema`** | `String` | Armazena o estado interno da propriedade. |
-| `private` | **`ano`** | `int` | Armazena o estado interno da propriedade. |
-
+ 
 ---
+ 
+## 🏗️ Construtores
+ 
+### public UsuarioController(String nomeSistema, int ano)
+ 
+**📥 Contrato**
+ 
+| Parâmetro | Tipo | Modificadores |
+|:---|:---|:---|
+| <code>nomeSistema</code> | <code>String</code> |  |
+| <code>ano</code> | <code>int</code> |  |
 
-## 2. Construtores e Injeção de Dependência
+**🚫 Retorna:** nada (<code>void</code>)
+ 
+**⚙️ Comportamento**
+ 
+- [x] this.nomeSistema = nomeSistema
+- [x] this.ano = ano
 
-### 🛠️ Inicializador: UsuarioController
-Instancia e prepara a classe para uso, exigindo a injeção dos seguintes parâmetros:
-
-**Assinatura de Entrada:**
-| Parâmetro | Tipo | Finalidade / Origem |
-| :--- | :--- | :--- | :--- |
-| **`nomeSistema`** | `String` | Valor injetado durante a instanciação. |
-| **`ano`** | `int` | Valor injetado durante a instanciação. |
-
-
-**Fluxo de Execução (Regras do Construtor):**
-1. Executa a seguinte instrução lógica: `this.nomeSistema = nomeSistema`
-1. Executa a seguinte instrução lógica: `this.ano = ano`
-
-
+<br>
+ 
 ---
+ 
 
-## 3. Comportamento e Regras de Negócio (Métodos)
-### ⚙️ Função: processarUsuario()
-*(A implementação interna deste método precisa ser mapeada)*
+
+## ⚙️ Métodos
+ 
+### public processarUsuario(int idade, String status)
+ 
+**📥 Contrato**
+ 
+| Parâmetro | Tipo | Modificadores |
+|:---|:---|:---|
+| <code>idade</code> | <code>int</code> |  |
+| <code>status</code> | <code>String</code> |  |
+
+**↩️ Retorna:** <code>boolean</code>
+ 
+**⚙️ Comportamento**
+ 
+- [x] if (idade >= 18 && status.equals("ATIVO")) {
+             System.out.println("Usuário processado no " + this.nomeSistema + "ano: " + ano);
+             return true;
+         }
+- [x] return false
+
+<br>
+ 
+---
+ 
+
 

@@ -26,7 +26,7 @@ type Executable struct {
 	Modifiers     []Modifier `json:"modifiers"`
 	Name          string     `json:"name"`
 	Parameters    []Variable `json:"parameters"`
-	Body          Body       `json:"body"`
+	Body          Block      `json:"body"`
 	ReturnType    string     `json:"returnType"`
 	isConstructor bool
 }
@@ -34,12 +34,11 @@ type Executable struct {
 type Modifier struct {
 	Modifier string `json:"modifier"`
 }
-type Body struct {
+
+type Block struct {
 	Statements []Statement
 }
-type Consquence struct {
-	Statement []Statement
-}
+
 type Statement struct {
 	Expressions []Expression
 }
@@ -76,7 +75,7 @@ func parseConstructor(node *tree_sitter.Node, content []byte, classData *ClassJa
 
 	parseParameters(node, content, &newContructor)
 	constructorBody := node.ChildByFieldName("body")
-	parseBody(constructorBody, content, &newContructor)
+	newContructor.Body = parseBlock(constructorBody, content)
 
 	classData.Constructors = append(classData.Constructors, newContructor)
 	return nil
@@ -118,19 +117,18 @@ func parseMethod(node *tree_sitter.Node, content []byte, classData *ClassJava) e
 
 	bodyNode := node.ChildByFieldName("body")
 
-	parseBody(bodyNode, content, &newMethod)
+	newMethod.Body = parseBlock(bodyNode, content)
 
 	classData.Methods = append(classData.Methods, newMethod)
 	return nil
 }
 
-func parseBody(node *tree_sitter.Node, content []byte, executableData *Executable) error {
+func parseBlock(node *tree_sitter.Node, content []byte) Block {
 	childCount := node.ChildCount()
-	var newBody Body
+	var newBlock Block
 
 	if node == nil {
-		executableData.Body = newBody
-		return nil
+		return newBlock
 	}
 
 	for i := range childCount {
@@ -138,12 +136,11 @@ func parseBody(node *tree_sitter.Node, content []byte, executableData *Executabl
 		if handler, exists := statementsHandlers[child.Kind()]; exists {
 			newStatement, err := handler(child, content)
 			if err == nil {
-				newBody.Statements = append(newBody.Statements, newStatement)
+				newBlock.Statements = append(newBlock.Statements, newStatement)
 			}
 		}
 	}
-	executableData.Body = newBody
-	return nil
+	return newBlock
 }
 func parseParameters(node *tree_sitter.Node, content []byte, executableData *Executable) error {
 	paramsGroupNode := node.ChildByFieldName("parameters")

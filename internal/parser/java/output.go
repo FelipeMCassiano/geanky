@@ -7,56 +7,77 @@ import (
 	"text/template"
 )
 
-const docTemplate = `
-# 📄 Especificação Técnica: {{bt}}{{.Name}}{{bt}}
-
-> **Documentação gerada automaticamente** pela ferramenta Geanky.
-> Mapeamento estrutural, injeção de dependências e regras de inicialização.
-
----
-
-## 1. Visão Geral e Estado Interno
-Esta seção detalha as propriedades de estado (fields) armazenadas na instância de {{.Name}}.
-
-{{if not .Fields}}> *Nenhuma propriedade de estado definida para esta classe.*
-{{else}}| Acesso | Nome da Propriedade | Tipo da Variável | Descrição / Uso |
-| :--- | :--- | :--- | :--- |
-{{range .Fields}}| {{bt}}private{{bt}} | **{{bt}}{{.Declarator}}{{bt}}** | {{bt}}{{.TypeName}}{{bt}} | Armazena o estado interno da propriedade. |
-{{end}}{{end}}
----
-
-## 2. Construtores e Injeção de Dependência
-{{if not .Constructors}}> *Nenhum construtor customizado detectado. A classe utiliza o construtor padrão vazio.*
-{{end}}{{range .Constructors}}
-### 🛠️ Inicializador: {{.Name}}
-Instancia e prepara a classe para uso, exigindo a injeção dos seguintes parâmetros:
-
-**Assinatura de Entrada:**
-{{if not .Parameters}}> *Este construtor não recebe parâmetros de entrada.*
-{{else}}| Parâmetro | Tipo | Finalidade / Origem |
-| :--- | :--- | :--- | :--- |
-{{range .Parameters}}| **{{bt}}{{.Declarator}}{{bt}}** | {{bt}}{{.TypeName}}{{bt}} | Valor injetado durante a instanciação. |
-{{end}}{{end}}
-
-**Fluxo de Execução (Regras do Construtor):**
-{{if not .Body.Statements}}> *Corpo de execução vazio (Nenhuma instrução executada).*
-{{else}}{{range .Body.Statements}}{{range .Expressions}}1. Executa a seguinte instrução lógica: {{bt}}{{formatExpression .}}{{bt}}
-{{end}}{{end}}{{end}}
+const docTemplate = `{{- define "executable" -}}
+### {{formatModifiers .Modifiers}}{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}})
+ 
+**📥 Contrato**
+ 
+{{if .Parameters -}}
+| Parâmetro | Tipo | Modificadores |
+|:---|:---|:---|
+{{range .Parameters}}| <code>{{.Declarator}}</code> | <code>{{.TypeName}}</code> | {{range .Modifiers}}<code>{{.Modifier}}</code> {{end}} |
+{{end -}}
+{{else -}}
+> Nenhum parâmetro de entrada.
 {{end}}
+{{if .ReturnType}}**↩️ Retorna:** <code>{{.ReturnType}}</code>{{else}}**🚫 Retorna:** nada (<code>void</code>){{end}}
+ 
+**⚙️ Comportamento**
+ 
+{{if .Body.Statements -}}
+{{range .Body.Statements}}{{range .Expressions}}- [x] {{formatExpression .}}
+{{end}}{{end -}}
+{{else -}}
+> Nenhuma lógica interna definida neste bloco.
+{{end}}
+<br>
+ 
 ---
-
-## 3. Comportamento e Regras de Negócio (Métodos)
-{{if not .Methods}}
-> ℹ️ **Aviso de Arquitetura:** Nenhum método ou API pública foi detectado para esta classe no escopo atual.
-{{else}}{{range .Methods}}### ⚙️ Função: {{.Name}}()
-*(A implementação interna deste método precisa ser mapeada)*
-{{end}}{{end}}
+ 
+{{end -}}
+# 📦 {{range .Modifiers}}<code>{{.Modifier}}</code> {{end}}{{.Name}}
+ 
+> Documentação gerada automaticamente a partir da análise estática do código-fonte.
+ 
+<p>
+{{range .Modifiers}}<img src="https://img.shields.io/badge/-{{.Modifier}}-6f42c1?style=flat-square" alt="{{.Modifier}}" /> {{end}}<img src="https://img.shields.io/badge/fields-{{len .Fields}}-informational?style=flat-square" /> <img src="https://img.shields.io/badge/constructors-{{len .Constructors}}-informational?style=flat-square" /> <img src="https://img.shields.io/badge/methods-{{len .Methods}}-informational?style=flat-square" />
+</p>
+ 
+---
+ 
+## 🧩 Atributos
+ 
+{{if .Fields -}}
+| Modificadores | Tipo | Nome |
+|:---|:---|:---|
+{{range .Fields}}| {{range .Modifiers}}<code>{{.Modifier}}</code> {{end}} | <code>{{.TypeName}}</code> | <code>{{.Declarator}}</code> |
+{{end -}}
+{{else -}}
+> Esta classe não possui atributos declarados.
+{{end}}
+ 
+---
+ 
+{{if .Constructors -}}
+## 🏗️ Construtores
+ 
+{{range .Constructors}}{{template "executable" .}}
+{{end}}
+{{end -}}
+{{if .Methods -}}
+## ⚙️ Métodos
+ 
+{{range .Methods}}{{template "executable" .}}
+{{end}}
+{{end -}}
 `
 
 func GenerateMarkdown(classData ClassJava, outputFilename string) {
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
 		"formatExpression": formatExpression,
-		"bt":               func() string { return "`" }, // Adicionamos isso aqui!
+		// Adicionamos o formatModifiers para exibir 'public', 'private' corretamente
+		"formatModifiers": formatModifiers,
+		"bt":              func() string { return "`" },
 	}).Parse(docTemplate)
 
 	if err != nil {

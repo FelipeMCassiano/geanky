@@ -19,7 +19,8 @@ type Binary struct {
 	Right    Expression `json:"right"`
 }
 type IfNode struct {
-	Condition Expression `json:"condition"`
+	Condition   Expression `json:"condition"`
+	Consequence Block      `json:"consequence"`
 }
 
 type MethodInvocation struct {
@@ -32,18 +33,20 @@ type Identifier struct {
 }
 
 type Access struct {
-	Object     string     `json:"object"`
+	Object     Expression `json:"object"`
 	Identifier Identifier `json:"identifier"`
 }
 type Literal struct {
 	Value string `json:"value"`
 }
 
+type ReturnNode struct {
+	Value Expression `json:"value"`
+}
 type ExpressionHandler func(node *tree_sitter.Node, content []byte) (Expression, error)
 
 var expressionHandlers map[string]ExpressionHandler
 
-// A função init() é executada automaticamente pelo Go antes do main()
 func init() {
 	expressionHandlers = map[string]ExpressionHandler{
 		"assignment_expression":    parseAssignment,
@@ -53,6 +56,8 @@ func init() {
 		"string_literal":           parseLiteral,
 		"decimal_integer_literal":  parseLiteral,
 		"identifier":               parseIdentifier,
+		"return_statement":         parseReturnNode,
+		"field_access":             parseAccess,
 	}
 }
 
@@ -60,6 +65,7 @@ func (b Binary) isExpression()           {}
 func (m MethodInvocation) isExpression() {}
 func (l Literal) isExpression()          {}
 func (i IfNode) isExpression()           {}
+func (r ReturnNode) isExpression()       {}
 
 func (a Access) isExpression() {}
 
@@ -81,6 +87,31 @@ func routeExpression(node *tree_sitter.Node, content []byte) Expression {
 	return Identifier{Name: node.Utf8Text(content)}
 }
 
+func parseAccess(node *tree_sitter.Node, content []byte) (Expression, error) {
+	objectNode := node.ChildByFieldName("object")
+	fieldNode := node.ChildByFieldName("field")
+
+	fieldName := ""
+	if fieldNode != nil {
+		fieldName = fieldNode.Utf8Text(content)
+	}
+
+	return Access{
+		Object:     routeExpression(objectNode, content),
+		Identifier: Identifier{Name: fieldName},
+	}, nil
+}
+
+func parseReturnNode(node *tree_sitter.Node, content []byte) (Expression, error) {
+	for i := range node.ChildCount() {
+		child := node.Child(i)
+		if child.IsNamed() {
+			return ReturnNode{Value: routeExpression(child, content)}, nil
+		}
+	}
+	return ReturnNode{Value: nil}, nil
+}
+
 func parseParenthesized(node *tree_sitter.Node, content []byte) (Expression, error) {
 	for i := range node.ChildCount() {
 		child := node.Child(i)
@@ -94,10 +125,6 @@ func parseParenthesized(node *tree_sitter.Node, content []byte) (Expression, err
 func parseMethodInvocation(node *tree_sitter.Node, content []byte) (Expression, error) {
 	objNode := node.ChildByFieldName("object")
 	nameNode := node.ChildByFieldName("name")
-	obj := ""
-	if objNode != nil {
-		obj = objNode.Utf8Text(content)
-	}
 	methodName := ""
 	if nameNode != nil {
 		methodName = nameNode.Utf8Text(content)
@@ -108,14 +135,16 @@ func parseMethodInvocation(node *tree_sitter.Node, content []byte) (Expression, 
 
 	for i := range argsNode.ChildCount() {
 		child := argsNode.Child(i)
-		expr := routeExpression(child, content)
-		args = append(args, expr)
+		if child.IsNamed() {
+			expr := routeExpression(child, content)
+			args = append(args, expr)
+		}
 
 	}
 
 	return MethodInvocation{
 		Accessed: Access{
-			Object:     obj,
+			Object:     routeExpression(objNode, content),
 			Identifier: Identifier{Name: methodName},
 		},
 		Args: args,
@@ -152,21 +181,9 @@ func parseBinary(node *tree_sitter.Node, content []byte) (Expression, error) {
 
 func parseAssignment(node *tree_sitter.Node, content []byte) (Expression, error) {
 	leftNode := node.ChildByFieldName("left")
-	var leftExpression Expression
 
 	if leftNode == nil {
 		return Assignment{}, fmt.Errorf("Tem que ter variavel de destino")
-	}
-	if leftNode.Kind() == "field_access" {
-		objectNode := leftNode.ChildByFieldName("object")
-		fieldNode := leftNode.ChildByFieldName("field")
-		leftExpression = Access{
-			Object:     objectNode.Utf8Text(content),
-			Identifier: Identifier{Name: fieldNode.Utf8Text(content)},
-		}
-	}
-	if leftNode.Kind() == "identifier" {
-		leftExpression = Identifier{Name: leftNode.Utf8Text(content)}
 	}
 
 	rightNode := node.ChildByFieldName("right")
@@ -175,7 +192,7 @@ func parseAssignment(node *tree_sitter.Node, content []byte) (Expression, error)
 	}
 
 	return Assignment{
-		Left:  leftExpression,
-		Right: Identifier{rightNode.Utf8Text(content)},
+		Left:  routeExpression(leftNode, content),
+		Right: routeExpression(rightNode, content),
 	}, nil
 }
