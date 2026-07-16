@@ -146,21 +146,20 @@ func formatExpression(expr Expression) string {
 	case IfNode:
 		condStr := formatExpression(e.Condition)
 
+		// Sem parênteses no If e no "do nothing"
 		if len(e.Consequence.Statements) == 0 {
-			return fmt.Sprintf("If %s, do nothing", condStr)
+			return fmt.Sprintf("If %s<br>&nbsp;&nbsp;&nbsp;&nbsp;then<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;do nothing", condStr)
 		}
 
-		result := fmt.Sprintf("If %s, then:\n", condStr)
+		// Sem parênteses no If
+		result := fmt.Sprintf("If %s<br>&nbsp;&nbsp;&nbsp;&nbsp;then<br>", condStr)
 		for _, stmt := range e.Consequence.Statements {
-			// Adds indentation and a bullet point for nested logic
-			result += "             - "
 			for _, subExpr := range stmt.Expressions {
-				result += formatExpression(subExpr)
+				result += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ " + formatExpression(subExpr) + "<br>"
 			}
-			result += "\n"
 		}
-		// Removes the trailing newline to preserve Markdown formatting
-		return result[:len(result)-1]
+
+		return result[:len(result)-4]
 
 	case MethodInvocation:
 		var argsStr string

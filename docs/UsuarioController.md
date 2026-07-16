@@ -97,9 +97,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 **Step-by-Step Logic:**
-    1. `If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'idade', 'status', then:
-             - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
-             - Return the result of: true`
+    1. `If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'idade', 'status'<br>&nbsp;&nbsp;&nbsp;&nbsp;then<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ Return the result of: true`
     1. `Return the result of: false`
 
 </details>

@@ -98,9 +98,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 **Step-by-Step Logic:**
-    1. `If idade is greater than or equal to 18 AND status is equal to "ativo", then:
-             - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'
-             - Return the result of: true`
+    1. `If idade is greater than or equal to 18 AND status is equal to "ativo"<br>&nbsp;&nbsp;&nbsp;&nbsp;then<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ Return the result of: true`
     1. `Invoke 'System.out.println' with parameters: '"Falha na validacao"'`
     1. `Return the result of: false`
 
