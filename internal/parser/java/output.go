@@ -83,8 +83,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Step-by-Step Logic:**
 {{if not .Body.Statements}}> *Empty body.*
-{{else}}{{range .Body.Statements}}{{range .Expressions}}    1. {{bt}}{{formatExpression .}}{{bt}}
-{{end}}{{end}}{{end}}
+{{else}}
+<ol>
+{{range .Body.Statements}}{{range .Expressions}}
+    <li>{{formatExpression .}}</li>
+{{end}}{{end}}
+</ol>
+{{end}}
 </details>
 {{end}}
 {{end}}
@@ -105,8 +110,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Step-by-Step Logic:**
 {{if not .Body.Statements}}> *Empty body.*
-{{else}}{{range .Body.Statements}}{{range .Expressions}}    1. {{bt}}{{formatExpression .}}{{bt}}
-{{end}}{{end}}{{end}}
+{{else}}
+<ol>
+{{range .Body.Statements}}{{range .Expressions}}
+    <li>{{formatExpression .}}</li>
+{{end}}{{end}}
+</ol>
+{{end}}
 </details>
 {{end}}
 {{end}}
