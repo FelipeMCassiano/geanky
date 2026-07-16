@@ -7,7 +7,6 @@ import (
 	"text/template"
 )
 
-// O template com Quick Summary, Diagrama Mermaid e Deep Dive Expansível
 const docTemplate = `
 # 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
 
@@ -18,7 +17,7 @@ const docTemplate = `
 ## 1. Quick Summary (API & State)
 A high-level overview of the class, its internal state, and available methods.
 
-**Internal State:**
+**Internal State & Dependencies:**
 {{if not .Fields}}> *No state properties defined.*
 {{else}}{{range .Fields}}- {{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
 {{end}}{{end}}
@@ -30,39 +29,64 @@ A high-level overview of the class, its internal state, and available methods.
 
 ---
 
-## 2. Data Flow & Navigation Diagram
-Visual representation of how data enters the class, how it is stored, and what is returned to external consumers.
+## 2. Architecture & Data Flow Diagram
+Visual representation of how data enters the class, internal state, and external dependencies.
 
 {{bt}}{{bt}}{{bt}}mermaid
 flowchart LR
     %% Styling
-    classDef mainClass fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
+    classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller((External<br>Caller))
-    ThisClass[{{.Name}}]:::mainClass
+    Caller((Caller))
+    ThisClass[{{.Name}}]:::classNode
 
-    %% API Interactions (Inputs and Outputs)
-    {{if .Methods}}{{range .Methods}}
-    Caller -->|Calls {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}}{{end}})| ThisClass
+    %% Method Calls
+    {{range .Methods}}
+    Caller -->|Calls {{.Name}}()| ThisClass
     ThisClass -.->|Returns {{.ReturnType}}| Caller
-    {{end}}{{end}}
+    {{end}}
 
-    %% Internal State (Storage)
-    {{if .Fields}}{{range .Fields}}
+    %% State vs External Dependencies
+    {{range .Fields}}
+    {{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double")}}
     ThisClass ---|Maintains State| State_{{.Declarator}}([{{.TypeName}} {{.Declarator}}]):::stateNode
-    {{end}}{{end}}
+    {{else}}
+    ThisClass --->|Depends on| Dep_{{.Declarator}}[{{.TypeName}}]:::extNode
+    {{end}}
+    {{end}}
 {{bt}}{{bt}}{{bt}}
 
 ---
 
-## 3. Detailed Execution Flow (Deep Dive)
-Expand the sections below to read the exact pseudo-code and business rules inside each method.
+## 3. Deep Dive (Constructors & Methods)
+Expand the sections below to read the exact pseudo-code and business rules.
 
-{{if not .Methods}}> *No methods available to detail.*
-{{else}}{{range .Methods}}
+{{if .Constructors}}
+### 🛠️ Constructors
+{{range .Constructors}}
 <details>
-<summary><b>⚙️ Function: {{.Name}}</b> (Click to expand)</summary>
+<summary><b>{{.Name}}</b> (Click to expand)</summary>
+
+**Parameters:**
+{{if not .Parameters}}> *None.*
+{{else}}{{range .Parameters}}- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
+{{end}}{{end}}
+
+**Step-by-Step Logic:**
+{{if not .Body.Statements}}> *Empty body.*
+{{else}}{{range .Body.Statements}}{{range .Expressions}}1. {{bt}}{{formatExpression .}}{{bt}}
+{{end}}{{end}}{{end}}
+</details>
+{{end}}
+{{end}}
+
+{{if .Methods}}
+### ⚙️ Methods
+{{range .Methods}}
+<details>
+<summary><b>{{.Name}}</b> ➞ {{bt}}{{.ReturnType}}{{bt}} (Click to expand)</summary>
 
 > **Signature:** {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}(){{bt}}
 
@@ -72,12 +96,12 @@ Expand the sections below to read the exact pseudo-code and business rules insid
 {{end}}{{end}}
 
 **Step-by-Step Logic:**
-{{if not .Body.Statements}}> *Method body empty or not implemented.*
+{{if not .Body.Statements}}> *Empty body.*
 {{else}}{{range .Body.Statements}}{{range .Expressions}}1. {{bt}}{{formatExpression .}}{{bt}}
 {{end}}{{end}}{{end}}
-
 </details>
-{{end}}{{end}}
+{{end}}
+{{end}}
 `
 
 // GenerateMarkdown compila o template com os dados mapeados da AST

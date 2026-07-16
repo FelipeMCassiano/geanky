@@ -81,29 +81,25 @@ func parseConstructor(node *tree_sitter.Node, content []byte, classData *ClassJa
 	return nil
 }
 func parseField(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
-
 	typeNode := node.ChildByFieldName("type")
-
-	if typeNode == nil {
-		return fmt.Errorf("Nao pode haver variavel sem tipo")
-	}
 	declaratorNode := node.ChildByFieldName("declarator")
-	if declaratorNode == nil {
-		return fmt.Errorf("Nao foi encontrado um declarador para o campo")
+
+	if typeNode == nil || declaratorNode == nil {
+		return nil
 	}
 
 	nameParamNode := declaratorNode.ChildByFieldName("name")
 	if nameParamNode == nil {
-		return fmt.Errorf("Nao pode haver tipo sem variavel")
+		return nil
 	}
 
 	newField := Variable{
+		Modifiers:  extractModifiers(node, content), // AGORA extraímos os modificadores!
 		Declarator: nameParamNode.Utf8Text(content),
 		TypeName:   typeNode.Utf8Text(content),
 	}
 
 	classData.Fields = append(classData.Fields, newField)
-
 	return nil
 }
 func parseMethod(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
