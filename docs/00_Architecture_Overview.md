@@ -20,7 +20,7 @@ flowchart LR
     %% Relationships / Dependencies
     
     
-     <!-- CHAMA A NOSSA FUNÇÃO GO! -->
+     
     
     
     
@@ -37,7 +37,7 @@ flowchart LR
     
     
     
-     <!-- CHAMA A NOSSA FUNÇÃO GO! -->
+     
     
     
     

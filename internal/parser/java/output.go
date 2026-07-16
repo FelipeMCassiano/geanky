@@ -155,7 +155,7 @@ flowchart LR
     %% Relationships / Dependencies
     {{range .}}
     {{$className := .Name}}
-    {{$callsMap := getDependencyCalls .}} <!-- CHAMA A NOSSA FUNÇÃO GO! -->
+    {{$callsMap := getDependencyCalls .}} {{/* CHAMA A NOSSA FUNCÃO GO! (Agora de forma segura) */}}
     
     {{range .Fields}}
     {{if not (or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double") (eq .TypeName "long") (eq .TypeName "float"))}}
