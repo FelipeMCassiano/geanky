@@ -1,71 +1,62 @@
-# 📦 <code>public</code> UsuarioController
- 
-> Documentação gerada automaticamente a partir da análise estática do código-fonte.
- 
-<p>
-<img src="https://img.shields.io/badge/-public-6f42c1?style=flat-square" alt="public" /> <img src="https://img.shields.io/badge/fields-2-informational?style=flat-square" /> <img src="https://img.shields.io/badge/constructors-1-informational?style=flat-square" /> <img src="https://img.shields.io/badge/methods-1-informational?style=flat-square" />
-</p>
- 
+
+# 📄 Technical Specification: `UsuarioController`
+
+> **Automatically generated documentation** by the Geanky tool.
+> Structural mapping, dependency injection, and initialization rules.
+
 ---
- 
-## 🧩 Atributos
- 
-| Modificadores | Tipo | Nome |
-|:---|:---|:---|
-|  | <code>String</code> | <code>nomeSistema</code> |
-|  | <code>int</code> | <code>ano</code> |
 
- 
+## 1. Overview and Internal State
+This section details the state properties (fields) stored in the class instance.
+
+| Modifiers | Property Name | Variable Type |
+| :--- | :--- | :--- |
+| `` | **`nomeSistema`** | `String` |
+| `` | **`ano`** | `int` |
+
+
 ---
- 
-## 🏗️ Construtores
- 
-### public UsuarioController(String nomeSistema, int ano)
- 
-**📥 Contrato**
- 
-| Parâmetro | Tipo | Modificadores |
-|:---|:---|:---|
-| <code>nomeSistema</code> | <code>String</code> |  |
-| <code>ano</code> | <code>int</code> |  |
 
-**🚫 Retorna:** nada (<code>void</code>)
- 
-**⚙️ Comportamento**
- 
-- [x] this.nomeSistema = nomeSistema
-- [x] this.ano = ano
+## 2. Constructors and Dependency Injection
 
-<br>
- 
+### 🛠️ Initializer: `UsuarioController`
+Instantiates and prepares the class for use.
+
+**Input Parameters:**
+| Parameter | Type |
+| :--- | :--- |
+| **`nomeSistema`** | `String` |
+| **`ano`** | `int` |
+
+
+**Execution Flow (Constructor Rules):**
+1. `Set 'this.nomeSistema' to 'nomeSistema'`
+1. `Set 'this.ano' to 'ano'`
+
+
+
 ---
- 
+
+## 3. Behavior and Business Rules (Methods)
+Below are all the class methods detailed, including their signatures and the literal step-by-step of what they do internally.
 
 
-## ⚙️ Métodos
- 
-### public processarUsuario(int idade, String status)
- 
-**📥 Contrato**
- 
-| Parâmetro | Tipo | Modificadores |
-|:---|:---|:---|
-| <code>idade</code> | <code>int</code> |  |
-| <code>status</code> | <code>String</code> |  |
+### ⚙️ Function: `processarUsuario`
+* **Return:** `boolean`
+* **Visibility/Modifiers:** `public `
 
-**↩️ Retorna:** <code>boolean</code>
- 
-**⚙️ Comportamento**
- 
-- [x] if (idade >= 18 && status.equals("ATIVO")) {
-             System.out.println("Usuário processado no " + this.nomeSistema + "ano: " + ano);
-             return true;
-         }
-- [x] return false
+**Received Parameters:**
+| Parameter Name | Type |
+| :--- | :--- |
+| **`idade`** | `int` |
+| **`status`** | `String` |
 
-<br>
- 
+
+**Internal Execution Flow:**
+1. `If idade is greater than or equal to 18 AND Invoke 'status.equals' with parameters: '"ATIVO"', then:
+             - Invoke 'System.out.println' with parameters: '"Usuário processado no " plus this.nomeSistema plus "ano: " plus ano'
+             - Return the result of: true`
+1. `Return the result of: false`
+
 ---
- 
-
 

@@ -102,6 +102,34 @@ func printExpressionPretty(expr Expression) {
 		fmt.Printf("%#v;", expr)
 	}
 }
+func translateOperator(op string) string {
+	switch op {
+	case "==":
+		return "is equal to"
+	case "!=":
+		return "is not equal to"
+	case ">":
+		return "is greater than"
+	case "<":
+		return "is less than"
+	case ">=":
+		return "is greater than or equal to"
+	case "<=":
+		return "is less than or equal to"
+	case "&&":
+		return "AND"
+	case "||":
+		return "OR"
+	case "+":
+		return "plus"
+	case "-":
+		return "minus"
+	default:
+		return op
+	}
+}
+
+// 3. ENGLISH NATURAL LANGUAGE ENGINE
 func formatExpression(expr Expression) string {
 	if expr == nil {
 		return ""
@@ -109,67 +137,69 @@ func formatExpression(expr Expression) string {
 
 	switch e := expr.(type) {
 	case Assignment:
-		return fmt.Sprintf("%s = %s", formatExpression(e.Left), formatExpression(e.Right))
+		return fmt.Sprintf("Set '%s' to '%s'", formatExpression(e.Left), formatExpression(e.Right))
+
 	case Binary:
-		return fmt.Sprintf("%s %s %s", formatExpression(e.Left), e.Operator, formatExpression(e.Right))
+		op := translateOperator(e.Operator)
+		return fmt.Sprintf("%s %s %s", formatExpression(e.Left), op, formatExpression(e.Right))
+
 	case IfNode:
 		condStr := formatExpression(e.Condition)
 
-		// 1. Se o bloco do IF estiver vazio
 		if len(e.Consequence.Statements) == 0 {
-			return fmt.Sprintf("if (%s) { }", condStr)
+			return fmt.Sprintf("If %s, do nothing", condStr)
 		}
 
-		// 2. Se tiver código, abre a chave e quebra a linha
-		result := fmt.Sprintf("if (%s) {\n", condStr)
-
-		// 3. Itera sobre o novo Block
+		result := fmt.Sprintf("If %s, then:\n", condStr)
 		for _, stmt := range e.Consequence.Statements {
-			// Adiciona espaços para identar o que está dentro do IF
-			result += "             "
-			for _, expr := range stmt.Expressions {
-				// Mágica da recursão: vai formatar variáveis, invocações, atribuições...
-				result += formatExpression(expr) + ";"
+			// Adds indentation and a bullet point for nested logic
+			result += "             - "
+			for _, subExpr := range stmt.Expressions {
+				result += formatExpression(subExpr)
 			}
-			result += "\n" // Quebra de linha após cada instrução
+			result += "\n"
 		}
+		// Removes the trailing newline to preserve Markdown formatting
+		return result[:len(result)-1]
 
-		// 4. Fecha a chave do IF alinhando com a margem
-		result += "         }"
-		return result
 	case MethodInvocation:
-		// 1. Extraímos e formatamos todos os argumentos
 		var argsStr string
 		for i, arg := range e.Args {
-			argsStr += formatExpression(arg) // Recursão! Funciona para literais, identificadores, etc.
+			argsStr += fmt.Sprintf("'%s'", formatExpression(arg))
 			if i < len(e.Args)-1 {
-				argsStr += ", " // Adiciona vírgula entre os argumentos
+				argsStr += ", "
 			}
 		}
 
-		// CORREÇÃO AQUI: != nil em vez de != "", e usar formatExpression no Object
+		// Resolve the target (with or without the owning object)
+		target := e.Accessed.Identifier.Name
 		if e.Accessed.Object != nil {
-			return fmt.Sprintf("%s.%s(%s)", formatExpression(e.Accessed.Object), e.Accessed.Identifier.Name, argsStr)
+			target = fmt.Sprintf("%s.%s", formatExpression(e.Accessed.Object), e.Accessed.Identifier.Name)
 		}
-		return fmt.Sprintf("%s(%s)", e.Accessed.Identifier.Name, argsStr)
+
+		if len(e.Args) > 0 {
+			return fmt.Sprintf("Invoke '%s' with parameters: %s", target, argsStr)
+		}
+		return fmt.Sprintf("Invoke '%s' (no parameters)", target)
 
 	case ReturnNode:
-		// Para imprimir os "return true;" que capturamos!
 		if e.Value != nil {
-			return fmt.Sprintf("return %s", formatExpression(e.Value))
+			return fmt.Sprintf("Return the result of: %s", formatExpression(e.Value))
 		}
-		return "return"
+		return "End execution (Return void)"
 
 	case Literal:
 		return e.Value
+
 	case Access:
-		// CORREÇÃO AQUI: != nil em vez de != "", e usar formatExpression no Object
 		if e.Object != nil {
 			return fmt.Sprintf("%s.%s", formatExpression(e.Object), e.Identifier.Name)
 		}
 		return e.Identifier.Name
+
 	case Identifier:
 		return e.Name
+
 	default:
 		return fmt.Sprintf("%v", expr)
 	}
