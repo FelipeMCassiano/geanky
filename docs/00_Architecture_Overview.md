@@ -24,6 +24,10 @@ flowchart TD
     
     
     
+    UsuarioController -- "Uses" --> UsuarioService
+    
+    
+    
     
     
     

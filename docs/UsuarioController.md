@@ -14,6 +14,9 @@ A high-level overview of the class, its internal state, and available methods.
 - `private ` **nomeSistema** (`String`)
 
 
+- `private ` **service** ([UsuarioService](UsuarioService.md)) 🔗
+
+
 **Available Methods:**
 - **processarUsuario()** ➞ returns `boolean`
 
@@ -43,6 +46,11 @@ flowchart LR
     
     
     ThisClass -- "Maintains State" --- State_nomeSistema(["String nomeSistema"]):::stateNode
+    
+    
+    
+    ThisClass -- "Depends on" ---> Dep_service["UsuarioService"]:::extNode
+    click Dep_service "UsuarioService.md" "Ir para a documentação de UsuarioService"
     
     
 ```
@@ -85,6 +93,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 **Step-by-Step Logic:**
+1. `If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'idade', 'status', then:
+             - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
+             - Return the result of: true`
 1. `Return the result of: false`
 
 </details>
