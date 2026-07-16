@@ -75,13 +75,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Step-by-Step Logic:**
 
-<ol>
 
-    <li>Set 'this.nomeSistema' to 'nomeSistema'</li>
 
-    <li>Set 'this.service' to 'service'</li>
+1. Set 'this.nomeSistema' to 'nomeSistema'
 
-</ol>
+1. Set 'this.service' to 'service'
+
+
 
 </details>
 
@@ -104,13 +104,16 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Step-by-Step Logic:**
 
-<ol>
 
-    <li>If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'idade', 'status'<br>&nbsp;&nbsp;&nbsp;&nbsp;then<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ Return the result of: true</li>
 
-    <li>Return the result of: false</li>
+1. If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'idade', 'status'
+   then:
+      - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
+      - Return the result of: true
 
-</ol>
+1. Return the result of: false
+
+
 
 </details>
 

@@ -142,24 +142,23 @@ func formatExpression(expr Expression) string {
 	case Binary:
 		op := translateOperator(e.Operator)
 		return fmt.Sprintf("%s %s %s", formatExpression(e.Left), op, formatExpression(e.Right))
-
 	case IfNode:
 		condStr := formatExpression(e.Condition)
 
-		// Sem parênteses no If e no "do nothing"
 		if len(e.Consequence.Statements) == 0 {
-			return fmt.Sprintf("If %s<br>&nbsp;&nbsp;&nbsp;&nbsp;then<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;do nothing", condStr)
+			return fmt.Sprintf("If %s\n   then:\n      - (do nothing)", condStr)
 		}
 
-		// Sem parênteses no If
-		result := fmt.Sprintf("If %s<br>&nbsp;&nbsp;&nbsp;&nbsp;then<br>", condStr)
+		result := fmt.Sprintf("If %s\n   then:\n", condStr)
 		for _, stmt := range e.Consequence.Statements {
 			for _, subExpr := range stmt.Expressions {
-				result += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ " + formatExpression(subExpr) + "<br>"
+				// Usa apenas espaços para recuar os itens do IF
+				result += "      - " + formatExpression(subExpr) + "\n"
 			}
 		}
 
-		return result[:len(result)-4]
+		// Remove a última quebra de linha
+		return result[:len(result)-1]
 
 	case MethodInvocation:
 		var argsStr string

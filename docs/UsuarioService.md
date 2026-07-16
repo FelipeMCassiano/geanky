@@ -76,13 +76,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Step-by-Step Logic:**
 
-<ol>
 
-    <li>Set 'this.nomeBanco' to 'nomeBanco'</li>
 
-    <li>Set 'this.conexaoAtiva' to 'true'</li>
+1. Set 'this.nomeBanco' to 'nomeBanco'
 
-</ol>
+1. Set 'this.conexaoAtiva' to 'true'
+
+
 
 </details>
 
@@ -105,15 +105,18 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Step-by-Step Logic:**
 
-<ol>
 
-    <li>If idade is greater than or equal to 18 AND status is equal to "ativo"<br>&nbsp;&nbsp;&nbsp;&nbsp;then<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➞ Return the result of: true</li>
 
-    <li>Invoke 'System.out.println' with parameters: '"Falha na validacao"'</li>
+1. If idade is greater than or equal to 18 AND status is equal to "ativo"
+   then:
+      - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'
+      - Return the result of: true
 
-    <li>Return the result of: false</li>
+1. Invoke 'System.out.println' with parameters: '"Falha na validacao"'
 
-</ol>
+1. Return the result of: false
+
+
 
 </details>
 
@@ -129,13 +132,13 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Step-by-Step Logic:**
 
-<ol>
 
-    <li>Set 'this.conexaoAtiva' to 'false'</li>
 
-    <li>Invoke 'System.out.println' with parameters: 'acao'</li>
+1. Set 'this.conexaoAtiva' to 'false'
 
-</ol>
+1. Invoke 'System.out.println' with parameters: 'acao'
+
+
 
 </details>
 

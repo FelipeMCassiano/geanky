@@ -84,11 +84,11 @@ Expand the sections below to read the exact pseudo-code and business rules.
 **Step-by-Step Logic:**
 {{if not .Body.Statements}}> *Empty body.*
 {{else}}
-<ol>
+
 {{range .Body.Statements}}{{range .Expressions}}
-    <li>{{formatExpression .}}</li>
+1. {{formatExpression .}}
 {{end}}{{end}}
-</ol>
+
 {{end}}
 </details>
 {{end}}
@@ -111,11 +111,11 @@ Expand the sections below to read the exact pseudo-code and business rules.
 **Step-by-Step Logic:**
 {{if not .Body.Statements}}> *Empty body.*
 {{else}}
-<ol>
+
 {{range .Body.Statements}}{{range .Expressions}}
-    <li>{{formatExpression .}}</li>
+1. {{formatExpression .}}
 {{end}}{{end}}
-</ol>
+
 {{end}}
 </details>
 {{end}}
