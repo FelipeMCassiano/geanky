@@ -4,7 +4,7 @@
 > Visão geral de alto nível mostrando as dependências entre todas as classes analisadas.
 
 ```mermaid
-flowchart TD
+flowchart LR
     %% Styling
     classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff,cursor:pointer;
 
@@ -20,14 +20,24 @@ flowchart TD
     %% Relationships / Dependencies
     
     
+     <!-- CHAMA A NOSSA FUNÇÃO GO! -->
     
     
     
     
-    UsuarioController -- "Uses" --> UsuarioService
+    
+        
+        
+        
+        
+            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario()<br>registrarLog()</b>"| UsuarioService
+        
+
     
     
     
+    
+     <!-- CHAMA A NOSSA FUNÇÃO GO! -->
     
     
     
