@@ -2,8 +2,10 @@ package java
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	tree_sitter "github.com/tree-sitter/go-tree-sitter"
@@ -11,6 +13,43 @@ import (
 	java_lang "github.com/tree-sitter/tree-sitter-java/bindings/go"
 )
 
+func AnalyzeDirectory(rootDir string, outputDir string) {
+	// Garante que a pasta de saída (onde os Markdowns vão ficar) exista
+	err := os.MkdirAll(outputDir, os.ModePerm)
+	if err != nil {
+		log.Fatalf("Erro ao criar diretório de saída: %v", err)
+	}
+
+	// WalkDir entra em todas as subpastas magicamente
+	err = filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Se for um arquivo e terminar com ".java", nós processamos!
+		if !d.IsDir() && strings.HasSuffix(d.Name(), ".java") {
+			fmt.Printf("🔍 Analisando: %s\n", path)
+
+			// Faz o parse do arquivo
+			classData := Analyze(path)
+
+			if classData.Name != "" {
+				// Cria o nome do arquivo markdown (Ex: UsuarioController.md)
+				outFileName := fmt.Sprintf("%s.md", classData.Name)
+				outFilePath := filepath.Join(outputDir, outFileName)
+
+				// Gera a documentação
+				GenerateMarkdown(classData, outFilePath)
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Fatalf("Erro ao varrer diretórios: %v", err)
+	}
+	fmt.Println("🚀 Varredura concluída com sucesso!")
+}
 func Analyze(filePath string) ClassJava {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
@@ -28,7 +67,6 @@ func Analyze(filePath string) ClassJava {
 	root := tree.RootNode()
 
 	queryPattern := JavaQueries()
-
 	query, _ := tree_sitter.NewQuery(lang, (queryPattern))
 
 	cursor := tree_sitter.NewQueryCursor()
@@ -50,12 +88,10 @@ func Analyze(filePath string) ClassJava {
 				handler(&capture.Node, content, &classData)
 			}
 		}
-
 	}
-	GenerateMarkdown(classData, "doccccc.md")
 
+	// Removido o GenerateMarkdown daqui!
 	return classData
-
 }
 
 func printReadableTree(node *tree_sitter.Node, sourceCode []byte, depth int) {

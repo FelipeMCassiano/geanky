@@ -4,8 +4,6 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"log"
-
 	"github.com/FelipeMCassiano/geanky/internal/parser/java"
 	"github.com/spf13/cobra"
 )
@@ -38,9 +36,9 @@ func init() {
 }
 
 func read(cmd *cobra.Command, args []string) {
-	if len(args) == 0 {
-		log.Fatalf("passe o caminho da classe java")
-	}
-	result := java.Analyze(args[0])
-	java.PrintClassSummary(result)
+	targetDir := args[0]
+
+	outputDir := "./docs"
+
+	java.AnalyzeDirectory(targetDir, outputDir)
 }
