@@ -28,19 +28,19 @@ flowchart LR
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller((Caller))
-    ThisClass[UsuarioController]:::classNode
+    Caller(("Caller"))
+    ThisClass["UsuarioController"]:::classNode
 
     %% Method Calls
     
-    Caller -->|Calls processarUsuario()| ThisClass
-    ThisClass -.->|Returns boolean| Caller
+    Caller -- "Calls processarUsuario()" --> ThisClass
+    ThisClass -. "Returns boolean" .-> Caller
     
 
     %% State vs External Dependencies
     
     
-    ThisClass ---|Maintains State| State_nomeSistema([String nomeSistema]):::stateNode
+    ThisClass -- "Maintains State" --- State_nomeSistema(["String nomeSistema"]):::stateNode
     
     
 ```

@@ -30,26 +30,26 @@ flowchart LR
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller((Caller))
-    ThisClass[UsuarioService]:::classNode
+    Caller(("Caller"))
+    ThisClass["UsuarioService"]:::classNode
 
     %% Method Calls
     
-    Caller -->|Calls validarEAtivarUsuario()| ThisClass
-    ThisClass -.->|Returns boolean| Caller
+    Caller -- "Calls validarEAtivarUsuario()" --> ThisClass
+    ThisClass -. "Returns boolean" .-> Caller
     
-    Caller -->|Calls registrarLog()| ThisClass
-    ThisClass -.->|Returns void| Caller
+    Caller -- "Calls registrarLog()" --> ThisClass
+    ThisClass -. "Returns void" .-> Caller
     
 
     %% State vs External Dependencies
     
     
-    ThisClass ---|Maintains State| State_nomeBanco([String nomeBanco]):::stateNode
+    ThisClass -- "Maintains State" --- State_nomeBanco(["String nomeBanco"]):::stateNode
     
     
     
-    ThisClass ---|Maintains State| State_conexaoAtiva([boolean conexaoAtiva]):::stateNode
+    ThisClass -- "Maintains State" --- State_conexaoAtiva(["boolean conexaoAtiva"]):::stateNode
     
     
 ```
