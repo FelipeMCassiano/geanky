@@ -23,13 +23,11 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 	}
 
 	var allClasses []ClassJava
-	var mu sync.Mutex // Mutex para proteger o append no allClasses concorrente
+	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	// Canal limitador (Semaphore) para controlar o máximo de concorrência
 	sem := make(chan struct{}, maxGoroutines)
 
-	// Coleta todos os caminhos de arquivos .java primeiro
 	var filePaths []string
 	err = filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -45,25 +43,22 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		log.Fatalf("Erro ao varrer diretórios: %v", err)
 	}
 
-	// Dispara a análise concorrente de cada arquivo
 	for _, path := range filePaths {
 		wg.Add(1)
-		sem <- struct{}{} // Bloqueia se atingir o limite de maxGoroutines
+		sem <- struct{}{}
 
 		go func(p string) {
 			defer wg.Done()
-			defer func() { <-sem }() // Libera espaço no canal ao terminar
+			defer func() { <-sem }()
 
 			fmt.Printf("🔍 Analisando: %s\n", p)
 			classData := Analyze(p)
 
 			if classData.Name != "" {
-				// Escreve o Markdown individual de forma assíncrona
 				outFileName := fmt.Sprintf("%s.md", classData.Name)
 				outFilePath := filepath.Join(outputDir, outFileName)
 				GenerateMarkdown(classData, outFilePath)
 
-				// Lock para evitar Race Condition ao salvar os dados no array global
 				mu.Lock()
 				allClasses = append(allClasses, classData)
 				mu.Unlock()
@@ -71,7 +66,6 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		}(path)
 	}
 
-	// Aguarda todas as goroutines finalizarem
 	wg.Wait()
 
 	if len(allClasses) > 0 {
@@ -79,7 +73,7 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		GenerateGlobalArchitecture(allClasses, globalOutPath)
 	}
 
-	fmt.Println("🚀 Varredura concorrente concluída com sucesso!")
+	fmt.Println("🚀 Varredura concluída com sucesso!")
 }
 
 func Analyze(filePath string) ClassJava {
@@ -88,8 +82,6 @@ func Analyze(filePath string) ClassJava {
 		log.Fatal(err)
 	}
 
-	// IMPORTANTE: Cada Goroutine precisa criar seu próprio Parser e instanciar sua própria Language.
-	// O Tree-Sitter NÃO é thread-safe se compartilhado no mesmo objeto!
 	parser := tree_sitter.NewParser()
 	defer parser.Close()
 	lang := tree_sitter.NewLanguage(java_lang.Language())
@@ -125,29 +117,4 @@ func Analyze(filePath string) ClassJava {
 	}
 
 	return classData
-}
-
-func printReadableTree(node *tree_sitter.Node, sourceCode []byte, depth int) {
-	if node == nil {
-		return
-
-	}
-
-	indent := strings.Repeat(" ", depth)
-
-	nodeType := node.Kind()
-
-	var textSample string
-	if node.ChildCount() == 0 {
-		textSample = fmt.Sprintf(" -> \"%s\"", node.Utf8Text(sourceCode))
-	}
-
-	fmt.Printf("%s[%s]%s\n", indent, nodeType, textSample)
-
-	childCount := node.ChildCount()
-	for i := uint(0); i < uint(childCount); i++ {
-		child := node.Child(i)
-		printReadableTree(child, sourceCode, depth+1)
-	}
-
 }

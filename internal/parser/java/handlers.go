@@ -6,6 +6,11 @@ import (
 	tree_sitter "github.com/tree-sitter/go-tree-sitter"
 )
 
+type Package struct {
+	Scope string `json:"scope"`
+	Name  string `json:"name"`
+}
+
 type CaptureHandler func(node *tree_sitter.Node, content []byte, classData *ClassJava) error
 
 type Variable struct {
@@ -15,6 +20,7 @@ type Variable struct {
 }
 
 type ClassJava struct {
+	Package      Package      `json:"package"`
 	Modifiers    []Modifier   `json:"modifiers"`
 	Name         string       `json:"name"`
 	Constructors []Executable `json:"constructors"`
@@ -48,6 +54,25 @@ var handlers = map[string]CaptureHandler{
 	"method":      parseMethod,
 	"field":       parseField,
 	"constructor": parseConstructor,
+	"package":     parsePackage,
+}
+
+func parsePackage(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
+	scopeNode := node.ChildByFieldName("scope")
+	nameNode := node.ChildByFieldName("name")
+
+	if nameNode == nil {
+		return fmt.Errorf("Name nao pode ser nulo")
+	}
+	if scopeNode == nil {
+		return fmt.Errorf("Scope nao pode ser nulo")
+	}
+	classData.Package = Package{
+		Name:  nameNode.Utf8Text(content),
+		Scope: scopeNode.Utf8Text(content),
+	}
+
+	return nil
 }
 
 func parseClass(node *tree_sitter.Node, content []byte, classData *ClassJava) error {

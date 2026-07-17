@@ -11,7 +11,8 @@ import (
 const docTemplate = `
 # 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
 
-> **Automatically generated documentation** by the Geanky tool.
+{{if .Package.Name}}> **Package:** {{if .Package.Scope}}{{.Package.Scope}}.{{end}}{{.Package.Name}}
+{{end}}> **Automatically generated documentation** by the Geanky tool.
 
 ---
 

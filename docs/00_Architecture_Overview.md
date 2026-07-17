@@ -30,7 +30,7 @@ flowchart LR
         
         
         
-            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario()<br>registrarLog()</b>"| UsuarioService
+            UsuarioController -->|"Calls:<br><b>registrarLog()<br>validarEAtivarUsuario()</b>"| UsuarioService
         
 
     
