@@ -66,8 +66,8 @@ A high-level overview of the class, its internal state, and available methods.
 
 ---
 
-## 2. Architecture & Data Flow Diagram
-Visual representation of how data enters the class, internal state, and external dependencies.
+## 2. Class Dependencies & State
+Visual representation of the internal state and external dependencies this class maintains.
 
 ```mermaid
 flowchart LR
@@ -76,23 +76,7 @@ flowchart LR
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller(("Caller"))
     ThisClass["BoatSyncController"]:::classNode
-
-    %% Method Calls
-    
-    Caller -- "Calls subscEmitter(UUID uuid)" --> ThisClass
-    ThisClass -. "Returns Flux&lt;ServerSentEvent&lt;String&gt;&gt;" .-> Caller
-    
-    Caller -- "Calls portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)" --> ThisClass
-    ThisClass -. "Returns ResponseEntity&lt;?&gt;" .-> Caller
-    
-    Caller -- "Calls latestSync(Principal principal)" --> ThisClass
-    ThisClass -. "Returns ResponseEntity&lt;?&gt;" .-> Caller
-    
-    Caller -- "Calls triggerCloudSync(SyncRequest request, Principal principal)" --> ThisClass
-    ThisClass -. "Returns ResponseEntity&lt;?&gt;" .-> Caller
-    
 
     %% State vs External Dependencies
     
@@ -179,6 +163,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > `@GetMapping(value = &#34;/events/{uuid}&#34;, produces = MediaType.TEXT_EVENT_STREAM_VALUE)`
 > `public Flux&lt;ServerSentEvent&lt;String&gt;&gt; subscEmitter(UUID uuid)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["subscEmitter()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>Flux&lt;ServerSentEvent&lt;String&gt;&gt;" .-> Caller
+```
+
 **Parameters:**
 
 - **uuid** (`UUID`)
@@ -200,6 +195,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `@GetMapping(&#34;/portal-readings&#34;)`
 > `public ResponseEntity&lt;?&gt; portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["portalReadingsSyncPaginated()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>ResponseEntity&lt;?&gt;" .-> Caller
+```
 
 **Parameters:**
 
@@ -229,6 +235,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > `@GetMapping(&#34;/latest&#34;)`
 > `public ResponseEntity&lt;?&gt; latestSync(Principal principal)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["latestSync()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>ResponseEntity&lt;?&gt;" .-> Caller
+```
+
 **Parameters:**
 
 - **principal** (`Principal`)
@@ -250,6 +267,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `@PostMapping(&#34;/cloud&#34;)`
 > `public ResponseEntity&lt;?&gt; triggerCloudSync(SyncRequest request, Principal principal)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["triggerCloudSync()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>ResponseEntity&lt;?&gt;" .-> Caller
+```
 
 **Parameters:**
 

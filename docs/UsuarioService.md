@@ -25,8 +25,8 @@ A high-level overview of the class, its internal state, and available methods.
 
 ---
 
-## 2. Architecture & Data Flow Diagram
-Visual representation of how data enters the class, internal state, and external dependencies.
+## 2. Class Dependencies & State
+Visual representation of the internal state and external dependencies this class maintains.
 
 ```mermaid
 flowchart LR
@@ -35,26 +35,16 @@ flowchart LR
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller(("Caller"))
     ThisClass["UsuarioService"]:::classNode
-
-    %% Method Calls
-    
-    Caller -- "Calls validarEAtivarUsuario(int idade, String status)" --> ThisClass
-    ThisClass -. "Returns boolean" .-> Caller
-    
-    Caller -- "Calls registrarLog(String acao)" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
 
     %% State vs External Dependencies
     
     
-    ThisClass -- "Maintains State" --- State_nomeBanco(["String nomeBanco"]):::stateNode
+    ThisClass -- "Maintains State" --- State_nomeBanco(["String<br>nomeBanco"]):::stateNode
     
     
     
-    ThisClass -- "Maintains State" --- State_conexaoAtiva(["boolean conexaoAtiva"]):::stateNode
+    ThisClass -- "Maintains State" --- State_conexaoAtiva(["boolean<br>conexaoAtiva"]):::stateNode
     
     
 ```
@@ -101,6 +91,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public boolean validarEAtivarUsuario(int idade, String status)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["validarEAtivarUsuario()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>boolean" .-> Caller
+```
+
 **Parameters:**
 
 - **idade** (`int`)
@@ -130,6 +131,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `public void registrarLog(String acao)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["registrarLog()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
 
 **Parameters:**
 

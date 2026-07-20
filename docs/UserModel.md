@@ -27,8 +27,8 @@ A high-level overview of the class, its internal state, and available methods.
 
 ---
 
-## 2. Architecture & Data Flow Diagram
-Visual representation of how data enters the class, internal state, and external dependencies.
+## 2. Class Dependencies & State
+Visual representation of the internal state and external dependencies this class maintains.
 
 ```mermaid
 flowchart LR
@@ -37,32 +37,16 @@ flowchart LR
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller(("Caller"))
     ThisClass["UserModel"]:::classNode
-
-    %% Method Calls
-    
-    Caller -- "Calls setNome(String nome)" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
-    Caller -- "Calls setIdade(int idade)" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
-    Caller -- "Calls getIdade()" --> ThisClass
-    ThisClass -. "Returns int" .-> Caller
-    
-    Caller -- "Calls getNome()" --> ThisClass
-    ThisClass -. "Returns String" .-> Caller
-    
 
     %% State vs External Dependencies
     
     
-    ThisClass -- "Maintains State" --- State_nome(["String nome"]):::stateNode
+    ThisClass -- "Maintains State" --- State_nome(["String<br>nome"]):::stateNode
     
     
     
-    ThisClass -- "Maintains State" --- State_idade(["int idade"]):::stateNode
+    ThisClass -- "Maintains State" --- State_idade(["int<br>idade"]):::stateNode
     
     
 ```
@@ -111,6 +95,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public void setNome(String nome)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["setNome()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
+
 **Parameters:**
 
 - **nome** (`String`)
@@ -131,6 +126,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `public void setIdade(int idade)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["setIdade()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
 
 **Parameters:**
 
@@ -153,6 +159,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public int getIdade()`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["getIdade()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>int" .-> Caller
+```
+
 **Parameters:**
 > *None.*
 
@@ -172,6 +189,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `public String getNome()`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["getNome()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>String" .-> Caller
+```
 
 **Parameters:**
 > *None.*

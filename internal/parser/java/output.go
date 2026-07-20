@@ -132,8 +132,8 @@ A high-level overview of the class, its internal state, and available methods.
 
 ---
 
-## 2. Architecture & Data Flow Diagram
-Visual representation of how data enters the class, internal state, and external dependencies.
+## 2. Class Dependencies & State
+Visual representation of the internal state and external dependencies this class maintains.
 
 {{bt}}{{bt}}{{bt}}mermaid
 flowchart LR
@@ -142,19 +142,12 @@ flowchart LR
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller(("Caller"))
     ThisClass["{{.Name}}"]:::classNode
-
-    %% Method Calls
-    {{range .Methods}}
-    Caller -- "Calls {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}})" --> ThisClass
-    ThisClass -. "Returns {{.ReturnType}}" .-> Caller
-    {{end}}
 
     %% State vs External Dependencies
     {{range .Fields}}
     {{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double") (eq .TypeName "long") (eq .TypeName "float")}}
-    ThisClass -- "Maintains State" --- State_{{.Declarator}}(["{{.TypeName}} {{.Declarator}}"]):::stateNode
+    ThisClass -- "Maintains State" --- State_{{.Declarator}}(["{{.TypeName}}<br>{{.Declarator}}"]):::stateNode
     {{else}}
     ThisClass -- "Depends on" ---> Dep_{{.Declarator}}["{{.TypeName}}"]:::extNode
     {{end}}
@@ -204,6 +197,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 {{range .Annotations}}> {{bt}}{{.}}{{bt}}
 {{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
+
+**Data Flow:**
+{{bt}}{{bt}}{{bt}}mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["{{.Name}}()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>{{.ReturnType}}" .-> Caller
+{{bt}}{{bt}}{{bt}}
 
 **Parameters:**
 {{if not .Parameters}}> *None.*

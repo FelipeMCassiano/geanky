@@ -140,8 +140,8 @@ A high-level overview of the class, its internal state, and available methods.
 
 ---
 
-## 2. Architecture & Data Flow Diagram
-Visual representation of how data enters the class, internal state, and external dependencies.
+## 2. Class Dependencies & State
+Visual representation of the internal state and external dependencies this class maintains.
 
 ```mermaid
 flowchart LR
@@ -150,53 +150,7 @@ flowchart LR
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    Caller(("Caller"))
     ThisClass["CloudSyncUploadService"]:::classNode
-
-    %% Method Calls
-    
-    Caller -- "Calls setDestination(String destination)" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
-    Caller -- "Calls latestSync()" --> ThisClass
-    ThisClass -. "Returns SyncLastestResponse" .-> Caller
-    
-    Caller -- "Calls syncToCloud(SyncRequest request)" --> ThisClass
-    ThisClass -. "Returns SyncEvent" .-> Caller
-    
-    Caller -- "Calls authorizeSync()" --> ThisClass
-    ThisClass -. "Returns String" .-> Caller
-    
-    Caller -- "Calls backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
-    Caller -- "Calls processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
-    Caller -- "Calls getControlWithRetry(UUID eventKey)" --> ThisClass
-    ThisClass -. "Returns SyncControlModel" .-> Caller
-    
-    Caller -- "Calls processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
-    Caller -- "Calls saveMasterAndChunksToDatabase(List&lt;byte[]&gt; slices, String checksum)" --> ThisClass
-    ThisClass -. "Returns SyncPacketMaster" .-> Caller
-    
-    Caller -- "Calls cleanupOldUploadPackages()" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
-    Caller -- "Calls buildProtobufPackage(List&lt;ItemStatusSyncDTO&gt; status, List&lt;MusteringSyncDTO&gt; mustering, List&lt;ItemModificationStatusDTO&gt; modifications)" --> ThisClass
-    ThisClass -. "Returns SyncPackage" .-> Caller
-    
-    Caller -- "Calls sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)" --> ThisClass
-    ThisClass -. "Returns boolean" .-> Caller
-    
-    Caller -- "Calls fetchItemStatusTransitions(List&lt;ItemStatusTransitionProjection&gt; transitions)" --> ThisClass
-    ThisClass -. "Returns List&lt;ItemStatusSyncDTO&gt;" .-> Caller
-    
-    Caller -- "Calls markDataAsSynced(List&lt;ItemStatusTransitionProjection&gt; transitions, List&lt;MusteringSyncDTO&gt; musterings)" --> ThisClass
-    ThisClass -. "Returns void" .-> Caller
-    
 
     %% State vs External Dependencies
     
@@ -257,15 +211,15 @@ flowchart LR
     
     
     
-    ThisClass -- "Maintains State" --- State_cloudUrl(["String cloudUrl"]):::stateNode
+    ThisClass -- "Maintains State" --- State_cloudUrl(["String<br>cloudUrl"]):::stateNode
     
     
     
-    ThisClass -- "Maintains State" --- State_authUrl(["String authUrl"]):::stateNode
+    ThisClass -- "Maintains State" --- State_authUrl(["String<br>authUrl"]):::stateNode
     
     
     
-    ThisClass -- "Maintains State" --- State_destination(["String destination"]):::stateNode
+    ThisClass -- "Maintains State" --- State_destination(["String<br>destination"]):::stateNode
     
     
 ```
@@ -364,6 +318,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public void setDestination(String destination)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["setDestination()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
+
 **Parameters:**
 
 - **destination** (`String`)
@@ -384,6 +349,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `public SyncLastestResponse latestSync()`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["latestSync()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncLastestResponse" .-> Caller
+```
 
 **Parameters:**
 > *None.*
@@ -409,6 +385,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `public SyncEvent syncToCloud(SyncRequest request)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["syncToCloud()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncEvent" .-> Caller
+```
 
 **Parameters:**
 
@@ -462,6 +449,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public String authorizeSync()`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["authorizeSync()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>String" .-> Caller
+```
+
 **Parameters:**
 > *None.*
 
@@ -481,6 +479,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `private void backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["backgroundProcess()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
 
 **Parameters:**
 
@@ -592,6 +601,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `private void processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["processDownload()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
+
 **Parameters:**
 
 - **eventKey** (`UUID`)
@@ -614,6 +634,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `private SyncControlModel getControlWithRetry(UUID eventKey)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["getControlWithRetry()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncControlModel" .-> Caller
+```
+
 **Parameters:**
 
 - **eventKey** (`UUID`)
@@ -629,6 +660,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `private void processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["processCloudSyncInBackground()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
 
 **Parameters:**
 
@@ -656,6 +698,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `private SyncPacketMaster saveMasterAndChunksToDatabase(List&lt;byte[]&gt; slices, String checksum)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["saveMasterAndChunksToDatabase()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncPacketMaster" .-> Caller
+```
 
 **Parameters:**
 
@@ -694,6 +747,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `private void cleanupOldUploadPackages()`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["cleanupOldUploadPackages()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
+
 **Parameters:**
 > *None.*
 
@@ -708,6 +772,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `private SyncPackage buildProtobufPackage(List&lt;ItemStatusSyncDTO&gt; status, List&lt;MusteringSyncDTO&gt; mustering, List&lt;ItemModificationStatusDTO&gt; modifications)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["buildProtobufPackage()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncPackage" .-> Caller
+```
 
 **Parameters:**
 
@@ -748,6 +823,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public boolean sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["sendStatusToApi()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>boolean" .-> Caller
+```
+
 **Parameters:**
 
 - **eventKey** (`UUID`)
@@ -779,6 +865,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `private List&lt;ItemStatusSyncDTO&gt; fetchItemStatusTransitions(List&lt;ItemStatusTransitionProjection&gt; transitions)`
 
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["fetchItemStatusTransitions()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>List&lt;ItemStatusSyncDTO&gt;" .-> Caller
+```
+
 **Parameters:**
 
 - **transitions** (`List&lt;ItemStatusTransitionProjection&gt;`)
@@ -809,6 +906,17 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 > `private void markDataAsSynced(List&lt;ItemStatusTransitionProjection&gt; transitions, List&lt;MusteringSyncDTO&gt; musterings)`
+
+**Data Flow:**
+```mermaid
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["markDataAsSynced()"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
 
 **Parameters:**
 
