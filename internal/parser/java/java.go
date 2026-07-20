@@ -17,15 +17,18 @@ import (
 const maxGoroutines = 8
 
 func AnalyzeDirectory(rootDir string, outputDir string) {
+	err := os.MkdirAll(outputDir, os.ModePerm)
+	if err != nil {
+		log.Fatalf("Erro ao criar diretório de saída: %v", err)
+	}
 
 	var allClasses []ClassJava
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
 	sem := make(chan struct{}, maxGoroutines)
-
 	var filePaths []string
-	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -39,10 +42,10 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		log.Fatalf("Erro ao varrer diretórios: %v", err)
 	}
 
+	// ETAPA 1: Parseia todos os arquivos e popula allClasses
 	for _, path := range filePaths {
 		wg.Add(1)
 		sem <- struct{}{}
-
 		go func(p string) {
 			defer wg.Done()
 			defer func() { <-sem }()
@@ -51,10 +54,6 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 			classData := Analyze(p)
 
 			if classData.Name != "" {
-				outFileName := fmt.Sprintf("%s.md", classData.Name)
-				outFilePath := filepath.Join(outputDir, outFileName)
-				GenerateMarkdown(classData, outFilePath)
-
 				mu.Lock()
 				allClasses = append(allClasses, classData)
 				mu.Unlock()
@@ -62,14 +61,23 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		}(path)
 	}
 
-	wg.Wait()
+	wg.Wait() // Espera todas as classes serem processadas
+
+	// ETAPA 2: Agora que sabemos de TODAS as classes do projeto, geramos os Markdowns
+	for _, classData := range allClasses {
+		outFileName := fmt.Sprintf("%s.md", classData.Name)
+		outFilePath := filepath.Join(outputDir, outFileName)
+
+		// Passamos a lista completa allClasses para a função!
+		GenerateMarkdown(classData, allClasses, outFilePath)
+	}
 
 	if len(allClasses) > 0 {
 		globalOutPath := filepath.Join(outputDir, "00_Architecture_Overview.md")
 		GenerateGlobalArchitecture(allClasses, globalOutPath)
 	}
 
-	fmt.Println("🚀 Varredura concluída com sucesso!")
+	fmt.Println("🚀 Varredura e Geração concluídas com sucesso!")
 }
 
 func Analyze(filePath string) ClassJava {

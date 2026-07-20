@@ -3,8 +3,8 @@
 
 > **Package:** controllers
 > **Dependencies (Imports):**
-> - internal.testadata.java.models.UserModel
-> - internal.testadata.java.services.UsuarioService
+> - [internal.testadata.java.models.UserModel](UserModel.md) 🔗
+> - [internal.testadata.java.services.UsuarioService](UsuarioService.md) 🔗
 > **Automatically generated documentation** by the Geanky tool.
 
 ---

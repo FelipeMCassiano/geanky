@@ -100,7 +100,7 @@ const docTemplate = `
 
 {{if .Package.Name}}> **Package:** {{.Package.Name}}
 {{end}}{{if .Imports}}> **Dependencies (Imports):**
-{{range .Imports}}> - {{.}}
+{{range .Imports}}> - {{if isProjectClass .}}[{{.}}]({{extractClassName .}}.md) 🔗{{else}}{{.}}{{end}}
 {{end}}{{end}}> **Automatically generated documentation** by the Geanky tool.
 
 ---
@@ -252,12 +252,24 @@ flowchart LR
 {{bt}}{{bt}}{{bt}}
 `
 
-// GenerateMarkdown cria o arquivo .md de especificação técnica de cada classe individual
-func GenerateMarkdown(classData ClassJava, outputFilename string) {
+func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilename string) {
+
+	isProjectClass := func(importPath string) bool {
+		className := extractClassName(importPath)
+		for _, c := range allClasses {
+			if c.Name == className {
+				return true
+			}
+		}
+		return false
+	}
+
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
 		"bt":               func() string { return "`" },
 		"formatModifiers":  formatModifiers,
 		"formatExpression": formatExpression,
+		"extractClassName": extractClassName,
+		"isProjectClass":   isProjectClass,
 	}).Parse(docTemplate)
 
 	if err != nil {
@@ -276,7 +288,14 @@ func GenerateMarkdown(classData ClassJava, outputFilename string) {
 	}
 }
 
-// GenerateGlobalArchitecture gera o arquivo global agrupando as classes por pacote
+func extractClassName(importPath string) string {
+	parts := strings.Split(importPath, ".")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return importPath
+}
+
 func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	tmpl, err := template.New("globalDoc").Funcs(template.FuncMap{
 		"bt":                 func() string { return "`" },
