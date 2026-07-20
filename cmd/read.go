@@ -4,6 +4,9 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/FelipeMCassiano/geanky/internal/parser/java"
 	"github.com/spf13/cobra"
 )
@@ -22,6 +25,7 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
+
 	rootCmd.AddCommand(readCmd)
 
 	// Here you will define your flags and configuration settings.
@@ -33,12 +37,29 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// readCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	readCmd.Flags().StringP("config", "o", "", "sets the config file for geanky")
 }
 
 func read(cmd *cobra.Command, args []string) {
 	targetDir := args[0]
+	// outputFlag, err := cmd.Flags().GetString("output")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	os.Exit(1)
+	// }
+	// wd, err := os.Getwd()
 
-	outputDir := "./docs"
+	outDir := "./docs"
+	// if outputFlag != "" {
+	// 	outDir = filepath.Join(wd, outputFlag)
+	// }
 
-	java.AnalyzeDirectory(targetDir, outputDir)
+	err := os.MkdirAll(outDir, os.ModePerm)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	java.AnalyzeDirectory(targetDir, outDir)
 }

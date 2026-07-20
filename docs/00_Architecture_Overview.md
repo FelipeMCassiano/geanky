@@ -1,26 +1,28 @@
 
 # 🌍 Global Architecture Diagram
 
-> Visão geral de alto nível mostrando as dependências entre todas as classes analisadas.
+> Visão geral de alto nível mostrando as dependências entre todas as classes analisadas e seus respectivos pacotes.
 
 ```mermaid
 flowchart LR
     %% Styling
-    classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff,cursor:pointer;
-
-    %% Nodes Creation
+    classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    UsuarioController["UsuarioController"]:::classNode
-    click UsuarioController "UsuarioController.md" "Acessar UsuarioController"
+    %% Nodes Creation Grouped by Package
     
-    UsuarioService["UsuarioService"]:::classNode
-    click UsuarioService "UsuarioService.md" "Acessar UsuarioService"
+    subgraph Default Package
+        
+        UsuarioController["UsuarioController"]:::classNode
+        
+        UsuarioService["UsuarioService"]:::classNode
+        
+    end
     
 
     %% Relationships / Dependencies
     
     
-     
+    
     
     
     
@@ -30,14 +32,14 @@ flowchart LR
         
         
         
-            UsuarioController -->|"Calls:<br><b>registrarLog()<br>validarEAtivarUsuario()</b>"| UsuarioService
+            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario()<br>registrarLog()</b>"| UsuarioService
         
 
     
     
     
     
-     
+    
     
     
     

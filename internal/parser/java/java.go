@@ -17,10 +17,6 @@ import (
 const maxGoroutines = 8
 
 func AnalyzeDirectory(rootDir string, outputDir string) {
-	err := os.MkdirAll(outputDir, os.ModePerm)
-	if err != nil {
-		log.Fatalf("Erro ao criar diretório de saída: %v", err)
-	}
 
 	var allClasses []ClassJava
 	var mu sync.Mutex
@@ -29,7 +25,7 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 	sem := make(chan struct{}, maxGoroutines)
 
 	var filePaths []string
-	err = filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

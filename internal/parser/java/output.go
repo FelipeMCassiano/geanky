@@ -122,12 +122,11 @@ Expand the sections below to read the exact pseudo-code and business rules.
 {{end}}
 `
 
-// GenerateMarkdown compila o template com os dados mapeados da AST
 func GenerateMarkdown(classData ClassJava, outputFilename string) {
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
 		"formatExpression": formatExpression,
 		"formatModifiers":  formatModifiers,
-		"bt":               func() string { return "`" }, // Hack para imprimir backticks no template
+		"bt":               func() string { return "`" },
 	}).Parse(docTemplate)
 
 	if err != nil {
@@ -151,23 +150,26 @@ func GenerateMarkdown(classData ClassJava, outputFilename string) {
 const globalDocTemplate = `
 # 🌍 Global Architecture Diagram
 
-> Visão geral de alto nível mostrando as dependências entre todas as classes analisadas.
+> Visão geral de alto nível mostrando as dependências entre todas as classes analisadas e seus respectivos pacotes.
 
 {{bt}}{{bt}}{{bt}}mermaid
 flowchart LR
     %% Styling
-    classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff,cursor:pointer;
-
-    %% Nodes Creation
-    {{range .}}
-    {{.Name}}["{{.Name}}"]:::classNode
-    click {{.Name}} "{{.Name}}.md" "Acessar {{.Name}}"
+    classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    
+    %% Nodes Creation Grouped by Package
+    {{range $pkgName, $pkgClasses := .GroupedClasses}}
+    subgraph {{$pkgName}}
+        {{range $pkgClasses}}
+        {{.Name}}["{{.Name}}"]:::classNode
+        {{end}}
+    end
     {{end}}
 
     %% Relationships / Dependencies
-    {{range .}}
+    {{range .AllClasses}}
     {{$className := .Name}}
-    {{$callsMap := getDependencyCalls .}} {{/* CHAMA A NOSSA FUNCÃO GO! (Agora de forma segura) */}}
+    {{$callsMap := getDependencyCalls .}}
     
     {{range .Fields}}
     {{if not (or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double") (eq .TypeName "long") (eq .TypeName "float"))}}
@@ -202,7 +204,30 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	}
 	defer file.Close()
 
-	err = tmpl.Execute(file, classes)
+	groupedClasses := make(map[string][]ClassJava)
+	for _, c := range classes {
+		pkgName := "Default Package"
+
+		if c.Package.Name != "" {
+			if c.Package.Scope != "" {
+				pkgName = c.Package.Scope + "." + c.Package.Name
+			} else {
+				pkgName = c.Package.Name
+			}
+		}
+
+		groupedClasses[pkgName] = append(groupedClasses[pkgName], c)
+	}
+
+	templateData := struct {
+		AllClasses     []ClassJava
+		GroupedClasses map[string][]ClassJava
+	}{
+		AllClasses:     classes,
+		GroupedClasses: groupedClasses,
+	}
+
+	err = tmpl.Execute(file, templateData)
 	if err != nil {
 		log.Fatalf("Erro ao gerar documentação global: %v", err)
 	}
@@ -210,18 +235,14 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	fmt.Printf("🗺️ Diagrama de Arquitetura Global gerado em: %s\n", outputFilename)
 }
 
-// getDependencyCalls varre os métodos de uma classe e mapeia: NomeDaDependencia -> "metodo1(), metodo2()"
 func getDependencyCalls(c ClassJava) map[string]string {
-	// 1. Mapeia as variáveis da classe (ex: "service" -> "UsuarioService")
 	fieldsMap := make(map[string]string)
 	for _, f := range c.Fields {
 		fieldsMap[f.Declarator] = f.TypeName
 	}
 
-	// 2. Prepara um mapa para guardar os métodos únicos chamados por tipo
 	deps := make(map[string]map[string]bool)
 
-	// 3. Função recursiva para varrer expressões infinitamente
 	var traverse func(expr Expression)
 	traverse = func(expr Expression) {
 		if expr == nil {
@@ -242,18 +263,16 @@ func getDependencyCalls(c ClassJava) map[string]string {
 				}
 			}
 		case MethodInvocation:
-			// Verifica se o objeto dono do método é uma dependência nossa
 			targetObj := ""
 			if e.Accessed.Object != nil {
 				switch obj := e.Accessed.Object.(type) {
 				case Access:
-					targetObj = obj.Identifier.Name // Pega o "service" de "this.service"
+					targetObj = obj.Identifier.Name
 				case Identifier:
-					targetObj = obj.Name // Pega o "service" direto
+					targetObj = obj.Name
 				}
 			}
 
-			// Se o objeto for uma dependência mapeada, registra o método chamado!
 			if typeName, exists := fieldsMap[targetObj]; exists {
 				if deps[typeName] == nil {
 					deps[typeName] = make(map[string]bool)
@@ -261,7 +280,6 @@ func getDependencyCalls(c ClassJava) map[string]string {
 				deps[typeName][e.Accessed.Identifier.Name] = true
 			}
 
-			// Continua varrendo os argumentos do método
 			for _, arg := range e.Args {
 				traverse(arg)
 			}
@@ -270,7 +288,6 @@ func getDependencyCalls(c ClassJava) map[string]string {
 		}
 	}
 
-	// 4. Inicia a varredura em todos os métodos da classe
 	for _, m := range c.Methods {
 		for _, s := range m.Body.Statements {
 			for _, e := range s.Expressions {
@@ -279,14 +296,13 @@ func getDependencyCalls(c ClassJava) map[string]string {
 		}
 	}
 
-	// 5. Formata a saída (junta os métodos com vírgula)
 	result := make(map[string]string)
 	for typeName, methods := range deps {
 		var methodList []string
 		for m := range methods {
 			methodList = append(methodList, m+"()")
 		}
-		result[typeName] = strings.Join(methodList, "<br>") // <br> quebra a linha na seta do Mermaid!
+		result[typeName] = strings.Join(methodList, "<br>")
 	}
 	return result
 }
