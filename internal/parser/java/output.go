@@ -200,9 +200,24 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Data Flow:**
 {{bt}}{{bt}}{{bt}}mermaid
-{{generateMethodFlowchart .}}
+flowchart LR
+    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
+    Caller(("Caller"))
+    Method["{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}})"]:::methodNode
+
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>{{.ReturnType}}" .-> Caller
 {{bt}}{{bt}}{{bt}}
 
+**Step-by-Step Logic:**
+{{if not .Body.Statements}}> *Empty body.*
+{{else}}
+
+{{range .Body.Statements}}{{range .Expressions}}
+1. {{formatExpression .}}
+{{end}}{{end}}
+
+{{end}}
 **Parameters:**
 {{if not .Parameters}}> *None.*
 {{else}}{{range .Parameters}}
@@ -279,12 +294,12 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 	}
 
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
-		"bt":                      func() string { return "`" },
-		"formatModifiers":         formatModifiers,
-		"formatExpression":        formatExpression,
-		"extractClassName":        extractClassName,
-		"isProjectClass":          isProjectClass,
-		"generateMethodFlowchart": generateMethodFlowchart,
+		"bt":               func() string { return "`" },
+		"formatModifiers":  formatModifiers,
+		"formatExpression": formatExpression,
+		"extractClassName": extractClassName,
+		"isProjectClass":   isProjectClass,
+		// "generateMethodFlowchart": generateMethodFlowchart,
 	}).Parse(docTemplate)
 
 	if err != nil {

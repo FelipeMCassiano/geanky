@@ -320,16 +320,22 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["setDestination(String destination)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["setDestination(String destination)"]:::methodNode
-    M_ENTRY -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Set 'this.destination' to 'destination'
+
+
 
 **Parameters:**
 
@@ -354,18 +360,27 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["latestSync()"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["latestSync()"]:::methodNode
-    M_ENTRY --> N1{"If:<br>Invoke 'syncModelOpt.isEmpty' (no par..."}:::ifNode
-    N1 --> N2(("Return:<br>new SyncLastestResponse('',...")):::retNode
-    N2 --> N3(("Return:<br>new SyncLastestResponse(eve...")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncLastestResponse" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. If Invoke 'syncModelOpt.isEmpty' (no parameters)
+   then:
+      - Return the result of: new SyncLastestResponse("", ESyncStatus.NONE, 0L, "")
+
+1. Return the result of: new SyncLastestResponse(eventKey, syncControlModel.getStatus(),
+                timestamp, syncControlModel.getErrorMessage())
+
+
 
 **Parameters:**
 > *None.*
@@ -394,32 +409,53 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["syncToCloud(SyncRequest request)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["syncToCloud(SyncRequest request)"]:::methodNode
-    M_ENTRY --> N1>"Call:<br>log.info(...)"]:::callNode
-    N1 --> N2{"If:<br>Invoke 'ESyncStatus.UPLOAD_IN_PROGRES..."}:::ifNode
-    N2 --> N3>"Call:<br>sseSyncService.sendSyncStatusOnChange(..., ..., ...)"]:::callNode
-    N3 --> N4(("Return:<br>new SyncEvent(control.getEv...")):::retNode
-    N4 --> N5{"If:<br>Invoke 'request.getEventKey' (no para..."}:::ifNode
-    N5 --> N6>"Call:<br>UUID.fromString(...)"]:::callNode
-    N6 --> N7>"Call:<br>newControl.setEventKey(targetEventKey)"]:::callNode
-    N7 --> N8>"Call:<br>newControl.setStatus(...)"]:::callNode
-    N8 --> N9>"Call:<br>newControl.setLastSyncAt(lastSuccessfulSyncDate)"]:::callNode
-    N9 --> N10>"Call:<br>newControl.setErrorMessage(...)"]:::callNode
-    N10 --> N11{"If:<br>Invoke 'newControl.getCreatedAt' (no ..."}:::ifNode
-    N11 --> N12>"Call:<br>newControl.setCreatedAt(new java.util.Date())"]:::callNode
-    N12 --> N13>"Call:<br>syncControlRepository.saveAndFlush(newControl)"]:::callNode
-    N13 --> N14>"Call:<br>sseSyncService.sendSyncStatusOnChange(eventKey, ..., ...)"]:::callNode
-    N14 --> N15>"Call:<br>backgroundProcess(eventKey, request, token, syncTimestamp, ...)"]:::callNode
-    N15 --> N16>"Call:<br>log.info(..., eventKey)"]:::callNode
-    N16 --> N17(("Return:<br>new SyncEvent(eventKey.toSt...")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncEvent" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Invoke 'log.info' with parameters: '"sync iniciado"'
+
+1. If Invoke 'ESyncStatus.UPLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' OR Invoke 'ESyncStatus.DOWNLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' OR Invoke 'ESyncStatus.IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)'
+   then:
+      - Invoke 'sseSyncService.sendSyncStatusOnChange' with parameters: 'Invoke 'control.getEventKey' (no parameters)', '"Sync já em andamento..."', 'Invoke 'control.getStatus' (no parameters)'
+      - Return the result of: new SyncEvent(control.getEventKey().toString(), control.getStatus(), lastSync)
+
+1. If Invoke 'request.getEventKey' (no parameters) is not equal to null AND !request.getEventKey().trim().isEmpty()
+   then:
+      - Set 'targetEventKey' to 'Invoke 'UUID.fromString' with parameters: 'Invoke 'request.getEventKey' (no parameters)''
+
+1. Invoke 'newControl.setEventKey' with parameters: 'targetEventKey'
+
+1. Invoke 'newControl.setStatus' with parameters: 'ESyncStatus.UPLOAD_IN_PROGRESS'
+
+1. Invoke 'newControl.setLastSyncAt' with parameters: 'lastSuccessfulSyncDate'
+
+1. Invoke 'newControl.setErrorMessage' with parameters: '""'
+
+1. If Invoke 'newControl.getCreatedAt' (no parameters) is equal to null
+   then:
+      - Invoke 'newControl.setCreatedAt' with parameters: 'new java.util.Date()'
+
+1. Invoke 'syncControlRepository.saveAndFlush' with parameters: 'newControl'
+
+1. Invoke 'sseSyncService.sendSyncStatusOnChange' with parameters: 'eventKey', '""', 'ESyncStatus.IN_PROGRESS'
+
+1. Invoke 'backgroundProcess' with parameters: 'eventKey', 'request', 'token', 'syncTimestamp', 'Invoke 'request.getLocationId' (no parameters)'
+
+1. Invoke 'log.info' with parameters: '"[SYNC] Retornando eventKey {} para o frontend conectar no SSE..."', 'eventKey'
+
+1. Return the result of: new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRESS, syncTimestamp)
+
+
 
 **Parameters:**
 
@@ -475,17 +511,22 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["authorizeSync()"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["authorizeSync()"]:::methodNode
-    M_ENTRY --> N1>"Call:<br>headers.setContentType(...)"]:::callNode
-    N1 -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>String" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Invoke 'headers.setContentType' with parameters: 'MediaType.APPLICATION_JSON'
+
+
 
 **Parameters:**
 > *None.*
@@ -509,14 +550,74 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)"]:::methodNode
-    M_ENTRY --> N1>"Call:<br>exceptionally(ex -> {
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
+```
+
+**Step-by-Step Logic:**
+
+
+
+1. Invoke 'Invoke 'Invoke 'Invoke 'CompletableFuture.runAsync' with parameters: '() -> {
+                    try {
+                        processCloudSyncInBackground(eventKey, token, syncTimestamp, locationId);
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
+                    }
+                }', 'parallelSyncExecutor'.thenRunAsync' with parameters: '() -> {
+                    try {
+                        SyncControlModel control = getControlWithRetry(eventKey);
+                        control.setStatus(ESyncStatus.DOWNLOAD_IN_PROGRESS);
+                        syncControlRepository.save(control);
+                        sseSyncService.sendSyncStatusOnChange(eventKey,
+                                "Upload concluído. Verificando novidades na Nuvem...",
+                                ESyncStatus.DOWNLOAD_IN_PROGRESS);
+
+                        log.info("[SYNC-BACKGROUND] Iniciando Fase 2: DOWNLOAD. Verificando nuvem...");
+                        PingSyncResponse ping = httpClient.pingCloud(token, this.destination, syncTimestamp);
+
+                        if (ping != null && ping.isDownloadReady()) {
+                            log.info("[SYNC-BACKGROUND] Nuvem sinalizou que há dados. Baixando...");
+                            request.setTimestamp(ping.getTimestampToDownload());
+                            processDownload(eventKey, request, token, locationId);
+                        } else {
+                            log.info("[SYNC-BACKGROUND] Nenhuma novidade na nuvem. O barco já está atualizado!");
+                        }
+
+                    } catch (Exception e) {
+                        throw new CompletionException("Falha na etapa de Download: " + e.getMessage(), e);
+                    }
+                }', 'parallelSyncExecutor'.thenRun' with parameters: '() -> {
+                    SyncControlModel control = getControlWithRetry(eventKey);
+
+                    Instant now = Instant.now();
+                    control.setStatus(ESyncStatus.SUCCESS_PENDING);
+                    control.setErrorMessage("");
+                    control.setLastSyncAt(now);
+                    control = syncControlRepository.saveAndFlush(control);
+                    sseSyncService.sendSyncStatusOnChange(eventKey, "", ESyncStatus.SUCCESS);
+
+                    boolean sendApiSuccess = sendStatusToApi(eventKey, ESyncStatus.SUCCESS, "", token,
+                            now.toEpochMilli(),
+                            locationId);
+                    boolean sendMachineSuccess = machineClient.sendSuccessSync(
+                            this.destination == null ? cloudUrl : this.destination,
+                            eventKey.toString(),
+                            now.toEpochMilli());
+                    if (sendApiSuccess && sendMachineSuccess) {
+                        control.setStatus(ESyncStatus.SUCCESS);
+                        syncControlRepository.save(control);
+                    } else {
+                        log.error(
+                                "Error ao avisar sucesso para api ou machine, na proxima iteracao do machine havera outra tentativa");
+                    }
+
+                }'.exceptionally' with parameters: 'ex -> {
                     Throwable rootCause = ex.getCause() != null ? ex.getCause() : ex;
                     log.error("[SYNC-BACKGROUND] Erro durante a sincronização: {}", rootCause.getMessage(), rootCause);
 
@@ -543,10 +644,9 @@ flowchart TD
                         log.error("[SYNC-BACKGROUND] Falha crítica ao salvar status FAILED: {}", dbEx.getMessage());
                     }
                     return null;
-                })"]:::callNode
-    N1 -.-> END(("End"))
+                }'
 
-```
+
 
 **Parameters:**
 
@@ -660,16 +760,17 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)"]:::methodNode
-    M_ENTRY -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+> *Empty body.*
 
 **Parameters:**
 
@@ -695,16 +796,17 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["getControlWithRetry(UUID eventKey)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["getControlWithRetry(UUID eventKey)"]:::methodNode
-    M_ENTRY -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncControlModel" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+> *Empty body.*
 
 **Parameters:**
 
@@ -724,17 +826,22 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)"]:::methodNode
-    M_ENTRY --> N1>"Call:<br>log.info(..., eventKey)"]:::callNode
-    N1 -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Invoke 'log.info' with parameters: '"[SYNC-BACKGROUND] Iniciando processamento em background para o eventKey: {}"', 'eventKey'
+
+
 
 **Parameters:**
 
@@ -765,23 +872,36 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["saveMasterAndChunksToDatabase(List<byte[]> slices, String checksum)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["saveMasterAndChunksToDatabase(List<byte[]> slices, String checksum)"]:::methodNode
-    M_ENTRY --> N1>"Call:<br>master.setId(...)"]:::callNode
-    N1 --> N2>"Call:<br>master.setStatus(...)"]:::callNode
-    N2 --> N3>"Call:<br>master.setTotalChunks(...)"]:::callNode
-    N3 --> N4>"Call:<br>master.setProcessedChunks(...)"]:::callNode
-    N4 --> N5>"Call:<br>master.setChecksum(checksum)"]:::callNode
-    N5 --> N6>"Call:<br>master.setNextRetryAt(...)"]:::callNode
-    N6 --> N7>"Call:<br>master.setChunks(chunks)"]:::callNode
-    N7 --> N8(("Return:<br>Invoke 'masterRepository.sa...")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncPacketMaster" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Invoke 'master.setId' with parameters: 'Invoke 'UUID.randomUUID' (no parameters)'
+
+1. Invoke 'master.setStatus' with parameters: 'EPacketStatus.PENDING'
+
+1. Invoke 'master.setTotalChunks' with parameters: 'Invoke 'slices.size' (no parameters)'
+
+1. Invoke 'master.setProcessedChunks' with parameters: '0'
+
+1. Invoke 'master.setChecksum' with parameters: 'checksum'
+
+1. Invoke 'master.setNextRetryAt' with parameters: 'Invoke 'Instant.now' (no parameters)'
+
+1. Invoke 'master.setChunks' with parameters: 'chunks'
+
+1. Return the result of: Invoke 'masterRepository.save' with parameters: 'master'
+
+
 
 **Parameters:**
 
@@ -822,16 +942,17 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["cleanupOldUploadPackages()"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["cleanupOldUploadPackages()"]:::methodNode
-    M_ENTRY -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+> *Empty body.*
 
 **Parameters:**
 > *None.*
@@ -850,20 +971,36 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["buildProtobufPackage(List<ItemStatusSyncDTO> status, List<MusteringSyncDTO> mustering, List<ItemModificationStatusDTO> modifications)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["buildProtobufPackage(List<ItemStatusSyncDTO> status, List<MusteringSyncDTO> mustering, List<ItemModificationStatusDTO> modifications)"]:::methodNode
-    M_ENTRY --> N1>"Call:<br>pb.setTimestamp(...)"]:::callNode
-    N1 --> N2{"If:<br>status is not equal to null"}:::ifNode
-    N2 --> N3{"If:<br>mustering is not equal to null"}:::ifNode
-    N3 --> N4{"If:<br>modifications is not equal to null"}:::ifNode
-    N4 --> N5(("Return:<br>Invoke 'pb.build' (no param...")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>SyncPackage" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Invoke 'pb.setTimestamp' with parameters: 'Invoke 'Invoke 'Instant.now' (no parameters).toEpochMilli' (no parameters)'
+
+1. If status is not equal to null
+   then:
+      - (do nothing)
+
+1. If mustering is not equal to null
+   then:
+      - (do nothing)
+
+1. If modifications is not equal to null
+   then:
+      - (do nothing)
+
+1. Return the result of: Invoke 'pb.build' (no parameters)
+
+
 
 **Parameters:**
 
@@ -906,16 +1043,22 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)"]:::methodNode
-    M_ENTRY --> N1(("Return:<br>false")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>boolean" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Return the result of: false
+
+
 
 **Parameters:**
 
@@ -950,16 +1093,32 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["fetchItemStatusTransitions(List<ItemStatusTransitionProjection> transitions)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["fetchItemStatusTransitions(List<ItemStatusTransitionProjection> transitions)"]:::methodNode
-    M_ENTRY --> N1(("Return:<br>Invoke 'Invoke 'Invoke 'tra...")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>List<ItemStatusSyncDTO>" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Return the result of: Invoke 'Invoke 'Invoke 'transitions.stream' (no parameters).map' with parameters: 't -> {
+            ItemStatusSyncDTO dto = new ItemStatusSyncDTO();
+            dto.setEpc(t.getEpc());
+            dto.setStatus(t.getSituation());
+            dto.setReadingDate(t.getReadingDate());
+            dto.setAntennaNumber(t.getAntennaNumber());
+            dto.setPortalMac(t.getPortalMac());
+            dto.setInventoryId(t.getInventoryId());
+            dto.setItemId(t.getItemId());
+            return dto;
+        }'.collect' with parameters: 'Invoke 'Collectors.toList' (no parameters)'
+
+
 
 **Parameters:**
 
@@ -994,20 +1153,28 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["markDataAsSynced(List<ItemStatusTransitionProjection> transitions, List<MusteringSyncDTO> musterings)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["markDataAsSynced(List<ItemStatusTransitionProjection> transitions, List<MusteringSyncDTO> musterings)"]:::methodNode
-    M_ENTRY --> N1{"If:<br>!transitions.isEmpty()"}:::ifNode
-    N1 --> N2>"Call:<br>situationRepository.markAsSynced(situationIds)"]:::callNode
-    N2 --> N3{"If:<br>!musterings.isEmpty()"}:::ifNode
-    N3 --> N4>"Call:<br>inventoryRepository.markAsSyncedByNames(inventoryNames)"]:::callNode
-    N4 -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. If !transitions.isEmpty()
+   then:
+      - Invoke 'situationRepository.markAsSynced' with parameters: 'situationIds'
+
+1. If !musterings.isEmpty()
+   then:
+      - Invoke 'inventoryRepository.markAsSyncedByNames' with parameters: 'inventoryNames'
+
+
 
 **Parameters:**
 

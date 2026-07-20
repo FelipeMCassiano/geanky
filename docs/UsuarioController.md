@@ -97,19 +97,27 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["processarUsuario(UserModel userModel, String status)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["processarUsuario(UserModel userModel, String status)"]:::methodNode
-    M_ENTRY --> N1{"If:<br>Invoke 'this.service.validarEAtivarUs..."}:::ifNode
-    N1 --> N2>"Call:<br>service.registrarLog(...)"]:::callNode
-    N2 --> N3(("Return:<br>true")):::retNode
-    N3 --> N4(("Return:<br>false")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>boolean" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'Invoke 'userModel.getIdade' (no parameters)', 'status'
+   then:
+      - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
+      - Return the result of: true
+
+1. Return the result of: false
+
+
 
 **Parameters:**
 

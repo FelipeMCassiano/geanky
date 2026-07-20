@@ -97,16 +97,22 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["setNome(String nome)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["setNome(String nome)"]:::methodNode
-    M_ENTRY -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Set 'this.nome' to 'nome'
+
+
 
 **Parameters:**
 
@@ -131,16 +137,22 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["setIdade(int idade)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["setIdade(int idade)"]:::methodNode
-    M_ENTRY -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Set 'this.idade' to 'idade'
+
+
 
 **Parameters:**
 
@@ -165,16 +177,22 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["getIdade()"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["getIdade()"]:::methodNode
-    M_ENTRY --> N1(("Return:<br>this.idade")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>int" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Return the result of: this.idade
+
+
 
 **Parameters:**
 > *None.*
@@ -198,16 +216,22 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["getNome()"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["getNome()"]:::methodNode
-    M_ENTRY --> N1(("Return:<br>this.nome")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>String" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Return the result of: this.nome
+
+
 
 **Parameters:**
 > *None.*

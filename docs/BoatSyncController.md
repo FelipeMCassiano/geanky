@@ -165,16 +165,22 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["subscEmitter(UUID uuid)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["subscEmitter(UUID uuid)"]:::methodNode
-    M_ENTRY --> N1(("Return:<br>Invoke 'sseSyncService.subs...")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>Flux<ServerSentEvent<String>>" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Return the result of: Invoke 'sseSyncService.subscribe' with parameters: 'uuid'
+
+
 
 **Parameters:**
 
@@ -200,17 +206,24 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)"]:::methodNode
-    M_ENTRY --> N1{"If:<br>Invoke 'readings.size' (no parameters..."}:::ifNode
-    N1 --> N2(("Return:<br>Invoke 'ContentLengthRespon...")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>ResponseEntity<?>" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. If Invoke 'readings.size' (no parameters) is less than SyncService.MAX_ITEMS plus 1
+   then:
+      - Return the result of: Invoke 'ContentLengthResponseBuilder.createResponse' with parameters: 'readings', 'HttpStatus.OK', 'principal'
+
+
 
 **Parameters:**
 
@@ -242,16 +255,22 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["latestSync(Principal principal)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["latestSync(Principal principal)"]:::methodNode
-    M_ENTRY --> N1(("Return:<br>Invoke 'ContentLengthRespon...")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>ResponseEntity<?>" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Return the result of: Invoke 'ContentLengthResponseBuilder.ok' with parameters: 'response', 'principal'
+
+
 
 **Parameters:**
 
@@ -277,16 +296,17 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["triggerCloudSync(SyncRequest request, Principal principal)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["triggerCloudSync(SyncRequest request, Principal principal)"]:::methodNode
-    M_ENTRY -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>ResponseEntity<?>" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+> *Empty body.*
 
 **Parameters:**
 

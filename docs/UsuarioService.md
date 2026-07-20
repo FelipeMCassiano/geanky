@@ -93,20 +93,29 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["validarEAtivarUsuario(int idade, String status)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["validarEAtivarUsuario(int idade, String status)"]:::methodNode
-    M_ENTRY --> N1{"If:<br>idade is greater than or equal to 18 ..."}:::ifNode
-    N1 --> N2>"Call:<br>out.println(...)"]:::callNode
-    N2 --> N3(("Return:<br>true")):::retNode
-    N3 --> N4>"Call:<br>out.println(...)"]:::callNode
-    N4 --> N5(("Return:<br>false")):::retNode
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>boolean" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. If idade is greater than or equal to 18 AND status is equal to "ativo"
+   then:
+      - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'
+      - Return the result of: true
+
+1. Invoke 'System.out.println' with parameters: '"Falha na validacao"'
+
+1. Return the result of: false
+
+
 
 **Parameters:**
 
@@ -140,17 +149,24 @@ flowchart TD
 
 **Data Flow:**
 ```mermaid
-flowchart TD
+flowchart LR
     classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;
-    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
-    classDef retNode fill:#28a745,stroke:#fff,color:#fff;
+    Caller(("Caller"))
+    Method["registrarLog(String acao)"]:::methodNode
 
-    START(("Caller")) --> M_ENTRY["registrarLog(String acao)"]:::methodNode
-    M_ENTRY --> N1>"Call:<br>out.println(acao)"]:::callNode
-    N1 -.-> END(("End"))
-
+    Caller -- "Calls" --> Method
+    Method -. "Returns<br>void" .-> Caller
 ```
+
+**Step-by-Step Logic:**
+
+
+
+1. Set 'this.conexaoAtiva' to 'false'
+
+1. Invoke 'System.out.println' with parameters: 'acao'
+
+
 
 **Parameters:**
 
