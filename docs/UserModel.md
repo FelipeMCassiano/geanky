@@ -76,9 +76,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set &#39;this.nome&#39; to &#39;nome&#39;
+1. Set 'this.nome' to 'nome'
 
-1. Set &#39;this.idade&#39; to &#39;idade&#39;
+1. Set 'this.idade' to 'idade'
 
 
 
@@ -103,8 +103,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;setNome(String nome)&#34;]:::methodNode
-    M_ENTRY -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["setNome(String nome)"]:::methodNode
+    M_ENTRY -.-> END(("End"))
 
 ```
 
@@ -117,7 +117,7 @@ flowchart TD
 
 
 
-1. Set &#39;this.nome&#39; to &#39;nome&#39;
+1. Set 'this.nome' to 'nome'
 
 
 
@@ -137,8 +137,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;setIdade(int idade)&#34;]:::methodNode
-    M_ENTRY -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["setIdade(int idade)"]:::methodNode
+    M_ENTRY -.-> END(("End"))
 
 ```
 
@@ -151,7 +151,7 @@ flowchart TD
 
 
 
-1. Set &#39;this.idade&#39; to &#39;idade&#39;
+1. Set 'this.idade' to 'idade'
 
 
 
@@ -171,8 +171,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;getIdade()&#34;]:::methodNode
-    M_ENTRY --&gt; N1((&#34;Return:&lt;br&gt;this.idade&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["getIdade()"]:::methodNode
+    M_ENTRY --> N1(("Return:<br>this.idade")):::retNode
 
 ```
 
@@ -204,8 +204,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;getNome()&#34;]:::methodNode
-    M_ENTRY --&gt; N1((&#34;Return:&lt;br&gt;this.nome&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["getNome()"]:::methodNode
+    M_ENTRY --> N1(("Return:<br>this.nome")):::retNode
 
 ```
 

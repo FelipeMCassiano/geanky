@@ -72,9 +72,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set &#39;this.nomeBanco&#39; to &#39;nomeBanco&#39;
+1. Set 'this.nomeBanco' to 'nomeBanco'
 
-1. Set &#39;this.conexaoAtiva&#39; to &#39;true&#39;
+1. Set 'this.conexaoAtiva' to 'true'
 
 
 
@@ -99,12 +99,12 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;validarEAtivarUsuario(int idade, String status)&#34;]:::methodNode
-    M_ENTRY --&gt; N1{&#34;If:&lt;br&gt;idade is greater than or equal to 18 ...&#34;}:::ifNode
-    N1 --&gt; N2&gt;&#34;Call:&lt;br&gt;out.println(...)&#34;]:::callNode
-    N2 --&gt; N3((&#34;Return:&lt;br&gt;true&#34;)):::retNode
-    N3 --&gt; N4&gt;&#34;Call:&lt;br&gt;out.println(...)&#34;]:::callNode
-    N4 --&gt; N5((&#34;Return:&lt;br&gt;false&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["validarEAtivarUsuario(int idade, String status)"]:::methodNode
+    M_ENTRY --> N1{"If:<br>idade is greater than or equal to 18 ..."}:::ifNode
+    N1 --> N2>"Call:<br>out.println(...)"]:::callNode
+    N2 --> N3(("Return:<br>true")):::retNode
+    N3 --> N4>"Call:<br>out.println(...)"]:::callNode
+    N4 --> N5(("Return:<br>false")):::retNode
 
 ```
 
@@ -119,12 +119,12 @@ flowchart TD
 
 
 
-1. If idade is greater than or equal to 18 AND status is equal to &#34;ativo&#34;
+1. If idade is greater than or equal to 18 AND status is equal to "ativo"
    then:
-      - Invoke &#39;System.out.println&#39; with parameters: &#39;&#34;Usuario validado com sucesso no banco &#34; plus this.nomeBanco&#39;
+      - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'
       - Return the result of: true
 
-1. Invoke &#39;System.out.println&#39; with parameters: &#39;&#34;Falha na validacao&#34;&#39;
+1. Invoke 'System.out.println' with parameters: '"Falha na validacao"'
 
 1. Return the result of: false
 
@@ -146,9 +146,9 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;registrarLog(String acao)&#34;]:::methodNode
-    M_ENTRY --&gt; N1&gt;&#34;Call:&lt;br&gt;out.println(acao)&#34;]:::callNode
-    N1 -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["registrarLog(String acao)"]:::methodNode
+    M_ENTRY --> N1>"Call:<br>out.println(acao)"]:::callNode
+    N1 -.-> END(("End"))
 
 ```
 
@@ -161,9 +161,9 @@ flowchart TD
 
 
 
-1. Set &#39;this.conexaoAtiva&#39; to &#39;false&#39;
+1. Set 'this.conexaoAtiva' to 'false'
 
-1. Invoke &#39;System.out.println&#39; with parameters: &#39;acao&#39;
+1. Invoke 'System.out.println' with parameters: 'acao'
 
 
 

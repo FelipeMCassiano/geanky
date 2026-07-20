@@ -50,7 +50,7 @@ flowchart LR
         
         
         
-            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)&lt;br&gt;registrarLog(...)</b>"| UsuarioService
+            UsuarioController -->|"Calls:<br><b>registrarLog(...)<br>validarEAtivarUsuario(..., status)</b>"| UsuarioService
         
 
     
@@ -208,7 +208,7 @@ flowchart LR
         
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(..., ..., ...)&lt;br&gt;sendSyncStatusOnChange(eventKey, ..., ...)</b>"| BoatSseSyncService
+            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(..., ..., ...)<br>sendSyncStatusOnChange(eventKey, ..., ...)</b>"| BoatSseSyncService
         
 
     

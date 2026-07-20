@@ -58,10 +58,10 @@ A high-level overview of the class, its internal state, and available methods.
 
 
 **Available Methods:**
-- **subscEmitter(UUID uuid)** ➞ returns `Flux&lt;ServerSentEvent&lt;String&gt;&gt;`
-- **portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)** ➞ returns `ResponseEntity&lt;?&gt;`
-- **latestSync(Principal principal)** ➞ returns `ResponseEntity&lt;?&gt;`
-- **triggerCloudSync(SyncRequest request, Principal principal)** ➞ returns `ResponseEntity&lt;?&gt;`
+- **subscEmitter(UUID uuid)** ➞ returns `Flux<ServerSentEvent<String>>`
+- **portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)** ➞ returns `ResponseEntity<?>`
+- **latestSync(Principal principal)** ➞ returns `ResponseEntity<?>`
+- **triggerCloudSync(SyncRequest request, Principal principal)** ➞ returns `ResponseEntity<?>`
 
 
 ---
@@ -137,15 +137,15 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set &#39;this.service&#39; to &#39;service&#39;
+1. Set 'this.service' to 'service'
 
-1. Set &#39;this.syncService&#39; to &#39;syncService&#39;
+1. Set 'this.syncService' to 'syncService'
 
-1. Set &#39;this.sseSyncService&#39; to &#39;sseSyncService&#39;
+1. Set 'this.sseSyncService' to 'sseSyncService'
 
-1. Set &#39;this.downloadService&#39; to &#39;downloadService&#39;
+1. Set 'this.downloadService' to 'downloadService'
 
-1. Set &#39;this.machineSync&#39; to &#39;machineSync&#39;
+1. Set 'this.machineSync' to 'machineSync'
 
 
 
@@ -157,11 +157,11 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### ⚙️ Methods
 
 <details>
-<summary><b>subscEmitter</b>(<i>UUID</i> uuid) ➞ `Flux&lt;ServerSentEvent&lt;String&gt;&gt;` (Click to expand)</summary>
+<summary><b>subscEmitter</b>(<i>UUID</i> uuid) ➞ `Flux<ServerSentEvent<String>>` (Click to expand)</summary>
 
 > **Signature:**
-> `@GetMapping(value = &#34;/events/{uuid}&#34;, produces = MediaType.TEXT_EVENT_STREAM_VALUE)`
-> `public Flux&lt;ServerSentEvent&lt;String&gt;&gt; subscEmitter(UUID uuid)`
+> `@GetMapping(value = "/events/{uuid}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)`
+> `public Flux<ServerSentEvent<String>> subscEmitter(UUID uuid)`
 
 **Data Flow:**
 ```mermaid
@@ -171,8 +171,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;subscEmitter(UUID uuid)&#34;]:::methodNode
-    M_ENTRY --&gt; N1((&#34;Return:&lt;br&gt;Invoke &#39;sseSyncService.subs...&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["subscEmitter(UUID uuid)"]:::methodNode
+    M_ENTRY --> N1(("Return:<br>Invoke 'sseSyncService.subs...")):::retNode
 
 ```
 
@@ -185,18 +185,18 @@ flowchart TD
 
 
 
-1. Return the result of: Invoke &#39;sseSyncService.subscribe&#39; with parameters: &#39;uuid&#39;
+1. Return the result of: Invoke 'sseSyncService.subscribe' with parameters: 'uuid'
 
 
 
 </details>
 
 <details>
-<summary><b>portalReadingsSyncPaginated</b>(<i>Long</i> timestamp, <i>Long</i> id, <i>Principal</i> principal) ➞ `ResponseEntity&lt;?&gt;` (Click to expand)</summary>
+<summary><b>portalReadingsSyncPaginated</b>(<i>Long</i> timestamp, <i>Long</i> id, <i>Principal</i> principal) ➞ `ResponseEntity<?>` (Click to expand)</summary>
 
 > **Signature:**
-> `@GetMapping(&#34;/portal-readings&#34;)`
-> `public ResponseEntity&lt;?&gt; portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)`
+> `@GetMapping("/portal-readings")`
+> `public ResponseEntity<?> portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)`
 
 **Data Flow:**
 ```mermaid
@@ -206,9 +206,9 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)&#34;]:::methodNode
-    M_ENTRY --&gt; N1{&#34;If:&lt;br&gt;Invoke &#39;readings.size&#39; (no parameters...&#34;}:::ifNode
-    N1 --&gt; N2((&#34;Return:&lt;br&gt;Invoke &#39;ContentLengthRespon...&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)"]:::methodNode
+    M_ENTRY --> N1{"If:<br>Invoke 'readings.size' (no parameters..."}:::ifNode
+    N1 --> N2(("Return:<br>Invoke 'ContentLengthRespon...")):::retNode
 
 ```
 
@@ -225,20 +225,20 @@ flowchart TD
 
 
 
-1. If Invoke &#39;readings.size&#39; (no parameters) is less than SyncService.MAX_ITEMS plus 1
+1. If Invoke 'readings.size' (no parameters) is less than SyncService.MAX_ITEMS plus 1
    then:
-      - Return the result of: Invoke &#39;ContentLengthResponseBuilder.createResponse&#39; with parameters: &#39;readings&#39;, &#39;HttpStatus.OK&#39;, &#39;principal&#39;
+      - Return the result of: Invoke 'ContentLengthResponseBuilder.createResponse' with parameters: 'readings', 'HttpStatus.OK', 'principal'
 
 
 
 </details>
 
 <details>
-<summary><b>latestSync</b>(<i>Principal</i> principal) ➞ `ResponseEntity&lt;?&gt;` (Click to expand)</summary>
+<summary><b>latestSync</b>(<i>Principal</i> principal) ➞ `ResponseEntity<?>` (Click to expand)</summary>
 
 > **Signature:**
-> `@GetMapping(&#34;/latest&#34;)`
-> `public ResponseEntity&lt;?&gt; latestSync(Principal principal)`
+> `@GetMapping("/latest")`
+> `public ResponseEntity<?> latestSync(Principal principal)`
 
 **Data Flow:**
 ```mermaid
@@ -248,8 +248,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;latestSync(Principal principal)&#34;]:::methodNode
-    M_ENTRY --&gt; N1((&#34;Return:&lt;br&gt;Invoke &#39;ContentLengthRespon...&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["latestSync(Principal principal)"]:::methodNode
+    M_ENTRY --> N1(("Return:<br>Invoke 'ContentLengthRespon...")):::retNode
 
 ```
 
@@ -262,18 +262,18 @@ flowchart TD
 
 
 
-1. Return the result of: Invoke &#39;ContentLengthResponseBuilder.ok&#39; with parameters: &#39;response&#39;, &#39;principal&#39;
+1. Return the result of: Invoke 'ContentLengthResponseBuilder.ok' with parameters: 'response', 'principal'
 
 
 
 </details>
 
 <details>
-<summary><b>triggerCloudSync</b>(<i>SyncRequest</i> request, <i>Principal</i> principal) ➞ `ResponseEntity&lt;?&gt;` (Click to expand)</summary>
+<summary><b>triggerCloudSync</b>(<i>SyncRequest</i> request, <i>Principal</i> principal) ➞ `ResponseEntity<?>` (Click to expand)</summary>
 
 > **Signature:**
-> `@PostMapping(&#34;/cloud&#34;)`
-> `public ResponseEntity&lt;?&gt; triggerCloudSync(SyncRequest request, Principal principal)`
+> `@PostMapping("/cloud")`
+> `public ResponseEntity<?> triggerCloudSync(SyncRequest request, Principal principal)`
 
 **Data Flow:**
 ```mermaid
@@ -283,8 +283,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;triggerCloudSync(SyncRequest request, Principal principal)&#34;]:::methodNode
-    M_ENTRY -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["triggerCloudSync(SyncRequest request, Principal principal)"]:::methodNode
+    M_ENTRY -.-> END(("End"))
 
 ```
 

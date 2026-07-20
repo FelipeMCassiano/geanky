@@ -76,9 +76,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set &#39;this.nomeSistema&#39; to &#39;nomeSistema&#39;
+1. Set 'this.nomeSistema' to 'nomeSistema'
 
-1. Set &#39;this.service&#39; to &#39;service&#39;
+1. Set 'this.service' to 'service'
 
 
 
@@ -103,11 +103,11 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;processarUsuario(UserModel userModel, String status)&#34;]:::methodNode
-    M_ENTRY --&gt; N1{&#34;If:&lt;br&gt;Invoke &#39;this.service.validarEAtivarUs...&#34;}:::ifNode
-    N1 --&gt; N2&gt;&#34;Call:&lt;br&gt;service.registrarLog(...)&#34;]:::callNode
-    N2 --&gt; N3((&#34;Return:&lt;br&gt;true&#34;)):::retNode
-    N3 --&gt; N4((&#34;Return:&lt;br&gt;false&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["processarUsuario(UserModel userModel, String status)"]:::methodNode
+    M_ENTRY --> N1{"If:<br>Invoke 'this.service.validarEAtivarUs..."}:::ifNode
+    N1 --> N2>"Call:<br>service.registrarLog(...)"]:::callNode
+    N2 --> N3(("Return:<br>true")):::retNode
+    N3 --> N4(("Return:<br>false")):::retNode
 
 ```
 
@@ -122,9 +122,9 @@ flowchart TD
 
 
 
-1. If Invoke &#39;this.service.validarEAtivarUsuario&#39; with parameters: &#39;Invoke &#39;userModel.getIdade&#39; (no parameters)&#39;, &#39;status&#39;
+1. If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'Invoke 'userModel.getIdade' (no parameters)', 'status'
    then:
-      - Invoke &#39;this.service.registrarLog&#39; with parameters: &#39;&#34;Processo concluido no sistema &#34; plus this.nomeSistema&#39;
+      - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
       - Return the result of: true
 
 1. Return the result of: false

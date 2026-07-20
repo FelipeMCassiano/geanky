@@ -112,10 +112,10 @@ A high-level overview of the class, its internal state, and available methods.
 - `private final ` **restTemplate** (`RestTemplate`)
 
 
-- `@Value(&#34;${cloud.api.sync.url:http://cloud:8889/api/v2/sync}&#34;)` `private ` **cloudUrl** (`String`)
+- `@Value("${cloud.api.sync.url:http://cloud:8889/api/v2/sync}")` `private ` **cloudUrl** (`String`)
 
 
-- `@Value(&#34;${cloud.api.auth.url:http://cloud:8889/api/v2/auth}&#34;)` `private ` **authUrl** (`String`)
+- `@Value("${cloud.api.auth.url:http://cloud:8889/api/v2/auth}")` `private ` **authUrl** (`String`)
 
 
 - `private ` **destination** (`String`)
@@ -130,12 +130,12 @@ A high-level overview of the class, its internal state, and available methods.
 - **processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)** ➞ returns `void`
 - **getControlWithRetry(UUID eventKey)** ➞ returns `SyncControlModel`
 - **processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)** ➞ returns `void`
-- **saveMasterAndChunksToDatabase(List&lt;byte[]&gt; slices, String checksum)** ➞ returns `SyncPacketMaster`
+- **saveMasterAndChunksToDatabase(List<byte[]> slices, String checksum)** ➞ returns `SyncPacketMaster`
 - **cleanupOldUploadPackages()** ➞ returns `void`
-- **buildProtobufPackage(List&lt;ItemStatusSyncDTO&gt; status, List&lt;MusteringSyncDTO&gt; mustering, List&lt;ItemModificationStatusDTO&gt; modifications)** ➞ returns `SyncPackage`
+- **buildProtobufPackage(List<ItemStatusSyncDTO> status, List<MusteringSyncDTO> mustering, List<ItemModificationStatusDTO> modifications)** ➞ returns `SyncPackage`
 - **sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)** ➞ returns `boolean`
-- **fetchItemStatusTransitions(List&lt;ItemStatusTransitionProjection&gt; transitions)** ➞ returns `List&lt;ItemStatusSyncDTO&gt;`
-- **markDataAsSynced(List&lt;ItemStatusTransitionProjection&gt; transitions, List&lt;MusteringSyncDTO&gt; musterings)** ➞ returns `void`
+- **fetchItemStatusTransitions(List<ItemStatusTransitionProjection> transitions)** ➞ returns `List<ItemStatusSyncDTO>`
+- **markDataAsSynced(List<ItemStatusTransitionProjection> transitions, List<MusteringSyncDTO> musterings)** ➞ returns `void`
 
 
 ---
@@ -275,33 +275,33 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set &#39;this.situationRepository&#39; to &#39;situationRepository&#39;
+1. Set 'this.situationRepository' to 'situationRepository'
 
-1. Set &#39;this.inventoryRepository&#39; to &#39;inventoryRepository&#39;
+1. Set 'this.inventoryRepository' to 'inventoryRepository'
 
-1. Set &#39;this.musteringBuilderService&#39; to &#39;musteringBuilderService&#39;
+1. Set 'this.musteringBuilderService' to 'musteringBuilderService'
 
-1. Set &#39;this.httpClient&#39; to &#39;httpClient&#39;
+1. Set 'this.httpClient' to 'httpClient'
 
-1. Set &#39;this.syncControlRepository&#39; to &#39;syncControlRepository&#39;
+1. Set 'this.syncControlRepository' to 'syncControlRepository'
 
-1. Set &#39;this.sseSyncService&#39; to &#39;sseSyncService&#39;
+1. Set 'this.sseSyncService' to 'sseSyncService'
 
-1. Set &#39;this.parallelSyncExecutor&#39; to &#39;parallelSyncExecutor&#39;
+1. Set 'this.parallelSyncExecutor' to 'parallelSyncExecutor'
 
-1. Set &#39;this.restTemplate&#39; to &#39;restTemplate&#39;
+1. Set 'this.restTemplate' to 'restTemplate'
 
-1. Set &#39;this.downloadService&#39; to &#39;downloadService&#39;
+1. Set 'this.downloadService' to 'downloadService'
 
-1. Set &#39;this.itemRepository&#39; to &#39;itemRepository&#39;
+1. Set 'this.itemRepository' to 'itemRepository'
 
-1. Set &#39;this.machineClient&#39; to &#39;machineClient&#39;
+1. Set 'this.machineClient' to 'machineClient'
 
-1. Set &#39;this.chunkerEngine&#39; to &#39;chunkerEngine&#39;
+1. Set 'this.chunkerEngine' to 'chunkerEngine'
 
-1. Set &#39;this.chunkRepository&#39; to &#39;syncPacketChunkRepository&#39;
+1. Set 'this.chunkRepository' to 'syncPacketChunkRepository'
 
-1. Set &#39;this.masterRepository&#39; to &#39;syncPacketMasterRepository&#39;
+1. Set 'this.masterRepository' to 'syncPacketMasterRepository'
 
 
 
@@ -326,8 +326,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;setDestination(String destination)&#34;]:::methodNode
-    M_ENTRY -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["setDestination(String destination)"]:::methodNode
+    M_ENTRY -.-> END(("End"))
 
 ```
 
@@ -340,7 +340,7 @@ flowchart TD
 
 
 
-1. Set &#39;this.destination&#39; to &#39;destination&#39;
+1. Set 'this.destination' to 'destination'
 
 
 
@@ -360,10 +360,10 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;latestSync()&#34;]:::methodNode
-    M_ENTRY --&gt; N1{&#34;If:&lt;br&gt;Invoke &#39;syncModelOpt.isEmpty&#39; (no par...&#34;}:::ifNode
-    N1 --&gt; N2((&#34;Return:&lt;br&gt;new SyncLastestResponse(&#39;&#39;,...&#34;)):::retNode
-    N2 --&gt; N3((&#34;Return:&lt;br&gt;new SyncLastestResponse(eve...&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["latestSync()"]:::methodNode
+    M_ENTRY --> N1{"If:<br>Invoke 'syncModelOpt.isEmpty' (no par..."}:::ifNode
+    N1 --> N2(("Return:<br>new SyncLastestResponse('',...")):::retNode
+    N2 --> N3(("Return:<br>new SyncLastestResponse(eve...")):::retNode
 
 ```
 
@@ -375,9 +375,9 @@ flowchart TD
 
 
 
-1. If Invoke &#39;syncModelOpt.isEmpty&#39; (no parameters)
+1. If Invoke 'syncModelOpt.isEmpty' (no parameters)
    then:
-      - Return the result of: new SyncLastestResponse(&#34;&#34;, ESyncStatus.NONE, 0L, &#34;&#34;)
+      - Return the result of: new SyncLastestResponse("", ESyncStatus.NONE, 0L, "")
 
 1. Return the result of: new SyncLastestResponse(eventKey, syncControlModel.getStatus(),
                 timestamp, syncControlModel.getErrorMessage())
@@ -400,24 +400,24 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;syncToCloud(SyncRequest request)&#34;]:::methodNode
-    M_ENTRY --&gt; N1&gt;&#34;Call:&lt;br&gt;log.info(...)&#34;]:::callNode
-    N1 --&gt; N2{&#34;If:&lt;br&gt;Invoke &#39;ESyncStatus.UPLOAD_IN_PROGRES...&#34;}:::ifNode
-    N2 --&gt; N3&gt;&#34;Call:&lt;br&gt;sseSyncService.sendSyncStatusOnChange(..., ..., ...)&#34;]:::callNode
-    N3 --&gt; N4((&#34;Return:&lt;br&gt;new SyncEvent(control.getEv...&#34;)):::retNode
-    N4 --&gt; N5{&#34;If:&lt;br&gt;Invoke &#39;request.getEventKey&#39; (no para...&#34;}:::ifNode
-    N5 --&gt; N6&gt;&#34;Call:&lt;br&gt;UUID.fromString(...)&#34;]:::callNode
-    N6 --&gt; N7&gt;&#34;Call:&lt;br&gt;newControl.setEventKey(targetEventKey)&#34;]:::callNode
-    N7 --&gt; N8&gt;&#34;Call:&lt;br&gt;newControl.setStatus(...)&#34;]:::callNode
-    N8 --&gt; N9&gt;&#34;Call:&lt;br&gt;newControl.setLastSyncAt(lastSuccessfulSyncDate)&#34;]:::callNode
-    N9 --&gt; N10&gt;&#34;Call:&lt;br&gt;newControl.setErrorMessage(...)&#34;]:::callNode
-    N10 --&gt; N11{&#34;If:&lt;br&gt;Invoke &#39;newControl.getCreatedAt&#39; (no ...&#34;}:::ifNode
-    N11 --&gt; N12&gt;&#34;Call:&lt;br&gt;newControl.setCreatedAt(new java.util.Date())&#34;]:::callNode
-    N12 --&gt; N13&gt;&#34;Call:&lt;br&gt;syncControlRepository.saveAndFlush(newControl)&#34;]:::callNode
-    N13 --&gt; N14&gt;&#34;Call:&lt;br&gt;sseSyncService.sendSyncStatusOnChange(eventKey, ..., ...)&#34;]:::callNode
-    N14 --&gt; N15&gt;&#34;Call:&lt;br&gt;backgroundProcess(eventKey, request, token, syncTimestamp, ...)&#34;]:::callNode
-    N15 --&gt; N16&gt;&#34;Call:&lt;br&gt;log.info(..., eventKey)&#34;]:::callNode
-    N16 --&gt; N17((&#34;Return:&lt;br&gt;new SyncEvent(eventKey.toSt...&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["syncToCloud(SyncRequest request)"]:::methodNode
+    M_ENTRY --> N1>"Call:<br>log.info(...)"]:::callNode
+    N1 --> N2{"If:<br>Invoke 'ESyncStatus.UPLOAD_IN_PROGRES..."}:::ifNode
+    N2 --> N3>"Call:<br>sseSyncService.sendSyncStatusOnChange(..., ..., ...)"]:::callNode
+    N3 --> N4(("Return:<br>new SyncEvent(control.getEv...")):::retNode
+    N4 --> N5{"If:<br>Invoke 'request.getEventKey' (no para..."}:::ifNode
+    N5 --> N6>"Call:<br>UUID.fromString(...)"]:::callNode
+    N6 --> N7>"Call:<br>newControl.setEventKey(targetEventKey)"]:::callNode
+    N7 --> N8>"Call:<br>newControl.setStatus(...)"]:::callNode
+    N8 --> N9>"Call:<br>newControl.setLastSyncAt(lastSuccessfulSyncDate)"]:::callNode
+    N9 --> N10>"Call:<br>newControl.setErrorMessage(...)"]:::callNode
+    N10 --> N11{"If:<br>Invoke 'newControl.getCreatedAt' (no ..."}:::ifNode
+    N11 --> N12>"Call:<br>newControl.setCreatedAt(new java.util.Date())"]:::callNode
+    N12 --> N13>"Call:<br>syncControlRepository.saveAndFlush(newControl)"]:::callNode
+    N13 --> N14>"Call:<br>sseSyncService.sendSyncStatusOnChange(eventKey, ..., ...)"]:::callNode
+    N14 --> N15>"Call:<br>backgroundProcess(eventKey, request, token, syncTimestamp, ...)"]:::callNode
+    N15 --> N16>"Call:<br>log.info(..., eventKey)"]:::callNode
+    N16 --> N17(("Return:<br>new SyncEvent(eventKey.toSt...")):::retNode
 
 ```
 
@@ -430,36 +430,36 @@ flowchart TD
 
 
 
-1. Invoke &#39;log.info&#39; with parameters: &#39;&#34;sync iniciado&#34;&#39;
+1. Invoke 'log.info' with parameters: '"sync iniciado"'
 
-1. If Invoke &#39;ESyncStatus.UPLOAD_IN_PROGRESS.equals&#39; with parameters: &#39;Invoke &#39;control.getStatus&#39; (no parameters)&#39; OR Invoke &#39;ESyncStatus.DOWNLOAD_IN_PROGRESS.equals&#39; with parameters: &#39;Invoke &#39;control.getStatus&#39; (no parameters)&#39; OR Invoke &#39;ESyncStatus.IN_PROGRESS.equals&#39; with parameters: &#39;Invoke &#39;control.getStatus&#39; (no parameters)&#39;
+1. If Invoke 'ESyncStatus.UPLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' OR Invoke 'ESyncStatus.DOWNLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' OR Invoke 'ESyncStatus.IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)'
    then:
-      - Invoke &#39;sseSyncService.sendSyncStatusOnChange&#39; with parameters: &#39;Invoke &#39;control.getEventKey&#39; (no parameters)&#39;, &#39;&#34;Sync já em andamento...&#34;&#39;, &#39;Invoke &#39;control.getStatus&#39; (no parameters)&#39;
+      - Invoke 'sseSyncService.sendSyncStatusOnChange' with parameters: 'Invoke 'control.getEventKey' (no parameters)', '"Sync já em andamento..."', 'Invoke 'control.getStatus' (no parameters)'
       - Return the result of: new SyncEvent(control.getEventKey().toString(), control.getStatus(), lastSync)
 
-1. If Invoke &#39;request.getEventKey&#39; (no parameters) is not equal to null AND !request.getEventKey().trim().isEmpty()
+1. If Invoke 'request.getEventKey' (no parameters) is not equal to null AND !request.getEventKey().trim().isEmpty()
    then:
-      - Set &#39;targetEventKey&#39; to &#39;Invoke &#39;UUID.fromString&#39; with parameters: &#39;Invoke &#39;request.getEventKey&#39; (no parameters)&#39;&#39;
+      - Set 'targetEventKey' to 'Invoke 'UUID.fromString' with parameters: 'Invoke 'request.getEventKey' (no parameters)''
 
-1. Invoke &#39;newControl.setEventKey&#39; with parameters: &#39;targetEventKey&#39;
+1. Invoke 'newControl.setEventKey' with parameters: 'targetEventKey'
 
-1. Invoke &#39;newControl.setStatus&#39; with parameters: &#39;ESyncStatus.UPLOAD_IN_PROGRESS&#39;
+1. Invoke 'newControl.setStatus' with parameters: 'ESyncStatus.UPLOAD_IN_PROGRESS'
 
-1. Invoke &#39;newControl.setLastSyncAt&#39; with parameters: &#39;lastSuccessfulSyncDate&#39;
+1. Invoke 'newControl.setLastSyncAt' with parameters: 'lastSuccessfulSyncDate'
 
-1. Invoke &#39;newControl.setErrorMessage&#39; with parameters: &#39;&#34;&#34;&#39;
+1. Invoke 'newControl.setErrorMessage' with parameters: '""'
 
-1. If Invoke &#39;newControl.getCreatedAt&#39; (no parameters) is equal to null
+1. If Invoke 'newControl.getCreatedAt' (no parameters) is equal to null
    then:
-      - Invoke &#39;newControl.setCreatedAt&#39; with parameters: &#39;new java.util.Date()&#39;
+      - Invoke 'newControl.setCreatedAt' with parameters: 'new java.util.Date()'
 
-1. Invoke &#39;syncControlRepository.saveAndFlush&#39; with parameters: &#39;newControl&#39;
+1. Invoke 'syncControlRepository.saveAndFlush' with parameters: 'newControl'
 
-1. Invoke &#39;sseSyncService.sendSyncStatusOnChange&#39; with parameters: &#39;eventKey&#39;, &#39;&#34;&#34;&#39;, &#39;ESyncStatus.IN_PROGRESS&#39;
+1. Invoke 'sseSyncService.sendSyncStatusOnChange' with parameters: 'eventKey', '""', 'ESyncStatus.IN_PROGRESS'
 
-1. Invoke &#39;backgroundProcess&#39; with parameters: &#39;eventKey&#39;, &#39;request&#39;, &#39;token&#39;, &#39;syncTimestamp&#39;, &#39;Invoke &#39;request.getLocationId&#39; (no parameters)&#39;
+1. Invoke 'backgroundProcess' with parameters: 'eventKey', 'request', 'token', 'syncTimestamp', 'Invoke 'request.getLocationId' (no parameters)'
 
-1. Invoke &#39;log.info&#39; with parameters: &#39;&#34;[SYNC] Retornando eventKey {} para o frontend conectar no SSE...&#34;&#39;, &#39;eventKey&#39;
+1. Invoke 'log.info' with parameters: '"[SYNC] Retornando eventKey {} para o frontend conectar no SSE..."', 'eventKey'
 
 1. Return the result of: new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRESS, syncTimestamp)
 
@@ -481,9 +481,9 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;authorizeSync()&#34;]:::methodNode
-    M_ENTRY --&gt; N1&gt;&#34;Call:&lt;br&gt;headers.setContentType(...)&#34;]:::callNode
-    N1 -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["authorizeSync()"]:::methodNode
+    M_ENTRY --> N1>"Call:<br>headers.setContentType(...)"]:::callNode
+    N1 -.-> END(("End"))
 
 ```
 
@@ -495,7 +495,7 @@ flowchart TD
 
 
 
-1. Invoke &#39;headers.setContentType&#39; with parameters: &#39;MediaType.APPLICATION_JSON&#39;
+1. Invoke 'headers.setContentType' with parameters: 'MediaType.APPLICATION_JSON'
 
 
 
@@ -515,16 +515,16 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)&#34;]:::methodNode
-    M_ENTRY --&gt; N1&gt;&#34;Call:&lt;br&gt;exceptionally(ex -&gt; {
+    START(("Caller")) --> M_ENTRY["backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)"]:::methodNode
+    M_ENTRY --> N1>"Call:<br>exceptionally(ex -> {
                     Throwable rootCause = ex.getCause() != null ? ex.getCause() : ex;
-                    log.error(&#34;[SYNC-BACKGROUND] Erro durante a sincronização: {}&#34;, rootCause.getMessage(), rootCause);
+                    log.error("[SYNC-BACKGROUND] Erro durante a sincronização: {}", rootCause.getMessage(), rootCause);
 
                     try {
                         SyncControlModel control = getControlWithRetry(eventKey);
                         control.setStatus(ESyncStatus.FAILED_PENDING);
-                        String errorMsg = rootCause.getMessage() != null ? rootCause.getMessage() : &#34;Erro desconhecido&#34;;
-                        control.setErrorMessage(errorMsg.length() &gt; 1000 ? errorMsg.substring(0, 1000) : errorMsg);
+                        String errorMsg = rootCause.getMessage() != null ? rootCause.getMessage() : "Erro desconhecido";
+                        control.setErrorMessage(errorMsg.length() > 1000 ? errorMsg.substring(0, 1000) : errorMsg);
                         control = syncControlRepository.saveAndFlush(control);
                         sseSyncService.sendSyncStatusOnChange(eventKey, rootCause.getMessage(), ESyncStatus.FAILED);
                         boolean sendApiStatusSuccessfully = sendStatusToApi(eventKey, ESyncStatus.FAILED,
@@ -536,15 +536,15 @@ flowchart TD
                             syncControlRepository.save(control);
                         } else {
                             log.error(
-                                    &#34;Error ao avisar falha para api, na proxima iteracao do machine havera outra tentativa&#34;);
+                                    "Error ao avisar falha para api, na proxima iteracao do machine havera outra tentativa");
                         }
 
                     } catch (Exception dbEx) {
-                        log.error(&#34;[SYNC-BACKGROUND] Falha crítica ao salvar status FAILED: {}&#34;, dbEx.getMessage());
+                        log.error("[SYNC-BACKGROUND] Falha crítica ao salvar status FAILED: {}", dbEx.getMessage());
                     }
                     return null;
-                })&#34;]:::callNode
-    N1 -.-&gt; END((&#34;End&#34;))
+                })"]:::callNode
+    N1 -.-> END(("End"))
 
 ```
 
@@ -565,69 +565,69 @@ flowchart TD
 
 
 
-1. Invoke &#39;Invoke &#39;Invoke &#39;Invoke &#39;CompletableFuture.runAsync&#39; with parameters: &#39;() -&gt; {
+1. Invoke 'Invoke 'Invoke 'Invoke 'CompletableFuture.runAsync' with parameters: '() -> {
                     try {
                         processCloudSyncInBackground(eventKey, token, syncTimestamp, locationId);
                     } catch (Exception e) {
                         throw new CompletionException(e);
                     }
-                }&#39;, &#39;parallelSyncExecutor&#39;.thenRunAsync&#39; with parameters: &#39;() -&gt; {
+                }', 'parallelSyncExecutor'.thenRunAsync' with parameters: '() -> {
                     try {
                         SyncControlModel control = getControlWithRetry(eventKey);
                         control.setStatus(ESyncStatus.DOWNLOAD_IN_PROGRESS);
                         syncControlRepository.save(control);
                         sseSyncService.sendSyncStatusOnChange(eventKey,
-                                &#34;Upload concluído. Verificando novidades na Nuvem...&#34;,
+                                "Upload concluído. Verificando novidades na Nuvem...",
                                 ESyncStatus.DOWNLOAD_IN_PROGRESS);
 
-                        log.info(&#34;[SYNC-BACKGROUND] Iniciando Fase 2: DOWNLOAD. Verificando nuvem...&#34;);
+                        log.info("[SYNC-BACKGROUND] Iniciando Fase 2: DOWNLOAD. Verificando nuvem...");
                         PingSyncResponse ping = httpClient.pingCloud(token, this.destination, syncTimestamp);
 
-                        if (ping != null &amp;&amp; ping.isDownloadReady()) {
-                            log.info(&#34;[SYNC-BACKGROUND] Nuvem sinalizou que há dados. Baixando...&#34;);
+                        if (ping != null && ping.isDownloadReady()) {
+                            log.info("[SYNC-BACKGROUND] Nuvem sinalizou que há dados. Baixando...");
                             request.setTimestamp(ping.getTimestampToDownload());
                             processDownload(eventKey, request, token, locationId);
                         } else {
-                            log.info(&#34;[SYNC-BACKGROUND] Nenhuma novidade na nuvem. O barco já está atualizado!&#34;);
+                            log.info("[SYNC-BACKGROUND] Nenhuma novidade na nuvem. O barco já está atualizado!");
                         }
 
                     } catch (Exception e) {
-                        throw new CompletionException(&#34;Falha na etapa de Download: &#34; &#43; e.getMessage(), e);
+                        throw new CompletionException("Falha na etapa de Download: " + e.getMessage(), e);
                     }
-                }&#39;, &#39;parallelSyncExecutor&#39;.thenRun&#39; with parameters: &#39;() -&gt; {
+                }', 'parallelSyncExecutor'.thenRun' with parameters: '() -> {
                     SyncControlModel control = getControlWithRetry(eventKey);
 
                     Instant now = Instant.now();
                     control.setStatus(ESyncStatus.SUCCESS_PENDING);
-                    control.setErrorMessage(&#34;&#34;);
+                    control.setErrorMessage("");
                     control.setLastSyncAt(now);
                     control = syncControlRepository.saveAndFlush(control);
-                    sseSyncService.sendSyncStatusOnChange(eventKey, &#34;&#34;, ESyncStatus.SUCCESS);
+                    sseSyncService.sendSyncStatusOnChange(eventKey, "", ESyncStatus.SUCCESS);
 
-                    boolean sendApiSuccess = sendStatusToApi(eventKey, ESyncStatus.SUCCESS, &#34;&#34;, token,
+                    boolean sendApiSuccess = sendStatusToApi(eventKey, ESyncStatus.SUCCESS, "", token,
                             now.toEpochMilli(),
                             locationId);
                     boolean sendMachineSuccess = machineClient.sendSuccessSync(
                             this.destination == null ? cloudUrl : this.destination,
                             eventKey.toString(),
                             now.toEpochMilli());
-                    if (sendApiSuccess &amp;&amp; sendMachineSuccess) {
+                    if (sendApiSuccess && sendMachineSuccess) {
                         control.setStatus(ESyncStatus.SUCCESS);
                         syncControlRepository.save(control);
                     } else {
                         log.error(
-                                &#34;Error ao avisar sucesso para api ou machine, na proxima iteracao do machine havera outra tentativa&#34;);
+                                "Error ao avisar sucesso para api ou machine, na proxima iteracao do machine havera outra tentativa");
                     }
 
-                }&#39;.exceptionally&#39; with parameters: &#39;ex -&gt; {
+                }'.exceptionally' with parameters: 'ex -> {
                     Throwable rootCause = ex.getCause() != null ? ex.getCause() : ex;
-                    log.error(&#34;[SYNC-BACKGROUND] Erro durante a sincronização: {}&#34;, rootCause.getMessage(), rootCause);
+                    log.error("[SYNC-BACKGROUND] Erro durante a sincronização: {}", rootCause.getMessage(), rootCause);
 
                     try {
                         SyncControlModel control = getControlWithRetry(eventKey);
                         control.setStatus(ESyncStatus.FAILED_PENDING);
-                        String errorMsg = rootCause.getMessage() != null ? rootCause.getMessage() : &#34;Erro desconhecido&#34;;
-                        control.setErrorMessage(errorMsg.length() &gt; 1000 ? errorMsg.substring(0, 1000) : errorMsg);
+                        String errorMsg = rootCause.getMessage() != null ? rootCause.getMessage() : "Erro desconhecido";
+                        control.setErrorMessage(errorMsg.length() > 1000 ? errorMsg.substring(0, 1000) : errorMsg);
                         control = syncControlRepository.saveAndFlush(control);
                         sseSyncService.sendSyncStatusOnChange(eventKey, rootCause.getMessage(), ESyncStatus.FAILED);
                         boolean sendApiStatusSuccessfully = sendStatusToApi(eventKey, ESyncStatus.FAILED,
@@ -639,14 +639,14 @@ flowchart TD
                             syncControlRepository.save(control);
                         } else {
                             log.error(
-                                    &#34;Error ao avisar falha para api, na proxima iteracao do machine havera outra tentativa&#34;);
+                                    "Error ao avisar falha para api, na proxima iteracao do machine havera outra tentativa");
                         }
 
                     } catch (Exception dbEx) {
-                        log.error(&#34;[SYNC-BACKGROUND] Falha crítica ao salvar status FAILED: {}&#34;, dbEx.getMessage());
+                        log.error("[SYNC-BACKGROUND] Falha crítica ao salvar status FAILED: {}", dbEx.getMessage());
                     }
                     return null;
-                }&#39;
+                }'
 
 
 
@@ -666,8 +666,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)&#34;]:::methodNode
-    M_ENTRY -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)"]:::methodNode
+    M_ENTRY -.-> END(("End"))
 
 ```
 
@@ -701,8 +701,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;getControlWithRetry(UUID eventKey)&#34;]:::methodNode
-    M_ENTRY -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["getControlWithRetry(UUID eventKey)"]:::methodNode
+    M_ENTRY -.-> END(("End"))
 
 ```
 
@@ -730,9 +730,9 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)&#34;]:::methodNode
-    M_ENTRY --&gt; N1&gt;&#34;Call:&lt;br&gt;log.info(..., eventKey)&#34;]:::callNode
-    N1 -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)"]:::methodNode
+    M_ENTRY --> N1>"Call:<br>log.info(..., eventKey)"]:::callNode
+    N1 -.-> END(("End"))
 
 ```
 
@@ -751,17 +751,17 @@ flowchart TD
 
 
 
-1. Invoke &#39;log.info&#39; with parameters: &#39;&#34;[SYNC-BACKGROUND] Iniciando processamento em background para o eventKey: {}&#34;&#39;, &#39;eventKey&#39;
+1. Invoke 'log.info' with parameters: '"[SYNC-BACKGROUND] Iniciando processamento em background para o eventKey: {}"', 'eventKey'
 
 
 
 </details>
 
 <details>
-<summary><b>saveMasterAndChunksToDatabase</b>(<i>List&lt;byte[]&gt;</i> slices, <i>String</i> checksum) ➞ `SyncPacketMaster` (Click to expand)</summary>
+<summary><b>saveMasterAndChunksToDatabase</b>(<i>List<byte[]></i> slices, <i>String</i> checksum) ➞ `SyncPacketMaster` (Click to expand)</summary>
 
 > **Signature:**
-> `private SyncPacketMaster saveMasterAndChunksToDatabase(List&lt;byte[]&gt; slices, String checksum)`
+> `private SyncPacketMaster saveMasterAndChunksToDatabase(List<byte[]> slices, String checksum)`
 
 **Data Flow:**
 ```mermaid
@@ -771,21 +771,21 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;saveMasterAndChunksToDatabase(List&lt;byte[]&gt; slices, String checksum)&#34;]:::methodNode
-    M_ENTRY --&gt; N1&gt;&#34;Call:&lt;br&gt;master.setId(...)&#34;]:::callNode
-    N1 --&gt; N2&gt;&#34;Call:&lt;br&gt;master.setStatus(...)&#34;]:::callNode
-    N2 --&gt; N3&gt;&#34;Call:&lt;br&gt;master.setTotalChunks(...)&#34;]:::callNode
-    N3 --&gt; N4&gt;&#34;Call:&lt;br&gt;master.setProcessedChunks(...)&#34;]:::callNode
-    N4 --&gt; N5&gt;&#34;Call:&lt;br&gt;master.setChecksum(checksum)&#34;]:::callNode
-    N5 --&gt; N6&gt;&#34;Call:&lt;br&gt;master.setNextRetryAt(...)&#34;]:::callNode
-    N6 --&gt; N7&gt;&#34;Call:&lt;br&gt;master.setChunks(chunks)&#34;]:::callNode
-    N7 --&gt; N8((&#34;Return:&lt;br&gt;Invoke &#39;masterRepository.sa...&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["saveMasterAndChunksToDatabase(List<byte[]> slices, String checksum)"]:::methodNode
+    M_ENTRY --> N1>"Call:<br>master.setId(...)"]:::callNode
+    N1 --> N2>"Call:<br>master.setStatus(...)"]:::callNode
+    N2 --> N3>"Call:<br>master.setTotalChunks(...)"]:::callNode
+    N3 --> N4>"Call:<br>master.setProcessedChunks(...)"]:::callNode
+    N4 --> N5>"Call:<br>master.setChecksum(checksum)"]:::callNode
+    N5 --> N6>"Call:<br>master.setNextRetryAt(...)"]:::callNode
+    N6 --> N7>"Call:<br>master.setChunks(chunks)"]:::callNode
+    N7 --> N8(("Return:<br>Invoke 'masterRepository.sa...")):::retNode
 
 ```
 
 **Parameters:**
 
-- **slices** (`List&lt;byte[]&gt;`)
+- **slices** (`List<byte[]>`)
 
 - **checksum** (`String`)
 
@@ -794,21 +794,21 @@ flowchart TD
 
 
 
-1. Invoke &#39;master.setId&#39; with parameters: &#39;Invoke &#39;UUID.randomUUID&#39; (no parameters)&#39;
+1. Invoke 'master.setId' with parameters: 'Invoke 'UUID.randomUUID' (no parameters)'
 
-1. Invoke &#39;master.setStatus&#39; with parameters: &#39;EPacketStatus.PENDING&#39;
+1. Invoke 'master.setStatus' with parameters: 'EPacketStatus.PENDING'
 
-1. Invoke &#39;master.setTotalChunks&#39; with parameters: &#39;Invoke &#39;slices.size&#39; (no parameters)&#39;
+1. Invoke 'master.setTotalChunks' with parameters: 'Invoke 'slices.size' (no parameters)'
 
-1. Invoke &#39;master.setProcessedChunks&#39; with parameters: &#39;0&#39;
+1. Invoke 'master.setProcessedChunks' with parameters: '0'
 
-1. Invoke &#39;master.setChecksum&#39; with parameters: &#39;checksum&#39;
+1. Invoke 'master.setChecksum' with parameters: 'checksum'
 
-1. Invoke &#39;master.setNextRetryAt&#39; with parameters: &#39;Invoke &#39;Instant.now&#39; (no parameters)&#39;
+1. Invoke 'master.setNextRetryAt' with parameters: 'Invoke 'Instant.now' (no parameters)'
 
-1. Invoke &#39;master.setChunks&#39; with parameters: &#39;chunks&#39;
+1. Invoke 'master.setChunks' with parameters: 'chunks'
 
-1. Return the result of: Invoke &#39;masterRepository.save&#39; with parameters: &#39;master&#39;
+1. Return the result of: Invoke 'masterRepository.save' with parameters: 'master'
 
 
 
@@ -828,8 +828,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;cleanupOldUploadPackages()&#34;]:::methodNode
-    M_ENTRY -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["cleanupOldUploadPackages()"]:::methodNode
+    M_ENTRY -.-> END(("End"))
 
 ```
 
@@ -843,10 +843,10 @@ flowchart TD
 </details>
 
 <details>
-<summary><b>buildProtobufPackage</b>(<i>List&lt;ItemStatusSyncDTO&gt;</i> status, <i>List&lt;MusteringSyncDTO&gt;</i> mustering, <i>List&lt;ItemModificationStatusDTO&gt;</i> modifications) ➞ `SyncPackage` (Click to expand)</summary>
+<summary><b>buildProtobufPackage</b>(<i>List<ItemStatusSyncDTO></i> status, <i>List<MusteringSyncDTO></i> mustering, <i>List<ItemModificationStatusDTO></i> modifications) ➞ `SyncPackage` (Click to expand)</summary>
 
 > **Signature:**
-> `private SyncPackage buildProtobufPackage(List&lt;ItemStatusSyncDTO&gt; status, List&lt;MusteringSyncDTO&gt; mustering, List&lt;ItemModificationStatusDTO&gt; modifications)`
+> `private SyncPackage buildProtobufPackage(List<ItemStatusSyncDTO> status, List<MusteringSyncDTO> mustering, List<ItemModificationStatusDTO> modifications)`
 
 **Data Flow:**
 ```mermaid
@@ -856,29 +856,29 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;buildProtobufPackage(List&lt;ItemStatusSyncDTO&gt; status, List&lt;MusteringSyncDTO&gt; mustering, List&lt;ItemModificationStatusDTO&gt; modifications)&#34;]:::methodNode
-    M_ENTRY --&gt; N1&gt;&#34;Call:&lt;br&gt;pb.setTimestamp(...)&#34;]:::callNode
-    N1 --&gt; N2{&#34;If:&lt;br&gt;status is not equal to null&#34;}:::ifNode
-    N2 --&gt; N3{&#34;If:&lt;br&gt;mustering is not equal to null&#34;}:::ifNode
-    N3 --&gt; N4{&#34;If:&lt;br&gt;modifications is not equal to null&#34;}:::ifNode
-    N4 --&gt; N5((&#34;Return:&lt;br&gt;Invoke &#39;pb.build&#39; (no param...&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["buildProtobufPackage(List<ItemStatusSyncDTO> status, List<MusteringSyncDTO> mustering, List<ItemModificationStatusDTO> modifications)"]:::methodNode
+    M_ENTRY --> N1>"Call:<br>pb.setTimestamp(...)"]:::callNode
+    N1 --> N2{"If:<br>status is not equal to null"}:::ifNode
+    N2 --> N3{"If:<br>mustering is not equal to null"}:::ifNode
+    N3 --> N4{"If:<br>modifications is not equal to null"}:::ifNode
+    N4 --> N5(("Return:<br>Invoke 'pb.build' (no param...")):::retNode
 
 ```
 
 **Parameters:**
 
-- **status** (`List&lt;ItemStatusSyncDTO&gt;`)
+- **status** (`List<ItemStatusSyncDTO>`)
 
-- **mustering** (`List&lt;MusteringSyncDTO&gt;`)
+- **mustering** (`List<MusteringSyncDTO>`)
 
-- **modifications** (`List&lt;ItemModificationStatusDTO&gt;`)
+- **modifications** (`List<ItemModificationStatusDTO>`)
 
 
 **Step-by-Step Logic:**
 
 
 
-1. Invoke &#39;pb.setTimestamp&#39; with parameters: &#39;Invoke &#39;Invoke &#39;Instant.now&#39; (no parameters).toEpochMilli&#39; (no parameters)&#39;
+1. Invoke 'pb.setTimestamp' with parameters: 'Invoke 'Invoke 'Instant.now' (no parameters).toEpochMilli' (no parameters)'
 
 1. If status is not equal to null
    then:
@@ -892,7 +892,7 @@ flowchart TD
    then:
       - (do nothing)
 
-1. Return the result of: Invoke &#39;pb.build&#39; (no parameters)
+1. Return the result of: Invoke 'pb.build' (no parameters)
 
 
 
@@ -912,8 +912,8 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)&#34;]:::methodNode
-    M_ENTRY --&gt; N1((&#34;Return:&lt;br&gt;false&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)"]:::methodNode
+    M_ENTRY --> N1(("Return:<br>false")):::retNode
 
 ```
 
@@ -943,10 +943,10 @@ flowchart TD
 </details>
 
 <details>
-<summary><b>fetchItemStatusTransitions</b>(<i>List&lt;ItemStatusTransitionProjection&gt;</i> transitions) ➞ `List&lt;ItemStatusSyncDTO&gt;` (Click to expand)</summary>
+<summary><b>fetchItemStatusTransitions</b>(<i>List<ItemStatusTransitionProjection></i> transitions) ➞ `List<ItemStatusSyncDTO>` (Click to expand)</summary>
 
 > **Signature:**
-> `private List&lt;ItemStatusSyncDTO&gt; fetchItemStatusTransitions(List&lt;ItemStatusTransitionProjection&gt; transitions)`
+> `private List<ItemStatusSyncDTO> fetchItemStatusTransitions(List<ItemStatusTransitionProjection> transitions)`
 
 **Data Flow:**
 ```mermaid
@@ -956,21 +956,21 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;fetchItemStatusTransitions(List&lt;ItemStatusTransitionProjection&gt; transitions)&#34;]:::methodNode
-    M_ENTRY --&gt; N1((&#34;Return:&lt;br&gt;Invoke &#39;Invoke &#39;Invoke &#39;tra...&#34;)):::retNode
+    START(("Caller")) --> M_ENTRY["fetchItemStatusTransitions(List<ItemStatusTransitionProjection> transitions)"]:::methodNode
+    M_ENTRY --> N1(("Return:<br>Invoke 'Invoke 'Invoke 'tra...")):::retNode
 
 ```
 
 **Parameters:**
 
-- **transitions** (`List&lt;ItemStatusTransitionProjection&gt;`)
+- **transitions** (`List<ItemStatusTransitionProjection>`)
 
 
 **Step-by-Step Logic:**
 
 
 
-1. Return the result of: Invoke &#39;Invoke &#39;Invoke &#39;transitions.stream&#39; (no parameters).map&#39; with parameters: &#39;t -&gt; {
+1. Return the result of: Invoke 'Invoke 'Invoke 'transitions.stream' (no parameters).map' with parameters: 't -> {
             ItemStatusSyncDTO dto = new ItemStatusSyncDTO();
             dto.setEpc(t.getEpc());
             dto.setStatus(t.getSituation());
@@ -980,17 +980,17 @@ flowchart TD
             dto.setInventoryId(t.getInventoryId());
             dto.setItemId(t.getItemId());
             return dto;
-        }&#39;.collect&#39; with parameters: &#39;Invoke &#39;Collectors.toList&#39; (no parameters)&#39;
+        }'.collect' with parameters: 'Invoke 'Collectors.toList' (no parameters)'
 
 
 
 </details>
 
 <details>
-<summary><b>markDataAsSynced</b>(<i>List&lt;ItemStatusTransitionProjection&gt;</i> transitions, <i>List&lt;MusteringSyncDTO&gt;</i> musterings) ➞ `void` (Click to expand)</summary>
+<summary><b>markDataAsSynced</b>(<i>List<ItemStatusTransitionProjection></i> transitions, <i>List<MusteringSyncDTO></i> musterings) ➞ `void` (Click to expand)</summary>
 
 > **Signature:**
-> `private void markDataAsSynced(List&lt;ItemStatusTransitionProjection&gt; transitions, List&lt;MusteringSyncDTO&gt; musterings)`
+> `private void markDataAsSynced(List<ItemStatusTransitionProjection> transitions, List<MusteringSyncDTO> musterings)`
 
 **Data Flow:**
 ```mermaid
@@ -1000,20 +1000,20 @@ flowchart TD
     classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;
     classDef retNode fill:#28a745,stroke:#fff,color:#fff;
 
-    START((&#34;Caller&#34;)) --&gt; M_ENTRY[&#34;markDataAsSynced(List&lt;ItemStatusTransitionProjection&gt; transitions, List&lt;MusteringSyncDTO&gt; musterings)&#34;]:::methodNode
-    M_ENTRY --&gt; N1{&#34;If:&lt;br&gt;!transitions.isEmpty()&#34;}:::ifNode
-    N1 --&gt; N2&gt;&#34;Call:&lt;br&gt;situationRepository.markAsSynced(situationIds)&#34;]:::callNode
-    N2 --&gt; N3{&#34;If:&lt;br&gt;!musterings.isEmpty()&#34;}:::ifNode
-    N3 --&gt; N4&gt;&#34;Call:&lt;br&gt;inventoryRepository.markAsSyncedByNames(inventoryNames)&#34;]:::callNode
-    N4 -.-&gt; END((&#34;End&#34;))
+    START(("Caller")) --> M_ENTRY["markDataAsSynced(List<ItemStatusTransitionProjection> transitions, List<MusteringSyncDTO> musterings)"]:::methodNode
+    M_ENTRY --> N1{"If:<br>!transitions.isEmpty()"}:::ifNode
+    N1 --> N2>"Call:<br>situationRepository.markAsSynced(situationIds)"]:::callNode
+    N2 --> N3{"If:<br>!musterings.isEmpty()"}:::ifNode
+    N3 --> N4>"Call:<br>inventoryRepository.markAsSyncedByNames(inventoryNames)"]:::callNode
+    N4 -.-> END(("End"))
 
 ```
 
 **Parameters:**
 
-- **transitions** (`List&lt;ItemStatusTransitionProjection&gt;`)
+- **transitions** (`List<ItemStatusTransitionProjection>`)
 
-- **musterings** (`List&lt;MusteringSyncDTO&gt;`)
+- **musterings** (`List<MusteringSyncDTO>`)
 
 
 **Step-by-Step Logic:**
@@ -1022,11 +1022,11 @@ flowchart TD
 
 1. If !transitions.isEmpty()
    then:
-      - Invoke &#39;situationRepository.markAsSynced&#39; with parameters: &#39;situationIds&#39;
+      - Invoke 'situationRepository.markAsSynced' with parameters: 'situationIds'
 
 1. If !musterings.isEmpty()
    then:
-      - Invoke &#39;inventoryRepository.markAsSyncedByNames&#39; with parameters: &#39;inventoryNames&#39;
+      - Invoke 'inventoryRepository.markAsSyncedByNames' with parameters: 'inventoryNames'
 
 
 

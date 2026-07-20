@@ -2,10 +2,10 @@ package java
 
 import (
 	"fmt"
-	"html/template"
 	"log"
 	"os"
 	"strings"
+	"text/template" // Mudou de html para text!
 )
 
 // extractClassName pega um import completo (ex: java.util.List) e retorna só a classe (List)
