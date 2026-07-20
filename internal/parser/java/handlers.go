@@ -21,6 +21,7 @@ type Variable struct {
 
 type ClassJava struct {
 	Package      Package      `json:"package"`
+	Imports      []string     `json:"imports"`
 	Modifiers    []Modifier   `json:"modifiers"`
 	Name         string       `json:"name"`
 	Constructors []Executable `json:"constructors"`
@@ -55,11 +56,19 @@ var handlers = map[string]CaptureHandler{
 	"field":       parseField,
 	"constructor": parseConstructor,
 	"package":     parsePackage,
+	"import":      parseImport,
+}
+
+func parseImport(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
+	importNode := node.NamedChild(0)
+	classData.Imports = append(classData.Imports, importNode.Utf8Text(content))
+	return nil
 }
 
 func parsePackage(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
-	scopeNode := node.ChildByFieldName("scope")
-	nameNode := node.ChildByFieldName("name")
+	pkgNode := node.NamedChild(0)
+	scopeNode := pkgNode.ChildByFieldName("scope")
+	nameNode := pkgNode.ChildByFieldName("name")
 
 	if nameNode == nil {
 		return fmt.Errorf("Name nao pode ser nulo")

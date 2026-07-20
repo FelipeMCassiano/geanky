@@ -1,6 +1,7 @@
 
 # 📄 Technical Specification: `UsuarioService`
 
+> **Package:** internal.testadata.java.services
 > **Automatically generated documentation** by the Geanky tool.
 
 ---

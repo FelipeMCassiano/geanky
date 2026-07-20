@@ -12,7 +12,9 @@ const docTemplate = `
 # 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
 
 {{if .Package.Name}}> **Package:** {{if .Package.Scope}}{{.Package.Scope}}.{{end}}{{.Package.Name}}
-{{end}}> **Automatically generated documentation** by the Geanky tool.
+{{end}}{{if .Imports}}> **Dependencies (Imports):**
+{{range .Imports}}> - {{.}}
+{{end}}{{end}}> **Automatically generated documentation** by the Geanky tool.
 
 ---
 

@@ -1,6 +1,10 @@
 
 # 📄 Technical Specification: `UsuarioController`
 
+> **Package:** internal.testadata.java.controllers
+> **Dependencies (Imports):**
+> - internal.testadata.java.models.UserModel
+> - internal.testadata.java.services.UsuarioService
 > **Automatically generated documentation** by the Geanky tool.
 
 ---
@@ -96,7 +100,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Parameters:**
 
-- **idade** (`int`)
+- **userModel** (`UserModel`)
 
 - **status** (`String`)
 
@@ -105,7 +109,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'idade', 'status'
+1. If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'Invoke 'userModel.getIdade' (no parameters)', 'status'
    then:
       - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
       - Return the result of: true
