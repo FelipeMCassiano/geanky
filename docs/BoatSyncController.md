@@ -25,7 +25,7 @@
 > - com.rfidbrasil.core.service.DownloadService
 > - com.rfidbrasil.core.service.SyncService
 > - com.rfidbrasil.core.service.sync.BoatSseSyncService
-> - com.rfidbrasil.core.service.sync.CloudSyncUploadService
+> - [com.rfidbrasil.core.service.sync.CloudSyncUploadService](CloudSyncUploadService.md) 🔗
 > - com.rfidbrasil.core.service.sync.MachineSync
 > - com.rfidbrasil.core.utils.response.ContentLengthResponseBuilder
 > - reactor.core.publisher.Flux
@@ -45,7 +45,7 @@ A high-level overview of the class, its internal state, and available methods.
 - `private final ` **service** (`SyncService`)
 
 
-- `private final ` **syncService** (`CloudSyncUploadService`)
+- `private final ` **syncService** ([CloudSyncUploadService](CloudSyncUploadService.md)) 🔗
 
 
 - `private final ` **sseSyncService** (`BoatSseSyncService`)

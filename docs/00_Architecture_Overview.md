@@ -32,6 +32,8 @@ flowchart LR
         
         BoatSyncController["BoatSyncController"]:::classNode
         
+        CloudSyncUploadService["CloudSyncUploadService"]:::classNode
+        
     end
     
 
@@ -48,7 +50,7 @@ flowchart LR
         
         
         
-            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(Invoke &#39;userModel.getIdade&#39; (no parameters), status)&lt;br&gt;registrarLog(&#39;Processo concluido no sistema &#39; plus this.nomeSistema)</b>"| UsuarioService
+            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)&lt;br&gt;registrarLog(...)</b>"| UsuarioService
         
 
     
@@ -134,6 +136,157 @@ flowchart LR
             BoatSyncController -->|"Depends on"| MachineSync
         
 
+    
+    
+    
+    
+    
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| MachineClient
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Calls:<br><b>markAsSynced(situationIds)</b>"| InventorySituationRepository
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Calls:<br><b>markAsSyncedByNames(inventoryNames)</b>"| InventoryRepository
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| SyncService
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| CloudSyncIntegrationClient
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Calls:<br><b>saveAndFlush(newControl)</b>"| SyncControlRepository
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(..., ..., ...)&lt;br&gt;sendSyncStatusOnChange(eventKey, ..., ...)</b>"| BoatSseSyncService
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| DownloadService
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| Executor
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| ItemRepository
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Calls:<br><b>save(master)</b>"| SyncPacketMasterRepository
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| SyncPacketChunkRepository
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| PacketChunkerEngine
+        
+
+    
+    
+    
+        
+        
+        
+        
+            CloudSyncUploadService -->|"Depends on"| RestTemplate
+        
+
+    
+    
+    
+    
+    
+    
     
     
     

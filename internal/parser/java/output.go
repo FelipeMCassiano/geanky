@@ -61,16 +61,16 @@ func getDependencyCalls(c ClassJava) map[string]string {
 					deps[typeName] = make(map[string]bool)
 				}
 
-				// Extrai os argumentos formatados para exibir no diagrama
 				var args []string
 				for _, arg := range e.Args {
-					argStr := formatExpression(arg)
-					// Troca aspas duplas por simples para não quebrar a label do Mermaid
-					argStr = strings.ReplaceAll(argStr, "\"", "'")
-					args = append(args, argStr)
+					switch a := arg.(type) {
+					case Identifier:
+						args = append(args, a.Name)
+					default:
+						args = append(args, "...")
+					}
 				}
 
-				// Monta a assinatura completa: metodo(arg1, arg2)
 				methodSignature := fmt.Sprintf("%s(%s)", e.Accessed.Identifier.Name, strings.Join(args, ", "))
 				deps[typeName][methodSignature] = true
 			}
