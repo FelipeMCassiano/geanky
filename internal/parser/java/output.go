@@ -93,15 +93,13 @@ func getDependencyCalls(c ClassJava) map[string]string {
 	return result
 }
 
-// formatModifiers transforma a slice de modificadores em string
-
 const docTemplate = `
-# 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
+# {{bt}}{{.Name}}{{bt}}
 
 {{if .Package.Name}}> **Package:** {{.Package.Name}}
 {{end}}{{if .Imports}}> **Dependencies (Imports):**
 {{range .Imports}}> - {{if isProjectClass .}}[{{.}}]({{extractClassName .}}.md) 🔗{{else}}{{.}}{{end}}
-{{end}}{{end}}> **Automatically generated documentation** by the Geanky tool.
+{{end}}{{end}}> 
 
 ---
 
@@ -212,7 +210,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 `
 
 const globalDocTemplate = `
-# 🌍 Global Architecture Diagram
+# 🌍 Architecture Diagram
 
 > Visão geral de alto nível mostrando as dependências entre todas as classes analisadas e seus respectivos pacotes.
 

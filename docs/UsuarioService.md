@@ -1,8 +1,8 @@
 
-# 📄 Technical Specification: `UsuarioService`
+# `UsuarioService`
 
 > **Package:** services
-> **Automatically generated documentation** by the Geanky tool.
+> 
 
 ---
 

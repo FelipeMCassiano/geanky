@@ -1,8 +1,8 @@
 
-# 📄 Technical Specification: `UserModel`
+# `UserModel`
 
 > **Package:** models
-> **Automatically generated documentation** by the Geanky tool.
+> 
 
 ---
 
