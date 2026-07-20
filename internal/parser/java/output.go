@@ -200,13 +200,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 **Data Flow:**
 {{bt}}{{bt}}{{bt}}mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["{{.Name}}()"]:::methodNode
-
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>{{.ReturnType}}" .-> Caller
+{{generateMethodFlowchart .}}
 {{bt}}{{bt}}{{bt}}
 
 **Parameters:**
@@ -285,11 +279,12 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 	}
 
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
-		"bt":               func() string { return "`" },
-		"formatModifiers":  formatModifiers,
-		"formatExpression": formatExpression,
-		"extractClassName": extractClassName,
-		"isProjectClass":   isProjectClass,
+		"bt":                      func() string { return "`" },
+		"formatModifiers":         formatModifiers,
+		"formatExpression":        formatExpression,
+		"extractClassName":        extractClassName,
+		"isProjectClass":          isProjectClass,
+		"generateMethodFlowchart": generateMethodFlowchart,
 	}).Parse(docTemplate)
 
 	if err != nil {
@@ -349,4 +344,122 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	}
 
 	fmt.Printf("🗺️ Diagrama de Arquitetura Global gerado em: %s\n", outputFilename)
+}
+
+// generateMethodFlowchart desenha um fluxograma detalhado da lógica interna do método
+func generateMethodFlowchart(m Executable) string {
+	var sb strings.Builder
+	// Configura o diagrama para Top-Down e adiciona estilos
+	sb.WriteString("flowchart TD\n")
+	sb.WriteString("    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;\n")
+	sb.WriteString("    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;\n")
+	sb.WriteString("    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;\n")
+	sb.WriteString("    classDef retNode fill:#28a745,stroke:#fff,color:#fff;\n\n")
+
+	// Formata os parâmetros para o nó de entrada
+	var params []string
+	for _, p := range m.Parameters {
+		params = append(params, p.TypeName+" "+p.Declarator)
+	}
+	methodSig := fmt.Sprintf("%s(%s)", m.Name, strings.Join(params, ", "))
+	sb.WriteString(fmt.Sprintf("    START((\"Caller\")) --> M_ENTRY[\"%s\"]:::methodNode\n", methodSig))
+
+	nodeCounter := 0
+	getNextID := func() string {
+		nodeCounter++
+		return fmt.Sprintf("N%d", nodeCounter)
+	}
+
+	// Função recursiva para varrer os statements e montar os nós
+	var traverse func(expr Expression, parentID string) string
+	traverse = func(expr Expression, parentID string) string {
+		if expr == nil {
+			return parentID
+		}
+		currentParent := parentID
+
+		switch e := expr.(type) {
+		case MethodInvocation:
+			id := getNextID()
+			targetObj := ""
+			if e.Accessed.Object != nil {
+				switch obj := e.Accessed.Object.(type) {
+				case Access:
+					targetObj = obj.Identifier.Name
+				case Identifier:
+					targetObj = obj.Name
+				}
+			}
+			var args []string
+			for _, arg := range e.Args {
+				switch a := arg.(type) {
+				case Identifier:
+					args = append(args, a.Name)
+				default:
+					args = append(args, "...")
+				}
+			}
+			callStr := fmt.Sprintf("%s(%s)", e.Accessed.Identifier.Name, strings.Join(args, ", "))
+			if targetObj != "" {
+				callStr = targetObj + "." + callStr
+			}
+			// Cria o nó de chamada
+			sb.WriteString(fmt.Sprintf("    %s --> %s>\"Call:<br>%s\"]:::callNode\n", currentParent, id, callStr))
+			return id
+
+		case IfNode:
+			id := getNextID()
+			condStr := formatExpression(e.Condition)
+			condStr = strings.ReplaceAll(condStr, "\"", "'")
+			if len(condStr) > 40 {
+				condStr = condStr[:37] + "..." // Trunca expressões gigantes
+			}
+			// Cria o nó condicional (Losango)
+			sb.WriteString(fmt.Sprintf("    %s --> %s{\"If:<br>%s\"}:::ifNode\n", currentParent, id, condStr))
+
+			consParent := id
+			for _, stmt := range e.Consequence.Statements {
+				for _, ex := range stmt.Expressions {
+					consParent = traverse(ex, consParent)
+				}
+			}
+			return consParent
+
+		case ReturnNode:
+			id := getNextID()
+			retStr := formatExpression(e.Value)
+			retStr = strings.ReplaceAll(retStr, "\"", "'")
+			if len(retStr) > 30 {
+				retStr = retStr[:27] + "..."
+			}
+			// Cria o nó de retorno
+			sb.WriteString(fmt.Sprintf("    %s --> %s((\"Return:<br>%s\")):::retNode\n", currentParent, id, retStr))
+			return id
+
+		case Assignment:
+			currentParent = traverse(e.Left, currentParent)
+			currentParent = traverse(e.Right, currentParent)
+			return currentParent
+		case Binary:
+			currentParent = traverse(e.Left, currentParent)
+			currentParent = traverse(e.Right, currentParent)
+			return currentParent
+		}
+		return currentParent
+	}
+
+	// Executa a varredura no corpo do método
+	lastNode := "M_ENTRY"
+	for _, stmt := range m.Body.Statements {
+		for _, expr := range stmt.Expressions {
+			lastNode = traverse(expr, lastNode)
+		}
+	}
+
+	// Se não finalizou com um Return explícito, adiciona um nó de Fim
+	if !strings.Contains(sb.String(), "Return:") {
+		sb.WriteString(fmt.Sprintf("    %s -.-> END((\"End\"))\n", lastNode))
+	}
+
+	return sb.String()
 }
