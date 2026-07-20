@@ -13,8 +13,8 @@ type Config struct {
 	Ignore Ignore
 }
 type Ignore struct {
-	Package bool
-	Files   []string
+	PackagePrefix string
+	Files         []string
 }
 
 func LoadConfig(configFile string) *Config {

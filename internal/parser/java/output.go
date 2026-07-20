@@ -11,7 +11,7 @@ import (
 const docTemplate = `
 # 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
 
-{{if .Package.Name}}> **Package:** {{if .Package.Scope}}{{.Package.Scope}}.{{end}}{{.Package.Name}}
+{{if .Package.Name}}> **Package:** {{.Package.Name}}
 {{end}}{{if .Imports}}> **Dependencies (Imports):**
 {{range .Imports}}> - {{.}}
 {{end}}{{end}}> **Automatically generated documentation** by the Geanky tool.
@@ -32,7 +32,7 @@ A high-level overview of the class, its internal state, and available methods.
 
 **Available Methods:**
 {{if not .Methods}}> *No methods defined.*
-{{else}}{{range .Methods}}- **{{.Name}}()** ➞ returns {{bt}}{{.ReturnType}}{{bt}}
+{{else}}{{range .Methods}}- **{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}})** ➞ returns {{bt}}{{.ReturnType}}{{bt}}
 {{end}}{{end}}
 
 ---
@@ -75,7 +75,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### 🛠️ Constructors
 {{range .Constructors}}
 <details>
-<summary><b>{{.Name}}</b> (Click to expand)</summary>
+<summary><b>{{.Name}}</b>({{range $i, $p := .Parameters}}{{if $i}}, {{end}}<i>{{$p.TypeName}}</i> {{$p.Declarator}}{{end}}) (Click to expand)</summary>
 
 **Parameters:**
 {{if not .Parameters}}> *None.*
@@ -100,9 +100,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### ⚙️ Methods
 {{range .Methods}}
 <details>
-<summary><b>{{.Name}}</b> ➞ {{bt}}{{.ReturnType}}{{bt}} (Click to expand)</summary>
+<summary><b>{{.Name}}</b>({{range $i, $p := .Parameters}}{{if $i}}, {{end}}<i>{{$p.TypeName}}</i> {{$p.Declarator}}{{end}}) ➞ {{bt}}{{.ReturnType}}{{bt}} (Click to expand)</summary>
 
-> **Signature:** {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}(){{bt}}
+> **Signature:** {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
 
 **Parameters:**
 {{if not .Parameters}}> *None.*

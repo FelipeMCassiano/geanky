@@ -1,7 +1,7 @@
 
 # 📄 Technical Specification: `UsuarioController`
 
-> **Package:** internal.testadata.java.controllers
+> **Package:** controllers
 > **Dependencies (Imports):**
 > - internal.testadata.java.models.UserModel
 > - internal.testadata.java.services.UsuarioService
@@ -22,7 +22,7 @@ A high-level overview of the class, its internal state, and available methods.
 
 
 **Available Methods:**
-- **processarUsuario()** ➞ returns `boolean`
+- **processarUsuario(UserModel userModel, String status)** ➞ returns `boolean`
 
 
 ---
@@ -67,7 +67,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### 🛠️ Constructors
 
 <details>
-<summary><b>UsuarioController</b> (Click to expand)</summary>
+<summary><b>UsuarioController</b>(<i>String</i> nomeSistema, <i>UsuarioService</i> service) (Click to expand)</summary>
 
 **Parameters:**
 
@@ -94,9 +94,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### ⚙️ Methods
 
 <details>
-<summary><b>processarUsuario</b> ➞ `boolean` (Click to expand)</summary>
+<summary><b>processarUsuario</b>(<i>UserModel</i> userModel, <i>String</i> status) ➞ `boolean` (Click to expand)</summary>
 
-> **Signature:** `public boolean processarUsuario()`
+> **Signature:** `public boolean processarUsuario(UserModel userModel, String status)`
 
 **Parameters:**
 

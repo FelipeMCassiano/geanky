@@ -1,7 +1,7 @@
 
 # 📄 Technical Specification: `UserModel`
 
-> **Package:** internal.testadata.java.models
+> **Package:** models
 > **Automatically generated documentation** by the Geanky tool.
 
 ---
@@ -19,8 +19,8 @@ A high-level overview of the class, its internal state, and available methods.
 
 
 **Available Methods:**
-- **setNome()** ➞ returns `void`
-- **setIdade()** ➞ returns `void`
+- **setNome(String nome)** ➞ returns `void`
+- **setIdade(int idade)** ➞ returns `void`
 - **getIdade()** ➞ returns `int`
 - **getNome()** ➞ returns `String`
 
@@ -76,7 +76,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### 🛠️ Constructors
 
 <details>
-<summary><b>UserModel</b> (Click to expand)</summary>
+<summary><b>UserModel</b>(<i>String</i> nome, <i>int</i> idade) (Click to expand)</summary>
 
 **Parameters:**
 
@@ -103,9 +103,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### ⚙️ Methods
 
 <details>
-<summary><b>setNome</b> ➞ `void` (Click to expand)</summary>
+<summary><b>setNome</b>(<i>String</i> nome) ➞ `void` (Click to expand)</summary>
 
-> **Signature:** `public void setNome()`
+> **Signature:** `public void setNome(String nome)`
 
 **Parameters:**
 
@@ -123,9 +123,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 </details>
 
 <details>
-<summary><b>setIdade</b> ➞ `void` (Click to expand)</summary>
+<summary><b>setIdade</b>(<i>int</i> idade) ➞ `void` (Click to expand)</summary>
 
-> **Signature:** `public void setIdade()`
+> **Signature:** `public void setIdade(int idade)`
 
 **Parameters:**
 
@@ -143,7 +143,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 </details>
 
 <details>
-<summary><b>getIdade</b> ➞ `int` (Click to expand)</summary>
+<summary><b>getIdade</b>() ➞ `int` (Click to expand)</summary>
 
 > **Signature:** `public int getIdade()`
 
@@ -162,7 +162,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 </details>
 
 <details>
-<summary><b>getNome</b> ➞ `String` (Click to expand)</summary>
+<summary><b>getNome</b>() ➞ `String` (Click to expand)</summary>
 
 > **Signature:** `public String getNome()`
 

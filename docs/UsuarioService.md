@@ -1,7 +1,7 @@
 
 # 📄 Technical Specification: `UsuarioService`
 
-> **Package:** internal.testadata.java.services
+> **Package:** services
 > **Automatically generated documentation** by the Geanky tool.
 
 ---
@@ -19,8 +19,8 @@ A high-level overview of the class, its internal state, and available methods.
 
 
 **Available Methods:**
-- **validarEAtivarUsuario()** ➞ returns `boolean`
-- **registrarLog()** ➞ returns `void`
+- **validarEAtivarUsuario(int idade, String status)** ➞ returns `boolean`
+- **registrarLog(String acao)** ➞ returns `void`
 
 
 ---
@@ -68,7 +68,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### 🛠️ Constructors
 
 <details>
-<summary><b>UsuarioService</b> (Click to expand)</summary>
+<summary><b>UsuarioService</b>(<i>String</i> nomeBanco) (Click to expand)</summary>
 
 **Parameters:**
 
@@ -93,9 +93,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 ### ⚙️ Methods
 
 <details>
-<summary><b>validarEAtivarUsuario</b> ➞ `boolean` (Click to expand)</summary>
+<summary><b>validarEAtivarUsuario</b>(<i>int</i> idade, <i>String</i> status) ➞ `boolean` (Click to expand)</summary>
 
-> **Signature:** `public boolean validarEAtivarUsuario()`
+> **Signature:** `public boolean validarEAtivarUsuario(int idade, String status)`
 
 **Parameters:**
 
@@ -122,9 +122,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 </details>
 
 <details>
-<summary><b>registrarLog</b> ➞ `void` (Click to expand)</summary>
+<summary><b>registrarLog</b>(<i>String</i> acao) ➞ `void` (Click to expand)</summary>
 
-> **Signature:** `public void registrarLog()`
+> **Signature:** `public void registrarLog(String acao)`
 
 **Parameters:**
 
