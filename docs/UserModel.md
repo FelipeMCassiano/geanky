@@ -1,8 +1,8 @@
 
-# `UserModel`
+# 📄 Technical Specification: `UserModel`
 
 > **Package:** models
-> 
+> **Automatically generated documentation** by the Geanky tool.
 
 ---
 
@@ -78,6 +78,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>UserModel</b>(<i>String</i> nome, <i>int</i> idade) (Click to expand)</summary>
 
+> **Signature:**
+> `public UserModel(String nome, int idade)`
+
 **Parameters:**
 
 - **nome** (`String`)
@@ -105,7 +108,8 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>setNome</b>(<i>String</i> nome) ➞ `void` (Click to expand)</summary>
 
-> **Signature:** `public void setNome(String nome)`
+> **Signature:**
+> `public void setNome(String nome)`
 
 **Parameters:**
 
@@ -125,7 +129,8 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>setIdade</b>(<i>int</i> idade) ➞ `void` (Click to expand)</summary>
 
-> **Signature:** `public void setIdade(int idade)`
+> **Signature:**
+> `public void setIdade(int idade)`
 
 **Parameters:**
 
@@ -145,7 +150,8 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>getIdade</b>() ➞ `int` (Click to expand)</summary>
 
-> **Signature:** `public int getIdade()`
+> **Signature:**
+> `public int getIdade()`
 
 **Parameters:**
 > *None.*
@@ -164,7 +170,8 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>getNome</b>() ➞ `String` (Click to expand)</summary>
 
-> **Signature:** `public String getNome()`
+> **Signature:**
+> `public String getNome()`
 
 **Parameters:**
 > *None.*

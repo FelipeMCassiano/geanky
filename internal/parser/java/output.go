@@ -8,6 +8,15 @@ import (
 	"strings"
 )
 
+// extractClassName pega um import completo (ex: java.util.List) e retorna só a classe (List)
+func extractClassName(importPath string) string {
+	parts := strings.Split(importPath, ".")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return importPath
+}
+
 // getDependencyCalls varre os métodos de uma classe e mapeia: NomeDaDependencia -> "metodo(arg1, arg2)"
 func getDependencyCalls(c ClassJava) map[string]string {
 	fieldsMap := make(map[string]string)
@@ -94,12 +103,13 @@ func getDependencyCalls(c ClassJava) map[string]string {
 }
 
 const docTemplate = `
-# {{bt}}{{.Name}}{{bt}}
+{{range .Annotations}}> **{{.}}**
+{{end}}# 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
 
 {{if .Package.Name}}> **Package:** {{.Package.Name}}
 {{end}}{{if .Imports}}> **Dependencies (Imports):**
 {{range .Imports}}> - {{if isProjectClass .}}[{{.}}]({{extractClassName .}}.md) 🔗{{else}}{{.}}{{end}}
-{{end}}{{end}}> 
+{{end}}{{end}}> **Automatically generated documentation** by the Geanky tool.
 
 ---
 
@@ -109,10 +119,10 @@ A high-level overview of the class, its internal state, and available methods.
 **Internal State & Dependencies:**
 {{if not .Fields}}> *No state properties defined.*
 {{else}}{{range .Fields}}
-{{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double") (eq .TypeName "long") (eq .TypeName "float")}}
-- {{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
+{{if isProjectClass .TypeName}}
+- {{range .Annotations}}{{bt}}{{.}}{{bt}} {{end}}{{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ([{{.TypeName}}]({{.TypeName}}.md)) 🔗
 {{else}}
-- {{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ([{{.TypeName}}]({{.TypeName}}.md)) 🔗
+- {{range .Annotations}}{{bt}}{{.}}{{bt}} {{end}}{{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
 {{end}}{{end}}{{end}}
 
 **Available Methods:**
@@ -162,10 +172,14 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>{{.Name}}</b>({{range $i, $p := .Parameters}}{{if $i}}, {{end}}<i>{{$p.TypeName}}</i> {{$p.Declarator}}{{end}}) (Click to expand)</summary>
 
+> **Signature:**
+{{range .Annotations}}> {{bt}}{{.}}{{bt}}
+{{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
+
 **Parameters:**
 {{if not .Parameters}}> *None.*
 {{else}}{{range .Parameters}}
-- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
+- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}}){{if .Annotations}} - {{range .Annotations}}*{{.}}* {{end}}{{end}}
 {{end}}{{end}}
 
 **Step-by-Step Logic:**
@@ -187,12 +201,14 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>{{.Name}}</b>({{range $i, $p := .Parameters}}{{if $i}}, {{end}}<i>{{$p.TypeName}}</i> {{$p.Declarator}}{{end}}) ➞ {{bt}}{{.ReturnType}}{{bt}} (Click to expand)</summary>
 
-> **Signature:** {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
+> **Signature:**
+{{range .Annotations}}> {{bt}}{{.}}{{bt}}
+{{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
 
 **Parameters:**
 {{if not .Parameters}}> *None.*
 {{else}}{{range .Parameters}}
-- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
+- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}}){{if .Annotations}} - {{range .Annotations}}*{{.}}* {{end}}{{end}}
 {{end}}{{end}}
 
 **Step-by-Step Logic:**
@@ -210,7 +226,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 `
 
 const globalDocTemplate = `
-# 🌍 Architecture Diagram
+# 🌍 Global Architecture Diagram
 
 > Visão geral de alto nível mostrando as dependências entre todas as classes analisadas e seus respectivos pacotes.
 
@@ -250,8 +266,10 @@ flowchart LR
 {{bt}}{{bt}}{{bt}}
 `
 
+// GenerateMarkdown cria o arquivo .md de especificação técnica de cada classe individual
 func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilename string) {
 
+	// isProjectClass verifica se a classe importada foi varrida no projeto
 	isProjectClass := func(importPath string) bool {
 		className := extractClassName(importPath)
 		for _, c := range allClasses {
@@ -286,14 +304,7 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 	}
 }
 
-func extractClassName(importPath string) string {
-	parts := strings.Split(importPath, ".")
-	if len(parts) > 0 {
-		return parts[len(parts)-1]
-	}
-	return importPath
-}
-
+// GenerateGlobalArchitecture gera o arquivo global agrupando as classes por pacote
 func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	tmpl, err := template.New("globalDoc").Funcs(template.FuncMap{
 		"bt":                 func() string { return "`" },

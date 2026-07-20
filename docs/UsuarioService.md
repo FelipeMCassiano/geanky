@@ -1,8 +1,8 @@
 
-# `UsuarioService`
+# 📄 Technical Specification: `UsuarioService`
 
 > **Package:** services
-> 
+> **Automatically generated documentation** by the Geanky tool.
 
 ---
 
@@ -70,6 +70,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>UsuarioService</b>(<i>String</i> nomeBanco) (Click to expand)</summary>
 
+> **Signature:**
+> `public UsuarioService(String nomeBanco)`
+
 **Parameters:**
 
 - **nomeBanco** (`String`)
@@ -95,7 +98,8 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>validarEAtivarUsuario</b>(<i>int</i> idade, <i>String</i> status) ➞ `boolean` (Click to expand)</summary>
 
-> **Signature:** `public boolean validarEAtivarUsuario(int idade, String status)`
+> **Signature:**
+> `public boolean validarEAtivarUsuario(int idade, String status)`
 
 **Parameters:**
 
@@ -124,7 +128,8 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>registrarLog</b>(<i>String</i> acao) ➞ `void` (Click to expand)</summary>
 
-> **Signature:** `public void registrarLog(String acao)`
+> **Signature:**
+> `public void registrarLog(String acao)`
 
 **Parameters:**
 

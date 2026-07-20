@@ -14,12 +14,14 @@ type Package struct {
 type CaptureHandler func(node *tree_sitter.Node, content []byte, classData *ClassJava) error
 
 type Variable struct {
-	Modifiers  []Modifier `json:"modifiers"`
-	TypeName   string     `json:"typeName"`
-	Declarator string     `json:"declarator"`
+	Annotations []string   `json:"annotations"`
+	Modifiers   []Modifier `json:"modifiers"`
+	TypeName    string     `json:"typeName"`
+	Declarator  string     `json:"declarator"`
 }
 
 type ClassJava struct {
+	Annotations  []string     `json:"annotations"`
 	Package      Package      `json:"package"`
 	Imports      []string     `json:"imports"`
 	Modifiers    []Modifier   `json:"modifiers"`
@@ -30,6 +32,7 @@ type ClassJava struct {
 }
 
 type Executable struct {
+	Annotations   []string   `json:"annotations"`
 	Modifiers     []Modifier `json:"modifiers"`
 	Name          string     `json:"name"`
 	Parameters    []Variable `json:"parameters"`
@@ -89,15 +92,20 @@ func parseClass(node *tree_sitter.Node, content []byte, classData *ClassJava) er
 	if nameNode == nil {
 		return fmt.Errorf("Classe nao pode ter nome nulo")
 	}
-	classData.Modifiers = extractModifiers(node, content)
+	modifiers, annotations := extractModifiersAndAnnotations(node, content)
+	classData.Annotations = annotations
+	classData.Modifiers = modifiers
 	classData.Name = nameNode.Utf8Text(content)
 
 	return nil
 }
 
 func parseConstructor(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
+
+	modifiers, annotations := extractModifiersAndAnnotations(node, content)
 	newContructor := Executable{
-		Modifiers:     extractModifiers(node, content),
+		Annotations:   annotations,
+		Modifiers:     modifiers,
 		isConstructor: true,
 	}
 
@@ -126,19 +134,24 @@ func parseField(node *tree_sitter.Node, content []byte, classData *ClassJava) er
 	if nameParamNode == nil {
 		return nil
 	}
+	modifiers, annotations := extractModifiersAndAnnotations(node, content)
 
 	newField := Variable{
-		Modifiers:  extractModifiers(node, content), // AGORA extraímos os modificadores!
-		Declarator: nameParamNode.Utf8Text(content),
-		TypeName:   typeNode.Utf8Text(content),
+		Annotations: annotations,
+		Modifiers:   modifiers,
+		Declarator:  nameParamNode.Utf8Text(content),
+		TypeName:    typeNode.Utf8Text(content),
 	}
 
 	classData.Fields = append(classData.Fields, newField)
 	return nil
 }
 func parseMethod(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
+
+	modifiers, annotations := extractModifiersAndAnnotations(node, content)
 	var newMethod = Executable{
-		Modifiers:     extractModifiers(node, content),
+		Annotations:   annotations,
+		Modifiers:     modifiers,
 		ReturnType:    node.ChildByFieldName("type").Utf8Text(content),
 		Name:          node.ChildByFieldName("name").Utf8Text(content),
 		isConstructor: false,
@@ -203,19 +216,27 @@ func parseParameters(node *tree_sitter.Node, content []byte, executableData *Exe
 	}
 	return nil
 }
-func extractModifiers(node *tree_sitter.Node, content []byte) []Modifier {
+func extractModifiersAndAnnotations(node *tree_sitter.Node, content []byte) ([]Modifier, []string) {
 	var modifiers []Modifier
+	var annotations []string
 
 	for i := range node.ChildCount() {
 		child := node.Child(i)
 		if child.Kind() == "modifiers" {
-
 			for j := range child.ChildCount() {
 				modChild := child.Child(j)
-				modifiers = append(modifiers, Modifier{modChild.Utf8Text(content)})
+				kind := modChild.Kind()
+
+				// Identifica se o modificador é uma anotação
+				if kind == "annotation" || kind == "marker_annotation" {
+					// Pega a string completa: ex: "@RequestMapping(value = \"/user\")"
+					annotations = append(annotations, modChild.Utf8Text(content))
+				} else {
+					modifiers = append(modifiers, Modifier{modChild.Utf8Text(content)})
+				}
 			}
 			break
 		}
 	}
-	return modifiers
+	return modifiers, annotations
 }

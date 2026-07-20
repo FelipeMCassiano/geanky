@@ -1,5 +1,6 @@
 
-# `BoatSyncController`
+> **@RestController**
+# 📄 Technical Specification: `BoatSyncController`
 
 > **Package:** sync
 > **Dependencies (Imports):**
@@ -28,7 +29,7 @@
 > - com.rfidbrasil.core.service.sync.MachineSync
 > - com.rfidbrasil.core.utils.response.ContentLengthResponseBuilder
 > - reactor.core.publisher.Flux
-> 
+> **Automatically generated documentation** by the Geanky tool.
 
 ---
 
@@ -38,22 +39,22 @@ A high-level overview of the class, its internal state, and available methods.
 **Internal State & Dependencies:**
 
 
-- `private static final ` **log** ([Logger](Logger.md)) 🔗
+- `private static final ` **log** (`Logger`)
 
 
-- `private final ` **service** ([SyncService](SyncService.md)) 🔗
+- `private final ` **service** (`SyncService`)
 
 
-- `private final ` **syncService** ([CloudSyncUploadService](CloudSyncUploadService.md)) 🔗
+- `private final ` **syncService** (`CloudSyncUploadService`)
 
 
-- `private final ` **sseSyncService** ([BoatSseSyncService](BoatSseSyncService.md)) 🔗
+- `private final ` **sseSyncService** (`BoatSseSyncService`)
 
 
-- `private final ` **downloadService** ([DownloadService](DownloadService.md)) 🔗
+- `private final ` **downloadService** (`DownloadService`)
 
 
-- `private final ` **machineSync** ([MachineSync](MachineSync.md)) 🔗
+- `private final ` **machineSync** (`MachineSync`)
 
 
 **Available Methods:**
@@ -132,6 +133,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>BoatSyncController</b>(<i>SyncService</i> service, <i>CloudSyncUploadService</i> syncService, <i>BoatSseSyncService</i> sseSyncService, <i>DownloadService</i> downloadService, <i>MachineSync</i> machineSync) (Click to expand)</summary>
 
+> **Signature:**
+> `public BoatSyncController(SyncService service, CloudSyncUploadService syncService, BoatSseSyncService sseSyncService, DownloadService downloadService, MachineSync machineSync)`
+
 **Parameters:**
 
 - **service** (`SyncService`)
@@ -171,7 +175,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>subscEmitter</b>(<i>UUID</i> uuid) ➞ `Flux&lt;ServerSentEvent&lt;String&gt;&gt;` (Click to expand)</summary>
 
-> **Signature:** `@GetMapping(value = &#34;/events/{uuid}&#34;, produces = MediaType.TEXT_EVENT_STREAM_VALUE) public Flux&lt;ServerSentEvent&lt;String&gt;&gt; subscEmitter(UUID uuid)`
+> **Signature:**
+> `@GetMapping(value = &#34;/events/{uuid}&#34;, produces = MediaType.TEXT_EVENT_STREAM_VALUE)`
+> `public Flux&lt;ServerSentEvent&lt;String&gt;&gt; subscEmitter(UUID uuid)`
 
 **Parameters:**
 
@@ -191,7 +197,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>portalReadingsSyncPaginated</b>(<i>Long</i> timestamp, <i>Long</i> id, <i>Principal</i> principal) ➞ `ResponseEntity&lt;?&gt;` (Click to expand)</summary>
 
-> **Signature:** `@GetMapping(&#34;/portal-readings&#34;) public ResponseEntity&lt;?&gt; portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)`
+> **Signature:**
+> `@GetMapping(&#34;/portal-readings&#34;)`
+> `public ResponseEntity&lt;?&gt; portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)`
 
 **Parameters:**
 
@@ -217,7 +225,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>latestSync</b>(<i>Principal</i> principal) ➞ `ResponseEntity&lt;?&gt;` (Click to expand)</summary>
 
-> **Signature:** `@GetMapping(&#34;/latest&#34;) public ResponseEntity&lt;?&gt; latestSync(Principal principal)`
+> **Signature:**
+> `@GetMapping(&#34;/latest&#34;)`
+> `public ResponseEntity&lt;?&gt; latestSync(Principal principal)`
 
 **Parameters:**
 
@@ -237,7 +247,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>triggerCloudSync</b>(<i>SyncRequest</i> request, <i>Principal</i> principal) ➞ `ResponseEntity&lt;?&gt;` (Click to expand)</summary>
 
-> **Signature:** `@PostMapping(&#34;/cloud&#34;) public ResponseEntity&lt;?&gt; triggerCloudSync(SyncRequest request, Principal principal)`
+> **Signature:**
+> `@PostMapping(&#34;/cloud&#34;)`
+> `public ResponseEntity&lt;?&gt; triggerCloudSync(SyncRequest request, Principal principal)`
 
 **Parameters:**
 

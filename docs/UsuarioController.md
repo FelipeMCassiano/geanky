@@ -1,11 +1,11 @@
 
-# `UsuarioController`
+# 📄 Technical Specification: `UsuarioController`
 
 > **Package:** controllers
 > **Dependencies (Imports):**
 > - [internal.testadata.java.models.UserModel](UserModel.md) 🔗
 > - [internal.testadata.java.services.UsuarioService](UsuarioService.md) 🔗
-> 
+> **Automatically generated documentation** by the Geanky tool.
 
 ---
 
@@ -69,6 +69,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>UsuarioController</b>(<i>String</i> nomeSistema, <i>UsuarioService</i> service) (Click to expand)</summary>
 
+> **Signature:**
+> `public UsuarioController(String nomeSistema, UsuarioService service)`
+
 **Parameters:**
 
 - **nomeSistema** (`String`)
@@ -96,7 +99,8 @@ Expand the sections below to read the exact pseudo-code and business rules.
 <details>
 <summary><b>processarUsuario</b>(<i>UserModel</i> userModel, <i>String</i> status) ➞ `boolean` (Click to expand)</summary>
 
-> **Signature:** `public boolean processarUsuario(UserModel userModel, String status)`
+> **Signature:**
+> `public boolean processarUsuario(UserModel userModel, String status)`
 
 **Parameters:**
 
