@@ -42,10 +42,10 @@ flowchart LR
 
     %% Method Calls
     
-    Caller -- "Calls setNome()" --> ThisClass
+    Caller -- "Calls setNome(String nome)" --> ThisClass
     ThisClass -. "Returns void" .-> Caller
     
-    Caller -- "Calls setIdade()" --> ThisClass
+    Caller -- "Calls setIdade(int idade)" --> ThisClass
     ThisClass -. "Returns void" .-> Caller
     
     Caller -- "Calls getIdade()" --> ThisClass
@@ -89,9 +89,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set 'this.nome' to 'nome'
+1. Set &#39;this.nome&#39; to &#39;nome&#39;
 
-1. Set 'this.idade' to 'idade'
+1. Set &#39;this.idade&#39; to &#39;idade&#39;
 
 
 
@@ -116,7 +116,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set 'this.nome' to 'nome'
+1. Set &#39;this.nome&#39; to &#39;nome&#39;
 
 
 
@@ -136,7 +136,7 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set 'this.idade' to 'idade'
+1. Set &#39;this.idade&#39; to &#39;idade&#39;
 
 
 

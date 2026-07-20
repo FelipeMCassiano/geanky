@@ -42,7 +42,7 @@ flowchart LR
 
     %% Method Calls
     
-    Caller -- "Calls processarUsuario()" --> ThisClass
+    Caller -- "Calls processarUsuario(UserModel userModel, String status)" --> ThisClass
     ThisClass -. "Returns boolean" .-> Caller
     
 
@@ -80,9 +80,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set 'this.nomeSistema' to 'nomeSistema'
+1. Set &#39;this.nomeSistema&#39; to &#39;nomeSistema&#39;
 
-1. Set 'this.service' to 'service'
+1. Set &#39;this.service&#39; to &#39;service&#39;
 
 
 
@@ -109,9 +109,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'Invoke 'userModel.getIdade' (no parameters)', 'status'
+1. If Invoke &#39;this.service.validarEAtivarUsuario&#39; with parameters: &#39;Invoke &#39;userModel.getIdade&#39; (no parameters)&#39;, &#39;status&#39;
    then:
-      - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
+      - Invoke &#39;this.service.registrarLog&#39; with parameters: &#39;&#34;Processo concluido no sistema &#34; plus this.nomeSistema&#39;
       - Return the result of: true
 
 1. Return the result of: false

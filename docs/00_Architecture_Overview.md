@@ -10,19 +10,19 @@ flowchart LR
     
     %% Nodes Creation Grouped by Package
     
-    subgraph internal.testadata.java.controllers
+    subgraph controllers
         
         UsuarioController["UsuarioController"]:::classNode
         
     end
     
-    subgraph internal.testadata.java.models
+    subgraph models
         
         UserModel["UserModel"]:::classNode
         
     end
     
-    subgraph internal.testadata.java.services
+    subgraph services
         
         UsuarioService["UsuarioService"]:::classNode
         
@@ -42,7 +42,7 @@ flowchart LR
         
         
         
-            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario()<br>registrarLog()</b>"| UsuarioService
+            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(Invoke &#39;userModel.getIdade&#39; (no parameters), status)&lt;br&gt;registrarLog(&#39;Processo concluido no sistema &#39; plus this.nomeSistema)</b>"| UsuarioService
         
 
     

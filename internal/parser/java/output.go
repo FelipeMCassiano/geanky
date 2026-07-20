@@ -2,11 +2,98 @@ package java
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"strings"
-	"text/template"
 )
+
+// getDependencyCalls varre os métodos de uma classe e mapeia: NomeDaDependencia -> "metodo(arg1, arg2)"
+func getDependencyCalls(c ClassJava) map[string]string {
+	fieldsMap := make(map[string]string)
+	for _, f := range c.Fields {
+		fieldsMap[f.Declarator] = f.TypeName
+	}
+
+	deps := make(map[string]map[string]bool)
+
+	var traverse func(expr Expression)
+	traverse = func(expr Expression) {
+		if expr == nil {
+			return
+		}
+		switch e := expr.(type) {
+		case Assignment:
+			traverse(e.Left)
+			traverse(e.Right)
+		case Binary:
+			traverse(e.Left)
+			traverse(e.Right)
+		case IfNode:
+			traverse(e.Condition)
+			for _, s := range e.Consequence.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+		case MethodInvocation:
+			targetObj := ""
+			if e.Accessed.Object != nil {
+				switch obj := e.Accessed.Object.(type) {
+				case Access:
+					targetObj = obj.Identifier.Name
+				case Identifier:
+					targetObj = obj.Name
+				}
+			}
+
+			if typeName, exists := fieldsMap[targetObj]; exists {
+				if deps[typeName] == nil {
+					deps[typeName] = make(map[string]bool)
+				}
+
+				// Extrai os argumentos formatados para exibir no diagrama
+				var args []string
+				for _, arg := range e.Args {
+					argStr := formatExpression(arg)
+					// Troca aspas duplas por simples para não quebrar a label do Mermaid
+					argStr = strings.ReplaceAll(argStr, "\"", "'")
+					args = append(args, argStr)
+				}
+
+				// Monta a assinatura completa: metodo(arg1, arg2)
+				methodSignature := fmt.Sprintf("%s(%s)", e.Accessed.Identifier.Name, strings.Join(args, ", "))
+				deps[typeName][methodSignature] = true
+			}
+
+			for _, arg := range e.Args {
+				traverse(arg)
+			}
+		case ReturnNode:
+			traverse(e.Value)
+		}
+	}
+
+	for _, m := range c.Methods {
+		for _, s := range m.Body.Statements {
+			for _, e := range s.Expressions {
+				traverse(e)
+			}
+		}
+	}
+
+	result := make(map[string]string)
+	for typeName, methods := range deps {
+		var methodList []string
+		for m := range methods {
+			methodList = append(methodList, m)
+		}
+		result[typeName] = strings.Join(methodList, "<br>")
+	}
+	return result
+}
+
+// formatModifiers transforma a slice de modificadores em string
 
 const docTemplate = `
 # 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
@@ -52,7 +139,7 @@ flowchart LR
 
     %% Method Calls
     {{range .Methods}}
-    Caller -- "Calls {{.Name}}()" --> ThisClass
+    Caller -- "Calls {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}})" --> ThisClass
     ThisClass -. "Returns {{.ReturnType}}" .-> Caller
     {{end}}
 
@@ -124,31 +211,6 @@ Expand the sections below to read the exact pseudo-code and business rules.
 {{end}}
 `
 
-func GenerateMarkdown(classData ClassJava, outputFilename string) {
-	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
-		"formatExpression": formatExpression,
-		"formatModifiers":  formatModifiers,
-		"bt":               func() string { return "`" },
-	}).Parse(docTemplate)
-
-	if err != nil {
-		log.Fatalf("Erro ao criar template: %v", err)
-	}
-
-	file, err := os.Create(outputFilename)
-	if err != nil {
-		log.Fatalf("Erro ao criar arquivo: %v", err)
-	}
-	defer file.Close()
-
-	err = tmpl.Execute(file, classData)
-	if err != nil {
-		log.Fatalf("Erro ao gerar documentação: %v", err)
-	}
-
-	fmt.Printf("✅ Documentação gerada com sucesso em: %s\n", outputFilename)
-}
-
 const globalDocTemplate = `
 # 🌍 Global Architecture Diagram
 
@@ -190,6 +252,31 @@ flowchart LR
 {{bt}}{{bt}}{{bt}}
 `
 
+// GenerateMarkdown cria o arquivo .md de especificação técnica de cada classe individual
+func GenerateMarkdown(classData ClassJava, outputFilename string) {
+	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
+		"bt":               func() string { return "`" },
+		"formatModifiers":  formatModifiers,
+		"formatExpression": formatExpression,
+	}).Parse(docTemplate)
+
+	if err != nil {
+		log.Fatalf("Erro ao criar template: %v", err)
+	}
+
+	file, err := os.Create(outputFilename)
+	if err != nil {
+		log.Fatalf("Erro ao criar arquivo: %v", err)
+	}
+	defer file.Close()
+
+	err = tmpl.Execute(file, classData)
+	if err != nil {
+		log.Fatalf("Erro ao executar template: %v", err)
+	}
+}
+
+// GenerateGlobalArchitecture gera o arquivo global agrupando as classes por pacote
 func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	tmpl, err := template.New("globalDoc").Funcs(template.FuncMap{
 		"bt":                 func() string { return "`" },
@@ -206,18 +293,13 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	}
 	defer file.Close()
 
+	// Agrupa as classes pelo nome completo do pacote obtido na AST
 	groupedClasses := make(map[string][]ClassJava)
 	for _, c := range classes {
 		pkgName := "Default Package"
-
 		if c.Package.Name != "" {
-			if c.Package.Scope != "" {
-				pkgName = c.Package.Scope + "." + c.Package.Name
-			} else {
-				pkgName = c.Package.Name
-			}
+			pkgName = c.Package.Name
 		}
-
 		groupedClasses[pkgName] = append(groupedClasses[pkgName], c)
 	}
 
@@ -235,76 +317,4 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	}
 
 	fmt.Printf("🗺️ Diagrama de Arquitetura Global gerado em: %s\n", outputFilename)
-}
-
-func getDependencyCalls(c ClassJava) map[string]string {
-	fieldsMap := make(map[string]string)
-	for _, f := range c.Fields {
-		fieldsMap[f.Declarator] = f.TypeName
-	}
-
-	deps := make(map[string]map[string]bool)
-
-	var traverse func(expr Expression)
-	traverse = func(expr Expression) {
-		if expr == nil {
-			return
-		}
-		switch e := expr.(type) {
-		case Assignment:
-			traverse(e.Left)
-			traverse(e.Right)
-		case Binary:
-			traverse(e.Left)
-			traverse(e.Right)
-		case IfNode:
-			traverse(e.Condition)
-			for _, s := range e.Consequence.Statements {
-				for _, ex := range s.Expressions {
-					traverse(ex)
-				}
-			}
-		case MethodInvocation:
-			targetObj := ""
-			if e.Accessed.Object != nil {
-				switch obj := e.Accessed.Object.(type) {
-				case Access:
-					targetObj = obj.Identifier.Name
-				case Identifier:
-					targetObj = obj.Name
-				}
-			}
-
-			if typeName, exists := fieldsMap[targetObj]; exists {
-				if deps[typeName] == nil {
-					deps[typeName] = make(map[string]bool)
-				}
-				deps[typeName][e.Accessed.Identifier.Name] = true
-			}
-
-			for _, arg := range e.Args {
-				traverse(arg)
-			}
-		case ReturnNode:
-			traverse(e.Value)
-		}
-	}
-
-	for _, m := range c.Methods {
-		for _, s := range m.Body.Statements {
-			for _, e := range s.Expressions {
-				traverse(e)
-			}
-		}
-	}
-
-	result := make(map[string]string)
-	for typeName, methods := range deps {
-		var methodList []string
-		for m := range methods {
-			methodList = append(methodList, m+"()")
-		}
-		result[typeName] = strings.Join(methodList, "<br>")
-	}
-	return result
 }

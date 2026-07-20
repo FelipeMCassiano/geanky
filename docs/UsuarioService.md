@@ -40,10 +40,10 @@ flowchart LR
 
     %% Method Calls
     
-    Caller -- "Calls validarEAtivarUsuario()" --> ThisClass
+    Caller -- "Calls validarEAtivarUsuario(int idade, String status)" --> ThisClass
     ThisClass -. "Returns boolean" .-> Caller
     
-    Caller -- "Calls registrarLog()" --> ThisClass
+    Caller -- "Calls registrarLog(String acao)" --> ThisClass
     ThisClass -. "Returns void" .-> Caller
     
 
@@ -79,9 +79,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set 'this.nomeBanco' to 'nomeBanco'
+1. Set &#39;this.nomeBanco&#39; to &#39;nomeBanco&#39;
 
-1. Set 'this.conexaoAtiva' to 'true'
+1. Set &#39;this.conexaoAtiva&#39; to &#39;true&#39;
 
 
 
@@ -108,12 +108,12 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. If idade is greater than or equal to 18 AND status is equal to "ativo"
+1. If idade is greater than or equal to 18 AND status is equal to &#34;ativo&#34;
    then:
-      - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'
+      - Invoke &#39;System.out.println&#39; with parameters: &#39;&#34;Usuario validado com sucesso no banco &#34; plus this.nomeBanco&#39;
       - Return the result of: true
 
-1. Invoke 'System.out.println' with parameters: '"Falha na validacao"'
+1. Invoke &#39;System.out.println&#39; with parameters: &#39;&#34;Falha na validacao&#34;&#39;
 
 1. Return the result of: false
 
@@ -135,9 +135,9 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 
 
-1. Set 'this.conexaoAtiva' to 'false'
+1. Set &#39;this.conexaoAtiva&#39; to &#39;false&#39;
 
-1. Invoke 'System.out.println' with parameters: 'acao'
+1. Invoke &#39;System.out.println&#39; with parameters: &#39;acao&#39;
 
 
 
