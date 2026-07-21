@@ -49,19 +49,19 @@ flowchart LR
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
         
         
             UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)<br>registrarLog(...)</b>"| UsuarioService
         
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -144,7 +144,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>markAsSynced(situationIds)<br>findStatusTransitions()</b>"| InventorySituationRepository
+            CloudSyncUploadService -->|"Calls:<br><b>findStatusTransitions()<br>markAsSynced(situationIds)</b>"| InventorySituationRepository
         
     
     
@@ -207,7 +207,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>findOldMastersToCleanup()<br>deleteAll(oldMasters)<br>findFirstPending()<br>save(master)</b>"| SyncPacketMasterRepository
+            CloudSyncUploadService -->|"Calls:<br><b>deleteAll(oldMasters)<br>findFirstPending()<br>save(master)<br>findOldMastersToCleanup()</b>"| SyncPacketMasterRepository
         
     
     
@@ -221,7 +221,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>sliceIntoChunks(gzipPayload)<br>calculateSha256(gzipPayload)<br>compressToGzip(pbPackage)</b>"| PacketChunkerEngine
+            CloudSyncUploadService -->|"Calls:<br><b>compressToGzip(pbPackage)<br>sliceIntoChunks(gzipPayload)<br>calculateSha256(gzipPayload)</b>"| PacketChunkerEngine
         
     
     
