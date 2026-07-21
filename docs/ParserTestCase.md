@@ -102,21 +102,21 @@ sequenceDiagram
     participant names
 
     Caller->>ThisClass: processData(names)
-    loop for each name in names
+    loop for name in names
     alt !name.isEmpty()
     alt try
     ThisClass->>users: add(new UserDTO(1, validName))
     else catch 
-    ThisClass-->>Caller: throw new Exception('Erro interno', e)
+    ThisClass-->>Caller: throw new Exception(\"Erro interno\", e)
     end
     else
     Note right of ThisClass: break loop
     end
     end
-    loop for i < 5
+    loop for (i &lt; 5)
     ThisClass->>System: println(i)
     end
-    loop while counter < 3
+    loop while (counter &lt; 3)
     end
     ThisClass->>names: forEach(String::toUpperCase)
     ThisClass-->>Caller: return new UserDTO(0, defaultName.get())

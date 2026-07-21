@@ -228,13 +228,11 @@ func getDependencyCalls(c ClassJava) map[string]string {
 	}
 	return result
 }
-
 func generateSequenceDiagram(m Executable) string {
 	var header strings.Builder
 	var steps strings.Builder
 	participants := make(map[string]bool)
 
-	// O Header guarda apenas a criação dos atores no topo do arquivo (evita quebrar o Mermaid)
 	header.WriteString("sequenceDiagram\n")
 	header.WriteString("    actor Caller\n")
 	header.WriteString("    participant ThisClass\n")
@@ -243,25 +241,50 @@ func generateSequenceDiagram(m Executable) string {
 		if name == "" || name == "this" || name == "ThisClass" || name == "Caller" {
 			return
 		}
-		// Pega apena o nome base do objeto (Ex: de "System.out" fica "System")
-		cleanName := strings.Split(name, " ")[0]
-		cleanName = strings.Split(cleanName, ".")[0]
-		cleanName = strings.Split(cleanName, "(")[0]
 
-		if !participants[cleanName] {
-			participants[cleanName] = true
-			header.WriteString(fmt.Sprintf("    participant %s\n", cleanName))
+		clean := strings.TrimSpace(name)
+		clean = strings.Split(clean, " ")[0]
+		clean = strings.Split(clean, ".")[0]
+		clean = strings.Split(clean, "(")[0]
+
+		if clean == "" {
+			return
+		}
+
+		if !participants[clean] {
+			participants[clean] = true
+			header.WriteString(fmt.Sprintf("    participant %s\n", clean))
 		}
 	}
 
-	cleanForMermaid := func(s string) string {
+	// Sanitiza qualquer texto que será colocado dentro do Mermaid.
+	// Evita que <, >, aspas ou quebras de linha destruam o parser.
+	sanitizeMermaid := func(s string) string {
+		s = strings.ReplaceAll(s, "\r", " ")
 		s = strings.ReplaceAll(s, "\n", " ")
-		s = strings.ReplaceAll(s, "\r", "")
-		s = strings.ReplaceAll(s, "\"", "'")
-		if len(s) > 60 {
-			s = s[:57] + "..."
+		s = strings.ReplaceAll(s, "\t", " ")
+
+		// Escapa caracteres HTML
+		s = strings.ReplaceAll(s, "&", "&amp;")
+		s = strings.ReplaceAll(s, "<", "&lt;")
+		s = strings.ReplaceAll(s, ">", "&gt;")
+
+		// Aspas
+		s = strings.ReplaceAll(s, `"`, `\"`)
+		s = strings.ReplaceAll(s, `'`, `\'`)
+
+		// Colapsa espaços
+		s = strings.Join(strings.Fields(s), " ")
+
+		if s == "" {
+			return ""
 		}
-		return strings.TrimSpace(s)
+
+		if len(s) > 120 {
+			s = s[:117] + "..."
+		}
+
+		return s
 	}
 
 	var resolveTarget func(expr Expression) string
@@ -269,145 +292,209 @@ func generateSequenceDiagram(m Executable) string {
 		if expr == nil {
 			return ""
 		}
+
 		switch o := expr.(type) {
 		case Identifier:
 			if o.Name == "this" || o.Name == "super" {
 				return ""
 			}
 			return o.Name
+
 		case Access:
 			if inner := resolveTarget(o.Object); inner != "" {
 				return inner
 			}
 			return o.Identifier.Name
-		default:
-			return ""
 		}
+
+		return ""
 	}
 
-	// Função exclusiva pro Mermaid (para não conflitar com seu Natural Language Engine)
-	var exprToString func(expr Expression) string
+	var exprToString func(Expression) string
 	exprToString = func(expr Expression) string {
 		if expr == nil {
 			return ""
 		}
+
 		defer func() { recover() }()
+
 		switch e := expr.(type) {
 		case Identifier:
 			return e.Name
+
 		case Literal:
 			return e.Value
+
 		case Access:
 			obj := exprToString(e.Object)
 			if obj != "" {
 				return obj + "." + e.Identifier.Name
 			}
 			return e.Identifier.Name
+
 		case MethodInvocation:
-			var args []string
+			args := make([]string, 0, len(e.Args))
 			for _, a := range e.Args {
 				args = append(args, exprToString(a))
 			}
-			return fmt.Sprintf("%s(%s)", exprToString(e.Accessed), strings.Join(args, ", "))
+			return fmt.Sprintf("%s(%s)",
+				exprToString(e.Accessed),
+				strings.Join(args, ", "),
+			)
+
 		case Binary:
-			return fmt.Sprintf("%s %s %s", exprToString(e.Left), e.Operator, exprToString(e.Right))
+			return fmt.Sprintf("%s %s %s",
+				exprToString(e.Left),
+				e.Operator,
+				exprToString(e.Right),
+			)
+
 		case Assignment:
 			return exprToString(e.Right)
+
 		case Variable:
 			return exprToString(e.Value)
+
 		case ThrowNode:
 			return exprToString(e.Value)
+
 		case ReturnNode:
 			return exprToString(e.Value)
-		default:
-			return "..."
 		}
+
+		return "..."
 	}
 
-	var traverse func(expr Expression)
+	var traverse func(Expression)
 	traverse = func(expr Expression) {
 		if expr == nil {
 			return
 		}
+
 		defer func() { recover() }()
+
 		switch e := expr.(type) {
+
 		case Assignment:
 			traverse(e.Right)
+
 		case Variable:
 			traverse(e.Value)
+
 		case Binary:
 			traverse(e.Left)
 			traverse(e.Right)
+
 		case IfNode:
-			cond := cleanForMermaid(exprToString(e.Condition))
+			cond := sanitizeMermaid(exprToString(e.Condition))
 			if cond == "" {
 				cond = "condition"
 			}
+
 			steps.WriteString(fmt.Sprintf("    alt %s\n", cond))
-			for _, s := range e.Consequence.Statements {
-				for _, ex := range s.Expressions {
+
+			for _, st := range e.Consequence.Statements {
+				for _, ex := range st.Expressions {
 					traverse(ex)
 				}
 			}
+
 			if e.Alternative != nil {
 				steps.WriteString("    else\n")
-				for _, s := range e.Alternative.Statements {
-					for _, ex := range s.Expressions {
+				for _, st := range e.Alternative.Statements {
+					for _, ex := range st.Expressions {
 						traverse(ex)
 					}
 				}
 			}
+
 			steps.WriteString("    end\n")
+
 		case ForNode:
-			cond := cleanForMermaid(exprToString(e.Condition))
-			steps.WriteString(fmt.Sprintf("    loop for %s\n", cond))
-			for _, s := range e.Body.Statements {
-				for _, ex := range s.Expressions {
+			cond := sanitizeMermaid(exprToString(e.Condition))
+			if cond == "" {
+				cond = "true"
+			}
+
+			steps.WriteString(fmt.Sprintf("    loop for (%s)\n", cond))
+
+			for _, st := range e.Body.Statements {
+				for _, ex := range st.Expressions {
 					traverse(ex)
 				}
 			}
+
 			steps.WriteString("    end\n")
+
 		case EnhancedForNode:
-			val := cleanForMermaid(exprToString(e.Value))
-			steps.WriteString(fmt.Sprintf("    loop for each %s in %s\n", e.Name, val))
-			for _, s := range e.Body.Statements {
-				for _, ex := range s.Expressions {
+			val := sanitizeMermaid(exprToString(e.Value))
+
+			steps.WriteString(fmt.Sprintf(
+				"    loop for %s in %s\n",
+				sanitizeMermaid(e.Name),
+				val,
+			))
+
+			for _, st := range e.Body.Statements {
+				for _, ex := range st.Expressions {
 					traverse(ex)
 				}
 			}
+
 			steps.WriteString("    end\n")
+
 		case WhileNode:
-			cond := cleanForMermaid(exprToString(e.Condition))
-			steps.WriteString(fmt.Sprintf("    loop while %s\n", cond))
-			for _, s := range e.Body.Statements {
-				for _, ex := range s.Expressions {
+			cond := sanitizeMermaid(exprToString(e.Condition))
+			if cond == "" {
+				cond = "true"
+			}
+
+			steps.WriteString(fmt.Sprintf("    loop while (%s)\n", cond))
+
+			for _, st := range e.Body.Statements {
+				for _, ex := range st.Expressions {
 					traverse(ex)
 				}
 			}
+
 			steps.WriteString("    end\n")
+
 		case TryNode:
 			steps.WriteString("    alt try\n")
-			for _, s := range e.Body.Statements {
-				for _, ex := range s.Expressions {
+
+			for _, st := range e.Body.Statements {
+				for _, ex := range st.Expressions {
 					traverse(ex)
 				}
 			}
+
 			for _, c := range e.Catches {
-				steps.WriteString(fmt.Sprintf("    else catch %s\n", cleanForMermaid(c.Parameter)))
-				for _, s := range c.Body.Statements {
-					for _, ex := range s.Expressions {
+				steps.WriteString(fmt.Sprintf(
+					"    else catch %s\n",
+					sanitizeMermaid(c.Parameter),
+				))
+
+				for _, st := range c.Body.Statements {
+					for _, ex := range st.Expressions {
 						traverse(ex)
 					}
 				}
 			}
+
 			steps.WriteString("    end\n")
+
 		case ThrowNode:
-			val := cleanForMermaid(exprToString(e.Value))
-			steps.WriteString(fmt.Sprintf("    ThisClass-->>Caller: throw %s\n", val))
+			steps.WriteString(fmt.Sprintf(
+				"    ThisClass-->>Caller: throw %s\n",
+				sanitizeMermaid(exprToString(e.Value)),
+			))
+
 		case BreakNode:
 			steps.WriteString("    Note right of ThisClass: break loop\n")
+
 		case MethodInvocation:
 			target := resolveTarget(e.Accessed.Object)
+
 			if target == "" {
 				target = "ThisClass"
 			} else {
@@ -415,47 +502,52 @@ func generateSequenceDiagram(m Executable) string {
 				target = strings.Split(target, ".")[0]
 				target = strings.Split(target, "(")[0]
 			}
+
 			ensureParticipant(target)
 
-			var args []string
+			args := make([]string, 0, len(e.Args))
 			for _, a := range e.Args {
-				args = append(args, exprToString(a))
+				args = append(args, sanitizeMermaid(exprToString(a)))
 			}
 
-			callArgs := cleanForMermaid(strings.Join(args, ", "))
+			method := sanitizeMermaid(e.Accessed.Identifier.Name)
+
 			steps.WriteString(fmt.Sprintf(
 				"    ThisClass->>%s: %s(%s)\n",
 				target,
-				e.Accessed.Identifier.Name,
-				callArgs,
+				method,
+				strings.Join(args, ", "),
 			))
 
 			for _, a := range e.Args {
 				traverse(a)
 			}
+
 		case ReturnNode:
-			val := cleanForMermaid(exprToString(e.Value))
-			steps.WriteString(fmt.Sprintf("    ThisClass-->>Caller: return %s\n", val))
-		default:
-			// Nó não mapeado: ignorado silenciosamente
+			steps.WriteString(fmt.Sprintf(
+				"    ThisClass-->>Caller: return %s\n",
+				sanitizeMermaid(exprToString(e.Value)),
+			))
 		}
 	}
 
-	var params []string
+	params := make([]string, 0, len(m.Parameters))
 	for _, p := range m.Parameters {
-		params = append(params, p.Declarator)
+		params = append(params, sanitizeMermaid(p.Declarator))
 	}
 
-	initCall := cleanForMermaid(strings.Join(params, ", "))
-	steps.WriteString(fmt.Sprintf("\n    Caller->>ThisClass: %s(%s)\n", m.Name, initCall))
+	steps.WriteString(fmt.Sprintf(
+		"\n    Caller->>ThisClass: %s(%s)\n",
+		sanitizeMermaid(m.Name),
+		strings.Join(params, ", "),
+	))
 
-	for _, s := range m.Body.Statements {
-		for _, e := range s.Expressions {
-			traverse(e)
+	for _, st := range m.Body.Statements {
+		for _, ex := range st.Expressions {
+			traverse(ex)
 		}
 	}
 
-	// Adiciona a lógica da timeline logo abaixo do bloco de atores
 	header.WriteString(steps.String())
 	return header.String()
 }

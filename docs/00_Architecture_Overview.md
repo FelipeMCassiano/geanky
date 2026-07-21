@@ -144,7 +144,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>findStatusTransitions()<br>markAsSynced(situationIds)</b>"| InventorySituationRepository
+            CloudSyncUploadService -->|"Calls:<br><b>markAsSynced(situationIds)<br>findStatusTransitions()</b>"| InventorySituationRepository
         
     
     
@@ -207,7 +207,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>deleteAll(oldMasters)<br>findFirstPending()<br>save(master)<br>findOldMastersToCleanup()</b>"| SyncPacketMasterRepository
+            CloudSyncUploadService -->|"Calls:<br><b>findOldMastersToCleanup()<br>deleteAll(oldMasters)<br>findFirstPending()<br>save(master)</b>"| SyncPacketMasterRepository
         
     
     
@@ -221,7 +221,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>calculateSha256(gzipPayload)<br>compressToGzip(pbPackage)<br>sliceIntoChunks(gzipPayload)</b>"| PacketChunkerEngine
+            CloudSyncUploadService -->|"Calls:<br><b>sliceIntoChunks(gzipPayload)<br>calculateSha256(gzipPayload)<br>compressToGzip(pbPackage)</b>"| PacketChunkerEngine
         
     
     
