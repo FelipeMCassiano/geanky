@@ -96,10 +96,10 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant System
 
     Caller->>ThisClass: validarEAtivarUsuario(idade, status)
     alt idade >= 18 && status == 'ativo'
-    participant System
     ThisClass->>System: println('Usuario validado com sucesso no banco ' + this.nomeBanco)
     ThisClass-->>Caller: return true
     end
@@ -134,9 +134,9 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant System
 
     Caller->>ThisClass: registrarLog(acao)
-    participant System
     ThisClass->>System: println(acao)
 
 ```

@@ -97,26 +97,27 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant users
+    participant System
+    participant names
 
     Caller->>ThisClass: processData(names)
     loop for each name in names
     alt !name.isEmpty()
     alt try
-    participant users
     ThisClass->>users: add(new UserDTO(1, validName))
     else catch 
     ThisClass-->>Caller: throw new Exception('Erro interno', e)
     end
     else
+    Note right of ThisClass: break loop
     end
     end
     loop for i < 5
-    participant System
     ThisClass->>System: println(i)
     end
     loop while counter < 3
     end
-    participant names
     ThisClass->>names: forEach(String::toUpperCase)
     ThisClass-->>Caller: return new UserDTO(0, defaultName.get())
 

@@ -49,19 +49,19 @@ flowchart LR
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
         
         
             UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)<br>registrarLog(...)</b>"| UsuarioService
         
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
@@ -221,7 +221,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>sliceIntoChunks(gzipPayload)<br>calculateSha256(gzipPayload)<br>compressToGzip(pbPackage)</b>"| PacketChunkerEngine
+            CloudSyncUploadService -->|"Calls:<br><b>calculateSha256(gzipPayload)<br>compressToGzip(pbPackage)<br>sliceIntoChunks(gzipPayload)</b>"| PacketChunkerEngine
         
     
     

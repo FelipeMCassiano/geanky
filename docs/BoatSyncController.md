@@ -186,14 +186,14 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant service
+    participant readings
 
     Caller->>ThisClass: portalReadingsSyncPaginated(timestamp, id, principal)
-    participant service
     ThisClass->>service: syncPortalReadingsPaginated(timestamp, id, principal)
     alt readings.size() < SyncService.MAX_ITEMS + 1
     ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, Htt...
     else
-    participant readings
     ThisClass->>readings: remove(SyncService.MAX_ITEMS)
     ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, Htt...
     end
@@ -228,9 +228,9 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant syncService
 
     Caller->>ThisClass: latestSync(principal)
-    participant syncService
     ThisClass->>syncService: latestSync()
     ThisClass-->>Caller: return ContentLengthResponseBuilder.ok(response, principal)
 
@@ -258,14 +258,14 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant log
+    participant e
 
     Caller->>ThisClass: triggerCloudSync(request, principal)
     alt try
     ThisClass-->>Caller: return ContentLengthResponseBuilder.ok(machineSync.executeSync(t...
     else catch 
-    participant log
     ThisClass->>log: error('[REST] Erro ao tentar acionar o sync manual: {}', e.getM...)
-    participant e
     ThisClass->>e: getMessage()
     ThisClass-->>Caller: return ResponseEntity.internalServerError().body('Falha ao inici...
     end

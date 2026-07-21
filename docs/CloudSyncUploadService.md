@@ -319,14 +319,14 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant syncControlRepository
+    participant syncModelOpt
 
     Caller->>ThisClass: latestSync()
-    participant syncControlRepository
     ThisClass->>syncControlRepository: findFirstByOrderByIdDesc()
     alt syncModelOpt.isEmpty()
     ThisClass-->>Caller: return new SyncLastestResponse('', ESyncStatus.NONE, 0L, '')
     end
-    participant syncModelOpt
     ThisClass->>syncModelOpt: get()
     ThisClass-->>Caller: return new SyncLastestResponse(eventKey, syncControlModel.getSta...
 
@@ -368,28 +368,32 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant log
+    participant sseSyncService
+    participant control
+    participant UUID
+    participant request
+    participant newControl
+    participant syncControlRepository
 
     Caller->>ThisClass: syncToCloud(request)
-    participant log
     ThisClass->>log: info('sync iniciado')
+    ThisClass->>ThisClass: authorizeSync()
+    ThisClass->>ThisClass: orElseGet(() -> {                     SyncControlModel newControl =...)
     alt ESyncStatus.UPLOAD_IN_PROGRESS.equals(control.getStatus()...
-    participant sseSyncService
     ThisClass->>sseSyncService: sendSyncStatusOnChange(control.getEventKey(), 'Sync já em andamento...', contro...)
-    participant control
     ThisClass->>control: getEventKey()
     ThisClass->>control: getStatus()
     ThisClass-->>Caller: return new SyncEvent(control.getEventKey().toString(), control.g...
     end
     ThisClass->>control: getLastSyncAt()
     alt request.getEventKey() != null && !request.getEventKey().t...
-    participant UUID
     ThisClass->>UUID: fromString(request.getEventKey())
-    participant request
     ThisClass->>request: getEventKey()
     else
     ThisClass->>UUID: randomUUID()
     end
-    participant newControl
+    ThisClass->>ThisClass: orElseGet(() -> new SyncControlModel())
     ThisClass->>newControl: setEventKey(targetEventKey)
     ThisClass->>newControl: setStatus(ESyncStatus.UPLOAD_IN_PROGRESS)
     ThisClass->>newControl: setLastSyncAt(lastSuccessfulSyncDate)
@@ -397,10 +401,10 @@ sequenceDiagram
     alt newControl.getCreatedAt() == null
     ThisClass->>newControl: setCreatedAt(new java.util.Date())
     end
-    participant syncControlRepository
     ThisClass->>syncControlRepository: saveAndFlush(newControl)
     ThisClass->>newControl: getEventKey()
     ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, '', ESyncStatus.IN_PROGRESS)
+    ThisClass->>ThisClass: backgroundProcess(eventKey, request, token, syncTimestamp, request.getLocat...)
     ThisClass->>request: getLocationId()
     ThisClass->>log: info('[SYNC] Retornando eventKey {} para o frontend conectar n...)
     ThisClass-->>Caller: return new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRES...
@@ -479,17 +483,18 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant headers
+    participant restTemplate
+    participant mapper
+    participant responseEntity
 
     Caller->>ThisClass: authorizeSync()
-    participant headers
     ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
     alt try
-    participant restTemplate
     ThisClass->>restTemplate: exchange(url, HttpMethod.POST, requestEntity, String.class)
-    participant mapper
     ThisClass->>mapper: readTree(responseEntity.getBody())
-    participant responseEntity
     ThisClass->>responseEntity: getBody()
+    ThisClass->>ThisClass: asText()
     ThisClass-->>Caller: return token
     else catch 
     alt e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStat...
@@ -533,6 +538,7 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: backgroundProcess(eventKey, request, token, syncTimestamp, locationId)
+    ThisClass->>ThisClass: exceptionally(ex -> {                     Throwable rootCause = ex.getC...)
 
 ```
 
@@ -636,10 +642,10 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant downloadService
 
     Caller->>ThisClass: processDownload(eventKey, request, token, locationId)
     alt try
-    participant downloadService
     ThisClass->>downloadService: download(eventKey, request, token, locationId, this.destination)
     else catch 
     ThisClass-->>Caller: throw new AppException(500, e.getMessage())
@@ -666,18 +672,20 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant syncControlRepository
+    participant Thread
 
     Caller->>ThisClass: getControlWithRetry(eventKey)
     loop for i < 15
-    participant syncControlRepository
     ThisClass->>syncControlRepository: findFirstByEventKeyOrderByIdDesc(eventKey)
     alt opt.isPresent()
     ThisClass-->>Caller: return opt.get()
     end
     alt try
-    participant Thread
     ThisClass->>Thread: sleep(200)
     else catch 
+    ThisClass->>ThisClass: interrupt()
+    Note right of ThisClass: break loop
     end
     end
     ThisClass-->>Caller: throw new RuntimeException('Controle de sync não encontrado no...
@@ -705,77 +713,84 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant log
+    participant factory
+    participant headers
+    participant localRestTemplate
+    participant masterRepository
+    participant pendingMaster
+    participant master
+    participant situationRepository
+    participant musteringBuilderService
+    participant chunkerEngine
+    participant slices
+    participant chunkRepository
+    participant unsentChunks
+    participant httpClient
+    participant chunk
+    participant String
+    participant sseSyncService
+    participant Thread
 
     Caller->>ThisClass: processCloudSyncInBackground(eventKey, token, syncTimestamp, locationId)
-    participant log
     ThisClass->>log: info('[SYNC-BACKGROUND] Iniciando processamento em background ...)
     alt try
-    participant factory
     ThisClass->>factory: setConnectTimeout(5000)
     ThisClass->>factory: setReadTimeout(15000)
-    participant headers
     ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
     ThisClass->>headers: setBearerAuth(token)
-    participant localRestTemplate
     ThisClass->>localRestTemplate: exchange(url + '/events/trigger', HttpMethod.PUT, requestEntity, S...)
     alt !response.getStatusCode().is2xxSuccessful()
     ThisClass-->>Caller: throw new RuntimeException('Erro na resposta da nuvem: ' + resp...
     end
-    participant masterRepository
     ThisClass->>masterRepository: findFirstPending()
     alt pendingMaster.isPresent()
-    participant pendingMaster
     ThisClass->>pendingMaster: get()
     ThisClass->>log: info('[SYNC-BACKGROUND] Retomando envio de pacote pendente ID:...)
-    participant master
     ThisClass->>master: getId()
     else
-    participant situationRepository
     ThisClass->>situationRepository: findStatusTransitions()
-    participant musteringBuilderService
+    ThisClass->>ThisClass: fetchItemStatusTransitions(transitions)
     ThisClass->>musteringBuilderService: buildPendingMusteringsPayload()
+    ThisClass->>ThisClass: toList()
     alt itemStatusPayload.isEmpty() && musteringPayload.isEmpty()...
     ThisClass->>log: info('[SYNC-BACKGROUND] nenhum status, mustering ou alteraçã...)
     ThisClass-->>Caller: return 
     end
-    participant chunkerEngine
+    ThisClass->>ThisClass: buildProtobufPackage(itemStatusPayload, musteringPayload, itemModificationStat...)
     ThisClass->>chunkerEngine: compressToGzip(pbPackage)
     ThisClass->>chunkerEngine: sliceIntoChunks(gzipPayload)
     ThisClass->>chunkerEngine: calculateSha256(gzipPayload)
+    ThisClass->>ThisClass: saveMasterAndChunksToDatabase(slices, checksum)
+    ThisClass->>ThisClass: markDataAsSynced(transitions, musteringPayload)
     ThisClass->>log: info('[SYNC-BACKGROUND] Empacotamento concluído. Gerados {} c...)
-    participant slices
     ThisClass->>slices: size()
     end
-    participant chunkRepository
     ThisClass->>chunkRepository: findUnsyncedByMasterId(master.getId())
     ThisClass->>master: getId()
     ThisClass->>log: info('[SYNC-BACKGROUND] Enviando {} chunks restantes...', unse...)
-    participant unsentChunks
     ThisClass->>unsentChunks: size()
     loop for each chunk in unsentChunks
     loop while !sucesso
-    participant httpClient
     ThisClass->>httpClient: sendChunk(chunk, master, currentToken, this.destination)
     alt !sucesso
     alt networkFailures % 3 == 0
     alt try
+    ThisClass->>ThisClass: authorizeSync()
     else catch 
     ThisClass->>log: warn('[SYNC-BACKGROUND] Tentativa de renovar token offline fal...)
     end
     end
     ThisClass->>log: warn('[SYNC-BACKGROUND] Rede falhou no fragmento {}. Retentand...)
-    participant chunk
     ThisClass->>chunk: getSequenceNumber()
-    participant String
     ThisClass->>String: format('Conexão instável. Reconectando e enviando pacote %d de...)
     ThisClass->>chunk: getSequenceNumber()
     ThisClass->>master: getTotalChunks()
-    participant sseSyncService
     ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, uiMessage, ESyncStatus.IN_PROGRESS)
     alt try
-    participant Thread
     ThisClass->>Thread: sleep(delaySeconds * 1000)
     else catch 
+    ThisClass->>ThisClass: interrupt()
     ThisClass-->>Caller: throw new RuntimeException('A thread de sincronização foi mor...
     end
     end
@@ -788,6 +803,7 @@ sequenceDiagram
     end
     ThisClass->>master: setStatus(EPacketStatus.DONE)
     ThisClass->>masterRepository: save(master)
+    ThisClass->>ThisClass: cleanupOldUploadPackages()
     ThisClass->>log: info('[SYNC-BACKGROUND] Upload de chunks concluído com sucesso!')
     else catch 
     ThisClass-->>Caller: throw new RuntimeException('Falha no upload: ' + e.getMessage()...
@@ -816,23 +832,24 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant master
+    participant UUID
+    participant slices
+    participant Instant
+    participant chunk
+    participant chunks
 
     Caller->>ThisClass: saveMasterAndChunksToDatabase(slices, checksum)
-    participant master
     ThisClass->>master: setId(UUID.randomUUID())
-    participant UUID
     ThisClass->>UUID: randomUUID()
     ThisClass->>master: setStatus(EPacketStatus.PENDING)
     ThisClass->>master: setTotalChunks(slices.size())
-    participant slices
     ThisClass->>slices: size()
     ThisClass->>master: setProcessedChunks(0)
     ThisClass->>master: setChecksum(checksum)
     ThisClass->>master: setNextRetryAt(Instant.now())
-    participant Instant
     ThisClass->>Instant: now()
     loop for i < slices.size()
-    participant chunk
     ThisClass->>chunk: setId(UUID.randomUUID())
     ThisClass->>UUID: randomUUID()
     ThisClass->>chunk: setMaster(master)
@@ -840,7 +857,6 @@ sequenceDiagram
     ThisClass->>chunk: setChunkData(slices.get(i))
     ThisClass->>slices: get(i)
     ThisClass->>chunk: setSynced(false)
-    participant chunks
     ThisClass->>chunks: add(chunk)
     end
     ThisClass->>master: setChunks(chunks)
@@ -887,21 +903,21 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant masterRepository
+    participant log
+    participant oldMasters
+    participant e
 
     Caller->>ThisClass: cleanupOldUploadPackages()
     alt try
-    participant masterRepository
     ThisClass->>masterRepository: findOldMastersToCleanup()
     alt oldMasters != null && !oldMasters.isEmpty()
-    participant log
     ThisClass->>log: info('[UPLOAD-CLEANUP] Deletando {} pacotes antigos (Master e ...)
-    participant oldMasters
     ThisClass->>oldMasters: size()
     ThisClass->>masterRepository: deleteAll(oldMasters)
     end
     else catch 
     ThisClass->>log: warn('[UPLOAD-CLEANUP] Falha ao tentar limpar pacotes antigos:...)
-    participant e
     ThisClass->>e: getMessage()
     end
 
@@ -926,26 +942,31 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant SyncPackage
+    participant pb
+    participant itemBuilder
+    participant musteringBuilder
+    participant sitBuilder
+    participant modBuilder
 
     Caller->>ThisClass: buildProtobufPackage(status, mustering, modifications)
-    participant SyncPackage
     ThisClass->>SyncPackage: newBuilder()
-    participant pb
     ThisClass->>pb: setTimestamp(Instant.now().toEpochMilli())
+    ThisClass->>ThisClass: toEpochMilli()
     alt status != null
     loop for each s in status
+    ThisClass->>ThisClass: setItemId(s.getItemId() != null ? s.getItemId() : 0L)
     ThisClass->>pb: addItemStatus(itemBuilder.build())
-    participant itemBuilder
     ThisClass->>itemBuilder: build()
     end
     end
     alt mustering != null
     loop for each m in mustering
+    ThisClass->>ThisClass: setInventoryType(m.getType() != null ? m.getType().name() : '')
     alt m.getSituations() != null
     loop for each sit in m.getSituations()
-    participant musteringBuilder
+    ThisClass->>ThisClass: setReadingDate(sit.getReadingDate() != null ? sit.getReadingDate().toEpo...)
     ThisClass->>musteringBuilder: addSituations(sitBuilder.build())
-    participant sitBuilder
     ThisClass->>sitBuilder: build()
     end
     end
@@ -955,8 +976,9 @@ sequenceDiagram
     end
     alt modifications != null
     loop for each mod in modifications
+    ThisClass->>ThisClass: setLastModifiedDate(mod.getLastMovedDate().toEpochMilli())
+    ThisClass->>ThisClass: toEpochMilli()
     ThisClass->>pb: addItemModifications(modBuilder.build())
-    participant modBuilder
     ThisClass->>modBuilder: build()
     end
     end
@@ -999,22 +1021,22 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant headers
+    participant restTemplate
+    participant log
+    participant e
 
     Caller->>ThisClass: sendStatusToApi(eventKey, status, message, token, timestamp, locationId)
     alt try
-    participant headers
     ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
     ThisClass->>headers: setBearerAuth(token)
-    participant restTemplate
     ThisClass->>restTemplate: exchange(url, HttpMethod.PUT, requestEntity, String.class)
     alt response.getStatusCode().is2xxSuccessful()
-    participant log
     ThisClass->>log: info('[SYNC-BACKGROUND] Status {} avisado para a API com suces...)
     ThisClass-->>Caller: return true
     end
     else catch 
     ThisClass->>log: error('[SYNC-BACKGROUND] Falha ao avisar a API sobre o status {...)
-    participant e
     ThisClass->>e: getMessage()
     ThisClass-->>Caller: return false
     end
@@ -1078,17 +1100,19 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant Collectors
+    participant situationRepository
+    participant inventoryRepository
 
     Caller->>ThisClass: markDataAsSynced(transitions, musterings)
     alt !transitions.isEmpty()
-    participant Collectors
+    ThisClass->>ThisClass: collect(Collectors.toList())
     ThisClass->>Collectors: toList()
-    participant situationRepository
     ThisClass->>situationRepository: markAsSynced(situationIds)
     end
     alt !musterings.isEmpty()
+    ThisClass->>ThisClass: collect(Collectors.toList())
     ThisClass->>Collectors: toList()
-    participant inventoryRepository
     ThisClass->>inventoryRepository: markAsSyncedByNames(inventoryNames)
     end
 

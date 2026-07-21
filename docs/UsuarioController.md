@@ -98,11 +98,11 @@ sequenceDiagram
 sequenceDiagram
     actor Caller
     participant ThisClass
+    participant service
+    participant userModel
 
     Caller->>ThisClass: processarUsuario(userModel, status)
-    participant service
     ThisClass->>service: validarEAtivarUsuario(userModel.getIdade(), status)
-    participant userModel
     ThisClass->>userModel: getIdade()
     alt valido
     ThisClass->>service: registrarLog('Processo concluido no sistema ' + this.nomeSistema)
