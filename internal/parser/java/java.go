@@ -17,13 +17,19 @@ import (
 
 const maxGoroutines = 8
 
+// ClassJob é uma estrutura auxiliar para guardar a classe e de qual diretório ela veio
+type ClassJob struct {
+	Data   ClassJava
+	RelDir string
+}
+
 func AnalyzeDirectory(rootDir string, outputDir string) {
 	err := os.MkdirAll(outputDir, os.ModePerm)
 	if err != nil {
 		log.Fatalf("Erro ao criar diretório de saída: %v", err)
 	}
 
-	var allClasses []ClassJava
+	var jobs []ClassJob
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
@@ -43,7 +49,7 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		log.Fatalf("Erro ao varrer diretórios: %v", err)
 	}
 
-	// ETAPA 1: Parseia todos os arquivos e popula allClasses
+	// ETAPA 1: Parseia todos os arquivos e popula os jobs com a classe e seu diretório
 	for _, path := range filePaths {
 		wg.Add(1)
 		sem <- struct{}{}
@@ -55,8 +61,15 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 			classData := Analyze(p)
 
 			if classData.Name != "" {
+				// Descobre a pasta original relativa ao rootDir
+				relPath, err := filepath.Rel(rootDir, p)
+				if err != nil {
+					relPath = filepath.Base(p) // Fallback seguro
+				}
+				relDir := filepath.Dir(relPath)
+
 				mu.Lock()
-				allClasses = append(allClasses, classData)
+				jobs = append(jobs, ClassJob{Data: classData, RelDir: relDir})
 				mu.Unlock()
 			}
 		}(path)
@@ -64,15 +77,30 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 
 	wg.Wait() // Espera todas as classes serem processadas
 
-	// ETAPA 2: Agora que sabemos de TODAS as classes do projeto, geramos os Markdowns
-	for _, classData := range allClasses {
-		outFileName := fmt.Sprintf("%s.md", classData.Name)
-		outFilePath := filepath.Join(outputDir, outFileName)
-
-		// Passamos a lista completa allClasses para a função!
-		GenerateMarkdown(classData, allClasses, outFilePath)
+	// Monta a lista completa de classes puras para passar para a doc global e dependências
+	var allClasses []ClassJava
+	for _, job := range jobs {
+		allClasses = append(allClasses, job.Data)
 	}
 
+	// ETAPA 2: Agora que sabemos de TODAS as classes do projeto, geramos os Markdowns nos subdiretórios
+	for _, job := range jobs {
+		// Monta o caminho do subdiretório de saída espelhando a origem
+		targetDir := filepath.Join(outputDir, job.RelDir)
+		err := os.MkdirAll(targetDir, os.ModePerm)
+		if err != nil {
+			log.Printf("⚠️ Erro ao criar subdiretório %s: %v\n", targetDir, err)
+			continue
+		}
+
+		outFileName := fmt.Sprintf("%s.md", job.Data.Name)
+		outFilePath := filepath.Join(targetDir, outFileName)
+
+		// Passamos a lista completa allClasses para a função!
+		GenerateMarkdown(job.Data, allClasses, outFilePath)
+	}
+
+	// O arquivo de arquitetura global e o JSON continuam indo para a raiz do outputDir
 	if len(allClasses) > 0 {
 		globalOutPath := filepath.Join(outputDir, "00_Architecture_Overview.md")
 		GenerateGlobalArchitecture(allClasses, globalOutPath)

@@ -8,35 +8,39 @@ flowchart LR
     classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
     
-    subgraph controllers
-        
-        UsuarioController["UsuarioController"]:::classNode
-        
-    end
-    
-    subgraph models
-        
-        UserModel["UserModel"]:::classNode
-        
-    end
-    
-    subgraph parser
+    subgraph com.exampleparser
         
         ParserTestCase["ParserTestCase"]:::classNode
         
     end
     
-    subgraph services
-        
-        UsuarioService["UsuarioService"]:::classNode
-        
-    end
-    
-    subgraph sync
+    subgraph com.rfidbrasil.core.controllersync
         
         BoatSyncController["BoatSyncController"]:::classNode
         
+    end
+    
+    subgraph com.rfidbrasil.core.servicesync
+        
         CloudSyncUploadService["CloudSyncUploadService"]:::classNode
+        
+    end
+    
+    subgraph internal.testadata.javacontrollers
+        
+        UsuarioController["UsuarioController"]:::classNode
+        
+    end
+    
+    subgraph internal.testadata.javamodels
+        
+        UserModel["UserModel"]:::classNode
+        
+    end
+    
+    subgraph internal.testadata.javaservices
+        
+        UsuarioService["UsuarioService"]:::classNode
         
     end
     
@@ -49,19 +53,19 @@ flowchart LR
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
         
         
             UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)<br>registrarLog(...)</b>"| UsuarioService
         
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
@@ -214,14 +218,14 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>save(chunk)<br>findUnsyncedByMasterId(...)</b>"| SyncPacketChunkRepository
+            CloudSyncUploadService -->|"Calls:<br><b>findUnsyncedByMasterId(...)<br>save(chunk)</b>"| SyncPacketChunkRepository
         
     
     
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>compressToGzip(pbPackage)<br>sliceIntoChunks(gzipPayload)<br>calculateSha256(gzipPayload)</b>"| PacketChunkerEngine
+            CloudSyncUploadService -->|"Calls:<br><b>sliceIntoChunks(gzipPayload)<br>calculateSha256(gzipPayload)<br>compressToGzip(pbPackage)</b>"| PacketChunkerEngine
         
     
     

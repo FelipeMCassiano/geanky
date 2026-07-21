@@ -655,7 +655,7 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	for _, c := range classes {
 		pkgName := "Default Package"
 		if c.Package.Name != "" {
-			pkgName = c.Package.Name
+			pkgName = c.Package.Scope + c.Package.Name
 		}
 		groupedClasses[pkgName] = append(groupedClasses[pkgName], c)
 	}
