@@ -103,6 +103,7 @@ func getDependencyCalls(c ClassJava) map[string]string {
 }
 
 // generateSequenceDiagram constrói dinamicamente um diagrama de sequência Mermaid
+// generateSequenceDiagram constrói dinamicamente um diagrama de sequência Mermaid
 func generateSequenceDiagram(m Executable) string {
 	var sb strings.Builder
 	participants := make(map[string]bool)
@@ -119,6 +120,19 @@ func generateSequenceDiagram(m Executable) string {
 			participants[name] = true
 			sb.WriteString(fmt.Sprintf("    participant %s\n", name))
 		}
+	}
+
+	// NOVO: Limpa quebras de linha que destroem o Mermaid e resume textos gigantes
+	cleanForMermaid := func(s string) string {
+		s = strings.ReplaceAll(s, "\n", " ")
+		s = strings.ReplaceAll(s, "\r", "")
+		s = strings.ReplaceAll(s, "\"", "'") // Evita conflito de aspas duplas no Mermaid
+
+		// Se o texto for absurdamente grande (ex: instanciação de objetos enormes), trunca para o diagrama ficar legível
+		if len(s) > 60 {
+			s = s[:57] + "..."
+		}
+		return s
 	}
 
 	var resolveTarget func(expr Expression) string
@@ -187,9 +201,9 @@ func generateSequenceDiagram(m Executable) string {
 			traverse(e.Left)
 			traverse(e.Right)
 		case IfNode:
-			cond := exprToString(e.Condition)
+			cond := cleanForMermaid(exprToString(e.Condition))
 			if cond == "" {
-				cond = "condição"
+				cond = "condition"
 			}
 			sb.WriteString(fmt.Sprintf("    alt %s\n", cond))
 			for _, s := range e.Consequence.Statements {
@@ -206,21 +220,24 @@ func generateSequenceDiagram(m Executable) string {
 				for _, a := range e.Args {
 					args = append(args, exprToString(a))
 				}
+
+				callArgs := cleanForMermaid(strings.Join(args, ", "))
+
 				sb.WriteString(fmt.Sprintf(
 					"    ThisClass->>%s: %s(%s)\n",
 					target,
 					e.Accessed.Identifier.Name,
-					strings.Join(args, ", "),
+					callArgs,
 				))
 			}
 			for _, a := range e.Args {
 				traverse(a)
 			}
 		case ReturnNode:
-			val := exprToString(e.Value)
+			val := cleanForMermaid(exprToString(e.Value))
 			sb.WriteString(fmt.Sprintf("    ThisClass-->>Caller: return %s\n", val))
 		default:
-			// Nó não mapeado: ignorado silenciosamente para tolerância a falhas.
+			// Nó não mapeado: ignorado silenciosamente
 		}
 	}
 
@@ -228,7 +245,9 @@ func generateSequenceDiagram(m Executable) string {
 	for _, p := range m.Parameters {
 		params = append(params, p.Declarator)
 	}
-	sb.WriteString(fmt.Sprintf("\n    Caller->>ThisClass: %s(%s)\n", m.Name, strings.Join(params, ", ")))
+
+	initCall := cleanForMermaid(strings.Join(params, ", "))
+	sb.WriteString(fmt.Sprintf("\n    Caller->>ThisClass: %s(%s)\n", m.Name, initCall))
 
 	for _, s := range m.Body.Statements {
 		for _, e := range s.Expressions {

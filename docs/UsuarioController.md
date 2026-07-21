@@ -112,7 +112,7 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: processarUsuario(userModel, status)
-    alt this.service.validarEAtivarUsuario(userModel.getIdade(), status)
+    alt this.service.validarEAtivarUsuario(userModel.getIdade(), ...
     participant service
     ThisClass->>service: registrarLog(... + this.nomeSistema)
     ThisClass-->>Caller: return true

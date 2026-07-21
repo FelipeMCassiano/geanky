@@ -244,7 +244,7 @@ sequenceDiagram
     actor Caller
     participant ThisClass
 
-    Caller->>ThisClass: CloudSyncUploadService(situationRepository, locationRepository, inventoryRepository, musteringBuilderService, httpClient, syncControlRepository, sseSyncService, restTemplate, downloadService, itemRepository, chunkerEngine, syncPacketChunkRepository, syncPacketMasterRepository, parallelSyncExecutor, machineClient)
+    Caller->>ThisClass: CloudSyncUploadService(situationRepository, locationRepository, inventoryReposit...)
 
 ```
 
@@ -367,10 +367,9 @@ sequenceDiagram
 
     Caller->>ThisClass: latestSync()
     alt syncModelOpt.isEmpty()
-    ThisClass-->>Caller: return new SyncLastestResponse("", ESyncStatus.NONE, 0L, "")
+    ThisClass-->>Caller: return new SyncLastestResponse('', ESyncStatus.NONE, 0L, '')
     end
-    ThisClass-->>Caller: return new SyncLastestResponse(eventKey, syncControlModel.getStatus(),
-                timestamp, syncControlModel.getErrorMessage())
+    ThisClass-->>Caller: return new SyncLastestResponse(eventKey, syncControlModel.getSta...
 
 ```
 
@@ -408,15 +407,15 @@ sequenceDiagram
     Caller->>ThisClass: syncToCloud(request)
     participant log
     ThisClass->>log: info(...)
-    alt ESyncStatus.UPLOAD_IN_PROGRESS.equals(control.getStatus()) || ESyncStatus.DOWNLOAD_IN_PROGRESS.equals(control.getStatus()) || ESyncStatus.IN_PROGRESS.equals(control.getStatus())
+    alt ESyncStatus.UPLOAD_IN_PROGRESS.equals(control.getStatus()...
     participant sseSyncService
     ThisClass->>sseSyncService: sendSyncStatusOnChange(control.getEventKey(), ..., control.getStatus())
     participant control
     ThisClass->>control: getEventKey()
     ThisClass->>control: getStatus()
-    ThisClass-->>Caller: return new SyncEvent(control.getEventKey().toString(), control.getStatus(), lastSync)
+    ThisClass-->>Caller: return new SyncEvent(control.getEventKey().toString(), control.g...
     end
-    alt request.getEventKey() != null && !request.getEventKey().trim().isEmpty()
+    alt request.getEventKey() != null && !request.getEventKey().t...
     participant UUID
     ThisClass->>UUID: fromString(request.getEventKey())
     participant request
@@ -435,7 +434,7 @@ sequenceDiagram
     ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, ..., ESyncStatus.IN_PROGRESS)
     ThisClass->>request: getLocationId()
     ThisClass->>log: info(..., eventKey)
-    ThisClass-->>Caller: return new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRESS, syncTimestamp)
+    ThisClass-->>Caller: return new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRES...
 
 ```
 
@@ -934,17 +933,7 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: fetchItemStatusTransitions(transitions)
-    ThisClass-->>Caller: return transitions.stream().map(t -> {
-            ItemStatusSyncDTO dto = new ItemStatusSyncDTO();
-            dto.setEpc(t.getEpc());
-            dto.setStatus(t.getSituation());
-            dto.setReadingDate(t.getReadingDate());
-            dto.setAntennaNumber(t.getAntennaNumber());
-            dto.setPortalMac(t.getPortalMac());
-            dto.setInventoryId(t.getInventoryId());
-            dto.setItemId(t.getItemId());
-            return dto;
-        }).collect(Collectors.toList())
+    ThisClass-->>Caller: return transitions.stream().map(t -> {             ItemStatusSyn...
 
 ```
 

@@ -126,7 +126,7 @@ sequenceDiagram
     actor Caller
     participant ThisClass
 
-    Caller->>ThisClass: BoatSyncController(service, syncService, sseSyncService, downloadService, machineSync)
+    Caller->>ThisClass: BoatSyncController(service, syncService, sseSyncService, downloadService, ma...)
 
 ```
 
@@ -214,7 +214,7 @@ sequenceDiagram
 
     Caller->>ThisClass: portalReadingsSyncPaginated(timestamp, id, principal)
     alt readings.size() < SyncService.MAX_ITEMS + ...
-    ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, HttpStatus.OK, principal)
+    ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, Htt...
     end
 
 ```
