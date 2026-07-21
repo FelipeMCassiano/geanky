@@ -68,13 +68,25 @@ var handlers = map[string]CaptureHandler{
 }
 
 func parseImport(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
+	if node == nil || node.NamedChildCount() == 0 {
+		return fmt.Errorf("Import invalido")
+	}
 	importNode := node.NamedChild(0)
+	if importNode == nil {
+		return fmt.Errorf("No de import e nulo")
+	}
 	classData.Imports = append(classData.Imports, importNode.Utf8Text(content))
 	return nil
 }
-
 func parsePackage(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
+	if node == nil || node.NamedChildCount() == 0 {
+		return fmt.Errorf("No de package e nulo")
+	}
 	pkgNode := node.NamedChild(0)
+	if pkgNode == nil {
+		return fmt.Errorf("No interno de package e nulo")
+	}
+
 	scopeNode := pkgNode.ChildByFieldName("scope")
 	nameNode := pkgNode.ChildByFieldName("name")
 
@@ -152,45 +164,57 @@ func parseField(node *tree_sitter.Node, content []byte, classData *ClassJava) er
 	return nil
 }
 func parseMethod(node *tree_sitter.Node, content []byte, classData *ClassJava) error {
+	if node == nil {
+		return fmt.Errorf("No do metodo e nulo")
+	}
 
 	modifiers, annotations := extractModifiersAndAnnotations(node, content)
+
+	returnType := ""
+	if typeNode := node.ChildByFieldName("type"); typeNode != nil {
+		returnType = typeNode.Utf8Text(content)
+	}
+
+	methodName := ""
+	if nameNode := node.ChildByFieldName("name"); nameNode != nil {
+		methodName = nameNode.Utf8Text(content)
+	}
+
 	var newMethod = Executable{
 		Annotations:   annotations,
 		Modifiers:     modifiers,
-		ReturnType:    node.ChildByFieldName("type").Utf8Text(content),
-		Name:          node.ChildByFieldName("name").Utf8Text(content),
+		ReturnType:    returnType,
+		Name:          methodName,
 		IsConstructor: false,
 	}
 	parseParameters(node, content, &newMethod)
 
 	bodyNode := node.ChildByFieldName("body")
-
 	newMethod.Body = parseBlock(bodyNode, content)
+
 	for i := range node.ChildCount() {
 		child := node.Child(i)
-		if child.Kind() == "throws" {
+		if child != nil && child.Kind() == "throws" {
 			rawText := child.Utf8Text(content)
-
 			cleanText := strings.Replace(rawText, "throws", "", 1)
 			newMethod.Throws = strings.TrimSpace(cleanText)
 			break
 		}
 	}
-	fmt.Println(newMethod.Throws)
 	classData.Methods = append(classData.Methods, newMethod)
 	return nil
 }
-
 func parseBlock(node *tree_sitter.Node, content []byte) Block {
-	childCount := node.ChildCount()
-	var newBlock Block
-
 	if node == nil {
-		return newBlock
+		return Block{}
 	}
 
-	for i := range childCount {
+	var newBlock Block
+	for i := range node.ChildCount() {
 		child := node.Child(i)
+		if child == nil {
+			continue
+		}
 		if handler, exists := statementsHandlers[child.Kind()]; exists {
 			newStatement, err := handler(child, content)
 			if err == nil {

@@ -162,6 +162,10 @@ func parseParenthesized(node *tree_sitter.Node, content []byte) (Expression, err
 
 }
 func parseMethodInvocation(node *tree_sitter.Node, content []byte) (Expression, error) {
+	if node == nil {
+		return nil, fmt.Errorf("No method_invocation e nulo")
+	}
+
 	objNode := node.ChildByFieldName("object")
 	nameNode := node.ChildByFieldName("name")
 	methodName := ""
@@ -172,13 +176,16 @@ func parseMethodInvocation(node *tree_sitter.Node, content []byte) (Expression, 
 	var args []Expression
 	argsNode := node.ChildByFieldName("arguments")
 
-	for i := range argsNode.ChildCount() {
-		child := argsNode.Child(i)
-		if child.IsNamed() {
-			expr := routeExpression(child, content)
-			args = append(args, expr)
+	if argsNode != nil {
+		for i := range argsNode.ChildCount() {
+			child := argsNode.Child(i)
+			if child != nil && child.IsNamed() {
+				expr := routeExpression(child, content)
+				if expr != nil {
+					args = append(args, expr)
+				}
+			}
 		}
-
 	}
 
 	return MethodInvocation{
@@ -188,9 +195,7 @@ func parseMethodInvocation(node *tree_sitter.Node, content []byte) (Expression, 
 		},
 		Args: args,
 	}, nil
-
 }
-
 func parseLiteral(node *tree_sitter.Node, content []byte) (Expression, error) {
 	return Literal{node.Utf8Text(content)}, nil
 }
@@ -199,16 +204,22 @@ func parseIdentifier(node *tree_sitter.Node, content []byte) (Expression, error)
 	return Identifier{node.Utf8Text(content)}, nil
 
 }
-
 func parseBinary(node *tree_sitter.Node, content []byte) (Expression, error) {
+	if node == nil {
+		return nil, fmt.Errorf("No binario nulo")
+	}
+
 	leftNode := node.ChildByFieldName("left")
 	rightNode := node.ChildByFieldName("right")
 	operatorNode := node.ChildByFieldName("operator")
+
 	op := ""
 	if operatorNode != nil {
 		op = operatorNode.Utf8Text(content)
 	} else if node.ChildCount() > 1 {
-		op = node.Child(1).Utf8Text(content)
+		if child := node.Child(1); child != nil {
+			op = child.Utf8Text(content)
+		}
 	}
 
 	return Binary{
@@ -217,7 +228,6 @@ func parseBinary(node *tree_sitter.Node, content []byte) (Expression, error) {
 		Right:    routeExpression(rightNode, content),
 	}, nil
 }
-
 func parseAssignment(node *tree_sitter.Node, content []byte) (Expression, error) {
 	leftNode := node.ChildByFieldName("left")
 

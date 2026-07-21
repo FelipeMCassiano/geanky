@@ -1,6 +1,8 @@
 package java
 
 import (
+	"fmt"
+
 	tree_sitter "github.com/tree-sitter/go-tree-sitter"
 )
 
@@ -139,17 +141,36 @@ func parseTryStatement(node *tree_sitter.Node, content []byte) (Statement, error
 	}}, nil
 }
 func parseLocalVariableDeclaration(node *tree_sitter.Node, content []byte) (Statement, error) {
+	if node == nil {
+		return Statement{}, fmt.Errorf("No e nulo")
+	}
 
 	typeNode := node.ChildByFieldName("type")
 	declaratorNode := node.ChildByFieldName("declarator")
+
+	if declaratorNode == nil {
+		return Statement{}, fmt.Errorf("Declarator nulo")
+	}
+
 	nameNode := declaratorNode.ChildByFieldName("name")
 	valueNode := declaratorNode.ChildByFieldName("value")
+
+	typeName := ""
+	if typeNode != nil {
+		typeName = typeNode.Utf8Text(content)
+	}
+
+	var declaratorName string
+	if nameNode != nil {
+		declaratorName = nameNode.Utf8Text(content)
+	}
+
 	expr := routeExpression(valueNode, content)
 
 	return Statement{Expressions: []Expression{
 		Variable{
-			TypeName:   typeNode.Utf8Text(content),
-			Declarator: nameNode.Utf8Text(content),
+			TypeName:   typeName,
+			Declarator: declaratorName,
 			Value:      expr,
 		},
 	}}, nil

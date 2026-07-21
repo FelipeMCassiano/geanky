@@ -612,8 +612,8 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
 		"bt":                      func() string { return "`" },
-		"formatModifiers":         formatModifiers,  // Certifique-se que você tem essa func no seu build
-		"formatExpression":        formatExpression, // Certifique-se que você tem essa func no seu build
+		"formatModifiers":         formatModifiers,
+		"formatExpression":        formatExpression,
 		"extractClassName":        extractClassName,
 		"isProjectClass":          isProjectClass,
 		"generateSequenceDiagram": generateSequenceDiagram,
