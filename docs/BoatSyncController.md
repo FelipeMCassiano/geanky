@@ -123,7 +123,7 @@ sequenceDiagram
     actor Caller
     participant ThisClass
 
-    Caller->>ThisClass: BoatSyncController(service, syncService, sseSyncService, downloadService, machineSync)
+    Caller->>ThisClass: BoatSyncController(service, syncService, sseSyncService, downloadService, ma...)
 
 ```
 
@@ -191,11 +191,11 @@ sequenceDiagram
 
     Caller->>ThisClass: portalReadingsSyncPaginated(timestamp, id, principal)
     ThisClass->>service: syncPortalReadingsPaginated(timestamp, id, principal)
-    alt readings.size() &lt; SyncService.MAX_ITEMS + 1
-    ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, HttpStatus.OK, principal)
+    alt readings.size() < SyncService.MAX_ITEMS + 1
+    ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, Htt...
     else
     ThisClass->>readings: remove(SyncService.MAX_ITEMS)
-    ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, HttpStatus.PARTIAL_CONTENT, principal, \"v2/sync/portal-reading...
+    ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, Htt...
     end
 
 ```
@@ -263,11 +263,11 @@ sequenceDiagram
 
     Caller->>ThisClass: triggerCloudSync(request, principal)
     alt try
-    ThisClass-->>Caller: return ContentLengthResponseBuilder.ok(machineSync.executeSync(true, request.getTimestamp()))
+    ThisClass-->>Caller: return ContentLengthResponseBuilder.ok(machineSync.executeSync(t...
     else catch 
-    ThisClass->>log: error(\"[REST] Erro ao tentar acionar o sync manual: {}\", e.getMessage())
+    ThisClass->>log: error('[REST] Erro ao tentar acionar o sync manual: {}', e.getM...)
     ThisClass->>e: getMessage()
-    ThisClass-->>Caller: return ResponseEntity.internalServerError().body(\"Falha ao iniciar sincronização: \" + e.getMessage())
+    ThisClass-->>Caller: return ResponseEntity.internalServerError().body('Falha ao inici...
     end
 
 ```

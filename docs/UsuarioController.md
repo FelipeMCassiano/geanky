@@ -105,7 +105,7 @@ sequenceDiagram
     ThisClass->>service: validarEAtivarUsuario(userModel.getIdade(), status)
     ThisClass->>userModel: getIdade()
     alt valido
-    ThisClass->>service: registrarLog(\"Processo concluido no sistema \" + this.nomeSistema)
+    ThisClass->>service: registrarLog('Processo concluido no sistema ' + this.nomeSistema)
     ThisClass-->>Caller: return true
     end
     ThisClass-->>Caller: return false
