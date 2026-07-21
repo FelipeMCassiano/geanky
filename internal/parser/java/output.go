@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 )
@@ -394,19 +395,21 @@ func generateSequenceDiagram(m Executable) string {
 			steps.WriteString("    Note right of ThisClass: break loop\n")
 		case MethodInvocation:
 			target := resolveTarget(e.Accessed.Object)
-			if target == "" {
+
+			target = strings.TrimSpace(target)
+			target = strings.Split(target, " ")[0]
+			target = strings.Split(target, ".")[0]
+			target = strings.Split(target, "(")[0]
+			target = strings.ReplaceAll(target, "<", "")
+			target = strings.ReplaceAll(target, ">", "")
+			target = strings.ReplaceAll(target, "[", "")
+			target = strings.ReplaceAll(target, "]", "")
+
+			if target == "" || target == "this" || target == "super" {
 				target = "ThisClass"
 			} else {
-				target = strings.Split(target, " ")[0]
-				target = strings.Split(target, ".")[0]
-				target = strings.Split(target, "(")[0]
-
-				target = strings.ReplaceAll(target, "<", "")
-				target = strings.ReplaceAll(target, ">", "")
-				target = strings.ReplaceAll(target, "[", "")
-				target = strings.ReplaceAll(target, "]", "")
+				ensureParticipant(target)
 			}
-			ensureParticipant(target)
 
 			var args []string
 			for _, a := range e.Args {
@@ -415,10 +418,14 @@ func generateSequenceDiagram(m Executable) string {
 
 			callArgs := cleanForMermaid(strings.Join(args, ", "))
 
-			// AQUI É A MUDANÇA: Exibe objeto.metodo(...) se não for da própria classe
-			methodLabel := e.Accessed.Identifier.Name
+			methodName := e.Accessed.Identifier.Name
+			if methodName == "" {
+				methodName = "call"
+			}
+
+			methodLabel := methodName
 			if target != "ThisClass" {
-				methodLabel = target + "." + methodLabel
+				methodLabel = fmt.Sprintf("%s.%s", target, methodName)
 			}
 
 			steps.WriteString(fmt.Sprintf(
@@ -435,7 +442,6 @@ func generateSequenceDiagram(m Executable) string {
 			val := cleanForMermaid(exprToString(e.Value))
 			steps.WriteString(fmt.Sprintf("    ThisClass-->>Caller: return %s\n", val))
 		default:
-			// Nó não mapeado: ignorado silenciosamente
 		}
 	}
 
@@ -599,15 +605,32 @@ flowchart LR
 {{bt}}{{bt}}{{bt}}
 `
 
-func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilename string) {
+func GenerateMarkdown(classData ClassJava, allClasses []ClassJob, currentFilePath string) {
 	isProjectClass := func(importPath string) bool {
 		className := extractClassName(importPath)
-		for _, c := range allClasses {
-			if c.Name == className {
+		for _, job := range allClasses {
+			if job.Data.Name == className {
 				return true
 			}
 		}
 		return false
+	}
+
+	getClassLink := func(typeName string) string {
+		cleanTypeName := extractClassName(typeName)
+
+		for _, job := range allClasses {
+			if job.Data.Name == cleanTypeName {
+				targetFilePath := filepath.Join(job.RelDir, fmt.Sprintf("%s.md", job.Data.Name))
+
+				currentDir := filepath.Dir(currentFilePath)
+				relPath, err := filepath.Rel(currentDir, targetFilePath)
+				if err == nil {
+					return filepath.ToSlash(relPath)
+				}
+			}
+		}
+		return fmt.Sprintf("%s.md", cleanTypeName)
 	}
 
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
@@ -616,6 +639,7 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 		"formatExpression":        formatExpression,
 		"extractClassName":        extractClassName,
 		"isProjectClass":          isProjectClass,
+		"getClassLink":            getClassLink,
 		"generateSequenceDiagram": generateSequenceDiagram,
 	}).Parse(docTemplate)
 
@@ -623,7 +647,7 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 		log.Fatalf("Erro ao criar template: %v", err)
 	}
 
-	file, err := os.Create(outputFilename)
+	file, err := os.Create(currentFilePath)
 	if err != nil {
 		log.Fatalf("Erro ao criar arquivo: %v", err)
 	}
