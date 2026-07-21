@@ -32,14 +32,12 @@ Visual representation of the internal state and external dependencies this class
 
 ```mermaid
 flowchart LR
-    %% Styling
     classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
     ThisClass["UsuarioController"]:::classNode
 
-    %% State vs External Dependencies
     
     
     ThisClass -- "Maintains State" --- State_nomeSistema(["String<br>nomeSistema"]):::stateNode
@@ -54,7 +52,6 @@ flowchart LR
 ---
 
 ## 3. Deep Dive (Constructors & Methods)
-Expand the sections below to read the exact pseudo-code and business rules.
 
 
 ### 🛠️ Constructors
@@ -75,21 +72,12 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **nomeSistema** (`String`)
-
-- **service** (`UsuarioService`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Set 'this.nomeSistema' to 'nomeSistema'
 
 1. Set 'this.service' to 'service'
-
 
 
 </details>
@@ -112,33 +100,29 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: processarUsuario(userModel, status)
-    alt this.service.validarEAtivarUsuario(userModel.getIdade(), ...
     participant service
-    ThisClass->>service: registrarLog(... + this.nomeSistema)
+    ThisClass->>service: validarEAtivarUsuario(userModel.getIdade(), status)
+    participant userModel
+    ThisClass->>userModel: getIdade()
+    alt valido
+    ThisClass->>service: registrarLog('Processo concluido no sistema ' + this.nomeSistema)
     ThisClass-->>Caller: return true
     end
     ThisClass-->>Caller: return false
 
 ```
 
-**Parameters:**
-
-- **userModel** (`UserModel`)
-
-- **status** (`String`)
-
-
 **Step-by-Step Logic:**
 
 
+1. Declare variable 'valido' of type 'boolean' and initialize it with 'Invoke 'this.service.validarEAtivarUsuario' with parameters: 'Invoke 'userModel.getIdade' (no parameters)', 'status''
 
-1. If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'Invoke 'userModel.getIdade' (no parameters)', 'status'
+1. If valido
    then:
-      - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
+      - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " + this.nomeSistema'
       - Return the result of: true
 
 1. Return the result of: false
-
 
 
 </details>

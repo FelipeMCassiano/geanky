@@ -124,10 +124,10 @@ A high-level overview of the class, its internal state, and available methods.
 **Available Methods:**
 - **setDestination(String destination)** ➞ returns `void`
 - **latestSync()** ➞ returns `SyncLastestResponse`
-- **syncToCloud(SyncRequest request)** ➞ returns `SyncEvent`
+- **syncToCloud(SyncRequest request)** ➞ returns `SyncEvent` (throws AppException)
 - **authorizeSync()** ➞ returns `String`
 - **backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)** ➞ returns `void`
-- **processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)** ➞ returns `void`
+- **processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)** ➞ returns `void` (throws AppException)
 - **getControlWithRetry(UUID eventKey)** ➞ returns `SyncControlModel`
 - **processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)** ➞ returns `void`
 - **saveMasterAndChunksToDatabase(List<byte[]> slices, String checksum)** ➞ returns `SyncPacketMaster`
@@ -145,14 +145,12 @@ Visual representation of the internal state and external dependencies this class
 
 ```mermaid
 flowchart LR
-    %% Styling
     classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
     ThisClass["CloudSyncUploadService"]:::classNode
 
-    %% State vs External Dependencies
     
     
     ThisClass -- "Depends on" ---> Dep_machineClient["MachineClient"]:::extNode
@@ -227,7 +225,6 @@ flowchart LR
 ---
 
 ## 3. Deep Dive (Constructors & Methods)
-Expand the sections below to read the exact pseudo-code and business rules.
 
 
 ### 🛠️ Constructors
@@ -248,41 +245,7 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **situationRepository** (`InventorySituationRepository`)
-
-- **locationRepository** (`LocationRepository`)
-
-- **inventoryRepository** (`InventoryRepository`)
-
-- **musteringBuilderService** (`SyncService`)
-
-- **httpClient** (`CloudSyncIntegrationClient`)
-
-- **syncControlRepository** (`SyncControlRepository`)
-
-- **sseSyncService** (`BoatSseSyncService`)
-
-- **restTemplate** (`RestTemplate`)
-
-- **downloadService** (`DownloadService`)
-
-- **itemRepository** (`ItemRepository`)
-
-- **chunkerEngine** (`PacketChunkerEngine`)
-
-- **syncPacketChunkRepository** (`SyncPacketChunkRepository`)
-
-- **syncPacketMasterRepository** (`SyncPacketMasterRepository`)
-
-- **parallelSyncExecutor** (`Executor`)
-
-- **machineClient** (`MachineClient`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Set 'this.situationRepository' to 'situationRepository'
@@ -314,7 +277,6 @@ sequenceDiagram
 1. Set 'this.masterRepository' to 'syncPacketMasterRepository'
 
 
-
 </details>
 
 
@@ -338,17 +300,10 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **destination** (`String`)
-
-
 **Step-by-Step Logic:**
 
 
-
 1. Set 'this.destination' to 'destination'
-
 
 
 </details>
@@ -366,28 +321,38 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: latestSync()
+    participant syncControlRepository
+    ThisClass->>syncControlRepository: findFirstByOrderByIdDesc()
     alt syncModelOpt.isEmpty()
     ThisClass-->>Caller: return new SyncLastestResponse('', ESyncStatus.NONE, 0L, '')
     end
+    participant syncModelOpt
+    ThisClass->>syncModelOpt: get()
     ThisClass-->>Caller: return new SyncLastestResponse(eventKey, syncControlModel.getSta...
 
 ```
 
-**Parameters:**
-> *None.*
-
-
 **Step-by-Step Logic:**
 
 
+1. Declare variable 'syncModelOpt' of type 'Optional<SyncControlModel>' and initialize it with 'Invoke 'syncControlRepository.findFirstByOrderByIdDesc' (no parameters)'
 
 1. If Invoke 'syncModelOpt.isEmpty' (no parameters)
    then:
       - Return the result of: new SyncLastestResponse("", ESyncStatus.NONE, 0L, "")
 
+1. Declare variable 'syncControlModel' of type 'SyncControlModel' and initialize it with 'Invoke 'syncModelOpt.get' (no parameters)'
+
+1. Declare variable 'timestamp' of type 'Long' and initialize it with 'syncControlModel.getLastSyncAt() != null
+                ? syncControlModel.getLastSyncAt().toEpochMilli()
+                : 0L'
+
+1. Declare variable 'eventKey' of type 'String' and initialize it with 'syncControlModel.getEventKey() != null
+                ? syncControlModel.getEventKey().toString()
+                : ""'
+
 1. Return the result of: new SyncLastestResponse(eventKey, syncControlModel.getStatus(),
                 timestamp, syncControlModel.getErrorMessage())
-
 
 
 </details>
@@ -396,7 +361,7 @@ sequenceDiagram
 <summary><b>syncToCloud</b>(<i>SyncRequest</i> request) ➞ `SyncEvent` (Click to expand)</summary>
 
 > **Signature:**
-> `public SyncEvent syncToCloud(SyncRequest request)`
+> `public SyncEvent syncToCloud(SyncRequest request) throws AppException`
 
 **Sequence Diagram:**
 ```mermaid
@@ -406,57 +371,72 @@ sequenceDiagram
 
     Caller->>ThisClass: syncToCloud(request)
     participant log
-    ThisClass->>log: info(...)
+    ThisClass->>log: info('sync iniciado')
     alt ESyncStatus.UPLOAD_IN_PROGRESS.equals(control.getStatus()...
     participant sseSyncService
-    ThisClass->>sseSyncService: sendSyncStatusOnChange(control.getEventKey(), ..., control.getStatus())
+    ThisClass->>sseSyncService: sendSyncStatusOnChange(control.getEventKey(), 'Sync já em andamento...', contro...)
     participant control
     ThisClass->>control: getEventKey()
     ThisClass->>control: getStatus()
     ThisClass-->>Caller: return new SyncEvent(control.getEventKey().toString(), control.g...
     end
+    ThisClass->>control: getLastSyncAt()
     alt request.getEventKey() != null && !request.getEventKey().t...
     participant UUID
     ThisClass->>UUID: fromString(request.getEventKey())
     participant request
     ThisClass->>request: getEventKey()
+    else
+    ThisClass->>UUID: randomUUID()
     end
     participant newControl
     ThisClass->>newControl: setEventKey(targetEventKey)
     ThisClass->>newControl: setStatus(ESyncStatus.UPLOAD_IN_PROGRESS)
     ThisClass->>newControl: setLastSyncAt(lastSuccessfulSyncDate)
-    ThisClass->>newControl: setErrorMessage(...)
+    ThisClass->>newControl: setErrorMessage('')
     alt newControl.getCreatedAt() == null
     ThisClass->>newControl: setCreatedAt(new java.util.Date())
     end
     participant syncControlRepository
     ThisClass->>syncControlRepository: saveAndFlush(newControl)
-    ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, ..., ESyncStatus.IN_PROGRESS)
+    ThisClass->>newControl: getEventKey()
+    ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, '', ESyncStatus.IN_PROGRESS)
     ThisClass->>request: getLocationId()
-    ThisClass->>log: info(..., eventKey)
+    ThisClass->>log: info('[SYNC] Retornando eventKey {} para o frontend conectar n...)
     ThisClass-->>Caller: return new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRES...
 
 ```
 
-**Parameters:**
-
-- **request** (`SyncRequest`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Invoke 'log.info' with parameters: '"sync iniciado"'
 
-1. If Invoke 'ESyncStatus.UPLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' OR Invoke 'ESyncStatus.DOWNLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' OR Invoke 'ESyncStatus.IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)'
+1. Declare variable 'token' of type 'String' and initialize it with 'Invoke 'authorizeSync' (no parameters)'
+
+1. Declare variable 'control' of type 'SyncControlModel' and initialize it with 'Invoke 'Invoke 'syncControlRepository.findFirstByOrderByIdDesc' (no parameters).orElseGet' with parameters: '() -> {
+                    SyncControlModel newControl = new SyncControlModel();
+                    newControl.setEventKey(UUID.randomUUID());
+                    return newControl;
+                }''
+
+1. If Invoke 'ESyncStatus.UPLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' || Invoke 'ESyncStatus.DOWNLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' || Invoke 'ESyncStatus.IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)'
    then:
+      - Declare variable 'lastSync' of type 'Long' and initialize it with 'control.getLastSyncAt() != null ? control.getLastSyncAt().toEpochMilli() : null'
       - Invoke 'sseSyncService.sendSyncStatusOnChange' with parameters: 'Invoke 'control.getEventKey' (no parameters)', '"Sync já em andamento..."', 'Invoke 'control.getStatus' (no parameters)'
       - Return the result of: new SyncEvent(control.getEventKey().toString(), control.getStatus(), lastSync)
 
-1. If Invoke 'request.getEventKey' (no parameters) is not equal to null AND !request.getEventKey().trim().isEmpty()
+1. Declare variable 'lastSuccessfulSyncDate' of type 'Instant' and initialize it with 'Invoke 'control.getLastSyncAt' (no parameters)'
+
+1. Declare variable 'targetEventKey' of type 'UUID'
+
+1. If Invoke 'request.getEventKey' (no parameters) != null && !request.getEventKey().trim().isEmpty()
    then:
       - Set 'targetEventKey' to 'Invoke 'UUID.fromString' with parameters: 'Invoke 'request.getEventKey' (no parameters)''
+   else:
+      - Set 'targetEventKey' to 'Invoke 'UUID.randomUUID' (no parameters)'
+
+1. Declare variable 'newControl' of type 'SyncControlModel' and initialize it with 'Invoke 'Invoke 'syncControlRepository.findFirstByEventKeyOrderByIdDesc' with parameters: 'targetEventKey'.orElseGet' with parameters: '() -> new SyncControlModel()''
 
 1. Invoke 'newControl.setEventKey' with parameters: 'targetEventKey'
 
@@ -466,11 +446,16 @@ sequenceDiagram
 
 1. Invoke 'newControl.setErrorMessage' with parameters: '""'
 
-1. If Invoke 'newControl.getCreatedAt' (no parameters) is equal to null
+1. If Invoke 'newControl.getCreatedAt' (no parameters) == null
    then:
       - Invoke 'newControl.setCreatedAt' with parameters: 'new java.util.Date()'
 
 1. Invoke 'syncControlRepository.saveAndFlush' with parameters: 'newControl'
+
+1. Declare variable 'eventKey' of type 'UUID' and initialize it with 'Invoke 'newControl.getEventKey' (no parameters)'
+
+1. Declare variable 'syncTimestamp' of type 'Long' and initialize it with 'lastSuccessfulSyncDate != null ? lastSuccessfulSyncDate.toEpochMilli()
+                : request.getTimestamp()'
 
 1. Invoke 'sseSyncService.sendSyncStatusOnChange' with parameters: 'eventKey', '""', 'ESyncStatus.IN_PROGRESS'
 
@@ -479,7 +464,6 @@ sequenceDiagram
 1. Invoke 'log.info' with parameters: '"[SYNC] Retornando eventKey {} para o frontend conectar no SSE..."', 'eventKey'
 
 1. Return the result of: new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRESS, syncTimestamp)
-
 
 
 </details>
@@ -499,19 +483,39 @@ sequenceDiagram
     Caller->>ThisClass: authorizeSync()
     participant headers
     ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
+    alt try
+    participant restTemplate
+    ThisClass->>restTemplate: exchange(url, HttpMethod.POST, requestEntity, String.class)
+    participant mapper
+    ThisClass->>mapper: readTree(responseEntity.getBody())
+    participant responseEntity
+    ThisClass->>responseEntity: getBody()
+    ThisClass-->>Caller: return token
+    else catch 
+    alt e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStat...
+    ThisClass-->>Caller: throw new RuntimeException('Sync unauthorized')
+    end
+    ThisClass-->>Caller: throw e
+    else catch 
+    ThisClass-->>Caller: throw new RuntimeException('Erro ao buscar token: ' + e.getMess...
+    end
 
 ```
-
-**Parameters:**
-> *None.*
-
 
 **Step-by-Step Logic:**
 
 
+1. Declare variable 'req' of type 'AuthRequest' and initialize it with 'new AuthRequest("suporte@cbo.com", "RFIDBrasil")'
+
+1. Declare variable 'url' of type 'String' and initialize it with 'this.destination == null ? authUrl : this.destination + "/auth"'
+
+1. Declare variable 'headers' of type 'HttpHeaders' and initialize it with 'new HttpHeaders()'
 
 1. Invoke 'headers.setContentType' with parameters: 'MediaType.APPLICATION_JSON'
 
+1. Declare variable 'requestEntity' of type 'HttpEntity<?>' and initialize it with 'new HttpEntity<>(req, headers)'
+
+1. Execute a safe block (try) catching potential exceptions
 
 
 </details>
@@ -532,21 +536,7 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **eventKey** (`UUID`)
-
-- **request** (`SyncRequest`)
-
-- **token** (`String`)
-
-- **syncTimestamp** (`Long`)
-
-- **locationId** (`Long`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Invoke 'Invoke 'Invoke 'Invoke 'CompletableFuture.runAsync' with parameters: '() -> {
@@ -633,14 +623,13 @@ sequenceDiagram
                 }'
 
 
-
 </details>
 
 <details>
 <summary><b>processDownload</b>(<i>UUID</i> eventKey, <i>SyncRequest</i> request, <i>String</i> token, <i>Long</i> locationId) ➞ `void` (Click to expand)</summary>
 
 > **Signature:**
-> `private void processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)`
+> `private void processDownload(UUID eventKey, SyncRequest request, String token, Long locationId) throws AppException`
 
 **Sequence Diagram:**
 ```mermaid
@@ -649,22 +638,20 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: processDownload(eventKey, request, token, locationId)
+    alt try
+    participant downloadService
+    ThisClass->>downloadService: download(eventKey, request, token, locationId, this.destination)
+    else catch 
+    ThisClass-->>Caller: throw new AppException(500, e.getMessage())
+    end
 
 ```
 
-**Parameters:**
-
-- **eventKey** (`UUID`)
-
-- **request** (`SyncRequest`)
-
-- **token** (`String`)
-
-- **locationId** (`Long`)
-
-
 **Step-by-Step Logic:**
-> *Empty body.*
+
+
+1. Execute a safe block (try) catching potential exceptions
+
 
 </details>
 
@@ -681,16 +668,29 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: getControlWithRetry(eventKey)
+    loop for i < 15
+    participant syncControlRepository
+    ThisClass->>syncControlRepository: findFirstByEventKeyOrderByIdDesc(eventKey)
+    alt opt.isPresent()
+    ThisClass-->>Caller: return opt.get()
+    end
+    alt try
+    participant Thread
+    ThisClass->>Thread: sleep(200)
+    else catch 
+    end
+    end
+    ThisClass-->>Caller: throw new RuntimeException('Controle de sync não encontrado no...
 
 ```
 
-**Parameters:**
-
-- **eventKey** (`UUID`)
-
-
 **Step-by-Step Logic:**
-> *Empty body.*
+
+
+1. Start loop (for) initializing 'Declare variable 'i' of type 'int' and initialize it with '0'', continuing while 'i < 15' is true, and updating 'i++'
+
+1. Throw exception: new RuntimeException("Controle de sync não encontrado no banco para a key: " + eventKey)
+
 
 </details>
 
@@ -708,27 +708,99 @@ sequenceDiagram
 
     Caller->>ThisClass: processCloudSyncInBackground(eventKey, token, syncTimestamp, locationId)
     participant log
-    ThisClass->>log: info(..., eventKey)
+    ThisClass->>log: info('[SYNC-BACKGROUND] Iniciando processamento em background ...)
+    alt try
+    participant factory
+    ThisClass->>factory: setConnectTimeout(5000)
+    ThisClass->>factory: setReadTimeout(15000)
+    participant headers
+    ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
+    ThisClass->>headers: setBearerAuth(token)
+    participant localRestTemplate
+    ThisClass->>localRestTemplate: exchange(url + '/events/trigger', HttpMethod.PUT, requestEntity, S...)
+    alt !response.getStatusCode().is2xxSuccessful()
+    ThisClass-->>Caller: throw new RuntimeException('Erro na resposta da nuvem: ' + resp...
+    end
+    participant masterRepository
+    ThisClass->>masterRepository: findFirstPending()
+    alt pendingMaster.isPresent()
+    participant pendingMaster
+    ThisClass->>pendingMaster: get()
+    ThisClass->>log: info('[SYNC-BACKGROUND] Retomando envio de pacote pendente ID:...)
+    participant master
+    ThisClass->>master: getId()
+    else
+    participant situationRepository
+    ThisClass->>situationRepository: findStatusTransitions()
+    participant musteringBuilderService
+    ThisClass->>musteringBuilderService: buildPendingMusteringsPayload()
+    alt itemStatusPayload.isEmpty() && musteringPayload.isEmpty()...
+    ThisClass->>log: info('[SYNC-BACKGROUND] nenhum status, mustering ou alteraçã...)
+    ThisClass-->>Caller: return 
+    end
+    participant chunkerEngine
+    ThisClass->>chunkerEngine: compressToGzip(pbPackage)
+    ThisClass->>chunkerEngine: sliceIntoChunks(gzipPayload)
+    ThisClass->>chunkerEngine: calculateSha256(gzipPayload)
+    ThisClass->>log: info('[SYNC-BACKGROUND] Empacotamento concluído. Gerados {} c...)
+    participant slices
+    ThisClass->>slices: size()
+    end
+    participant chunkRepository
+    ThisClass->>chunkRepository: findUnsyncedByMasterId(master.getId())
+    ThisClass->>master: getId()
+    ThisClass->>log: info('[SYNC-BACKGROUND] Enviando {} chunks restantes...', unse...)
+    participant unsentChunks
+    ThisClass->>unsentChunks: size()
+    loop for each chunk in unsentChunks
+    loop while !sucesso
+    participant httpClient
+    ThisClass->>httpClient: sendChunk(chunk, master, currentToken, this.destination)
+    alt !sucesso
+    alt networkFailures % 3 == 0
+    alt try
+    else catch 
+    ThisClass->>log: warn('[SYNC-BACKGROUND] Tentativa de renovar token offline fal...)
+    end
+    end
+    ThisClass->>log: warn('[SYNC-BACKGROUND] Rede falhou no fragmento {}. Retentand...)
+    participant chunk
+    ThisClass->>chunk: getSequenceNumber()
+    participant String
+    ThisClass->>String: format('Conexão instável. Reconectando e enviando pacote %d de...)
+    ThisClass->>chunk: getSequenceNumber()
+    ThisClass->>master: getTotalChunks()
+    participant sseSyncService
+    ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, uiMessage, ESyncStatus.IN_PROGRESS)
+    alt try
+    participant Thread
+    ThisClass->>Thread: sleep(delaySeconds * 1000)
+    else catch 
+    ThisClass-->>Caller: throw new RuntimeException('A thread de sincronização foi mor...
+    end
+    end
+    end
+    ThisClass->>chunk: setSynced(true)
+    ThisClass->>chunkRepository: save(chunk)
+    ThisClass->>master: setProcessedChunks(master.getProcessedChunks() + 1)
+    ThisClass->>master: getProcessedChunks()
+    ThisClass->>masterRepository: save(master)
+    end
+    ThisClass->>master: setStatus(EPacketStatus.DONE)
+    ThisClass->>masterRepository: save(master)
+    ThisClass->>log: info('[SYNC-BACKGROUND] Upload de chunks concluído com sucesso!')
+    else catch 
+    ThisClass-->>Caller: throw new RuntimeException('Falha no upload: ' + e.getMessage()...
+    end
 
 ```
-
-**Parameters:**
-
-- **eventKey** (`UUID`)
-
-- **token** (`String`)
-
-- **syncTimestamp** (`Long`)
-
-- **locationId** (`Long`)
-
 
 **Step-by-Step Logic:**
 
 
-
 1. Invoke 'log.info' with parameters: '"[SYNC-BACKGROUND] Iniciando processamento em background para o eventKey: {}"', 'eventKey'
 
+1. Execute a safe block (try) catching potential exceptions
 
 
 </details>
@@ -754,26 +826,32 @@ sequenceDiagram
     ThisClass->>master: setTotalChunks(slices.size())
     participant slices
     ThisClass->>slices: size()
-    ThisClass->>master: setProcessedChunks(...)
+    ThisClass->>master: setProcessedChunks(0)
     ThisClass->>master: setChecksum(checksum)
     ThisClass->>master: setNextRetryAt(Instant.now())
     participant Instant
     ThisClass->>Instant: now()
+    loop for i < slices.size()
+    participant chunk
+    ThisClass->>chunk: setId(UUID.randomUUID())
+    ThisClass->>UUID: randomUUID()
+    ThisClass->>chunk: setMaster(master)
+    ThisClass->>chunk: setSequenceNumber(i + 1)
+    ThisClass->>chunk: setChunkData(slices.get(i))
+    ThisClass->>slices: get(i)
+    ThisClass->>chunk: setSynced(false)
+    participant chunks
+    ThisClass->>chunks: add(chunk)
+    end
     ThisClass->>master: setChunks(chunks)
     ThisClass-->>Caller: return masterRepository.save(master)
 
 ```
 
-**Parameters:**
-
-- **slices** (`List<byte[]>`)
-
-- **checksum** (`String`)
-
-
 **Step-by-Step Logic:**
 
 
+1. Declare variable 'master' of type 'SyncPacketMaster' and initialize it with 'new SyncPacketMaster()'
 
 1. Invoke 'master.setId' with parameters: 'Invoke 'UUID.randomUUID' (no parameters)'
 
@@ -787,10 +865,13 @@ sequenceDiagram
 
 1. Invoke 'master.setNextRetryAt' with parameters: 'Invoke 'Instant.now' (no parameters)'
 
+1. Declare variable 'chunks' of type 'List<SyncPacketChunk>' and initialize it with 'new ArrayList<>()'
+
+1. Start loop (for) initializing 'Declare variable 'i' of type 'int' and initialize it with '0'', continuing while 'i < Invoke 'slices.size' (no parameters)' is true, and updating 'i++'
+
 1. Invoke 'master.setChunks' with parameters: 'chunks'
 
 1. Return the result of: Invoke 'masterRepository.save' with parameters: 'master'
-
 
 
 </details>
@@ -808,15 +889,29 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: cleanupOldUploadPackages()
+    alt try
+    participant masterRepository
+    ThisClass->>masterRepository: findOldMastersToCleanup()
+    alt oldMasters != null && !oldMasters.isEmpty()
+    participant log
+    ThisClass->>log: info('[UPLOAD-CLEANUP] Deletando {} pacotes antigos (Master e ...)
+    participant oldMasters
+    ThisClass->>oldMasters: size()
+    ThisClass->>masterRepository: deleteAll(oldMasters)
+    end
+    else catch 
+    ThisClass->>log: warn('[UPLOAD-CLEANUP] Falha ao tentar limpar pacotes antigos:...)
+    participant e
+    ThisClass->>e: getMessage()
+    end
 
 ```
 
-**Parameters:**
-> *None.*
-
-
 **Step-by-Step Logic:**
-> *Empty body.*
+
+
+1. Execute a safe block (try) catching potential exceptions
+
 
 </details>
 
@@ -833,47 +928,62 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: buildProtobufPackage(status, mustering, modifications)
+    participant SyncPackage
+    ThisClass->>SyncPackage: newBuilder()
     participant pb
     ThisClass->>pb: setTimestamp(Instant.now().toEpochMilli())
     alt status != null
+    loop for each s in status
+    ThisClass->>pb: addItemStatus(itemBuilder.build())
+    participant itemBuilder
+    ThisClass->>itemBuilder: build()
+    end
     end
     alt mustering != null
+    loop for each m in mustering
+    alt m.getSituations() != null
+    loop for each sit in m.getSituations()
+    participant musteringBuilder
+    ThisClass->>musteringBuilder: addSituations(sitBuilder.build())
+    participant sitBuilder
+    ThisClass->>sitBuilder: build()
+    end
+    end
+    ThisClass->>pb: addMustering(musteringBuilder.build())
+    ThisClass->>musteringBuilder: build()
+    end
     end
     alt modifications != null
+    loop for each mod in modifications
+    ThisClass->>pb: addItemModifications(modBuilder.build())
+    participant modBuilder
+    ThisClass->>modBuilder: build()
+    end
     end
     ThisClass-->>Caller: return pb.build()
 
 ```
 
-**Parameters:**
-
-- **status** (`List<ItemStatusSyncDTO>`)
-
-- **mustering** (`List<MusteringSyncDTO>`)
-
-- **modifications** (`List<ItemModificationStatusDTO>`)
-
-
 **Step-by-Step Logic:**
 
 
+1. Declare variable 'pb' of type 'SyncPackage.Builder' and initialize it with 'Invoke 'SyncPackage.newBuilder' (no parameters)'
 
 1. Invoke 'pb.setTimestamp' with parameters: 'Invoke 'Invoke 'Instant.now' (no parameters).toEpochMilli' (no parameters)'
 
-1. If status is not equal to null
+1. If status != null
    then:
-      - (do nothing)
+      - Loop through each 's' in the collection 'status'
 
-1. If mustering is not equal to null
+1. If mustering != null
    then:
-      - (do nothing)
+      - Loop through each 'm' in the collection 'mustering'
 
-1. If modifications is not equal to null
+1. If modifications != null
    then:
-      - (do nothing)
+      - Loop through each 'mod' in the collection 'modifications'
 
 1. Return the result of: Invoke 'pb.build' (no parameters)
-
 
 
 </details>
@@ -891,31 +1001,33 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: sendStatusToApi(eventKey, status, message, token, timestamp, locationId)
+    alt try
+    participant headers
+    ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
+    ThisClass->>headers: setBearerAuth(token)
+    participant restTemplate
+    ThisClass->>restTemplate: exchange(url, HttpMethod.PUT, requestEntity, String.class)
+    alt response.getStatusCode().is2xxSuccessful()
+    participant log
+    ThisClass->>log: info('[SYNC-BACKGROUND] Status {} avisado para a API com suces...)
+    ThisClass-->>Caller: return true
+    end
+    else catch 
+    ThisClass->>log: error('[SYNC-BACKGROUND] Falha ao avisar a API sobre o status {...)
+    participant e
+    ThisClass->>e: getMessage()
+    ThisClass-->>Caller: return false
+    end
     ThisClass-->>Caller: return false
 
 ```
 
-**Parameters:**
-
-- **eventKey** (`UUID`)
-
-- **status** (`ESyncStatus`)
-
-- **message** (`String`)
-
-- **token** (`String`)
-
-- **timestamp** (`Long`)
-
-- **locationId** (`Long`)
-
-
 **Step-by-Step Logic:**
 
 
+1. Execute a safe block (try) catching potential exceptions
 
 1. Return the result of: false
-
 
 
 </details>
@@ -937,13 +1049,7 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **transitions** (`List<ItemStatusTransitionProjection>`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Return the result of: Invoke 'Invoke 'Invoke 'transitions.stream' (no parameters).map' with parameters: 't -> {
@@ -957,7 +1063,6 @@ sequenceDiagram
             dto.setItemId(t.getItemId());
             return dto;
         }'.collect' with parameters: 'Invoke 'Collectors.toList' (no parameters)'
-
 
 
 </details>
@@ -976,35 +1081,31 @@ sequenceDiagram
 
     Caller->>ThisClass: markDataAsSynced(transitions, musterings)
     alt !transitions.isEmpty()
+    participant Collectors
+    ThisClass->>Collectors: toList()
     participant situationRepository
     ThisClass->>situationRepository: markAsSynced(situationIds)
     end
     alt !musterings.isEmpty()
+    ThisClass->>Collectors: toList()
     participant inventoryRepository
     ThisClass->>inventoryRepository: markAsSyncedByNames(inventoryNames)
     end
 
 ```
 
-**Parameters:**
-
-- **transitions** (`List<ItemStatusTransitionProjection>`)
-
-- **musterings** (`List<MusteringSyncDTO>`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. If !transitions.isEmpty()
    then:
+      - Declare variable 'situationIds' of type 'List<Long>' and initialize it with 'Invoke 'Invoke 'Invoke 'transitions.stream' (no parameters).map' with parameters: 'ItemStatusTransitionProjection::getId'.collect' with parameters: 'Invoke 'Collectors.toList' (no parameters)''
       - Invoke 'situationRepository.markAsSynced' with parameters: 'situationIds'
 
 1. If !musterings.isEmpty()
    then:
+      - Declare variable 'inventoryNames' of type 'List<String>' and initialize it with 'Invoke 'Invoke 'Invoke 'musterings.stream' (no parameters).map' with parameters: 'MusteringSyncDTO::getInventoryName'.collect' with parameters: 'Invoke 'Collectors.toList' (no parameters)''
       - Invoke 'inventoryRepository.markAsSyncedByNames' with parameters: 'inventoryNames'
-
 
 
 </details>

@@ -30,14 +30,12 @@ Visual representation of the internal state and external dependencies this class
 
 ```mermaid
 flowchart LR
-    %% Styling
     classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
     ThisClass["UsuarioService"]:::classNode
 
-    %% State vs External Dependencies
     
     
     ThisClass -- "Maintains State" --- State_nomeBanco(["String<br>nomeBanco"]):::stateNode
@@ -52,7 +50,6 @@ flowchart LR
 ---
 
 ## 3. Deep Dive (Constructors & Methods)
-Expand the sections below to read the exact pseudo-code and business rules.
 
 
 ### 🛠️ Constructors
@@ -73,19 +70,12 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **nomeBanco** (`String`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Set 'this.nomeBanco' to 'nomeBanco'
 
 1. Set 'this.conexaoAtiva' to 'true'
-
 
 
 </details>
@@ -108,36 +98,27 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: validarEAtivarUsuario(idade, status)
-    alt idade >= ... && status == ...
+    alt idade >= 18 && status == 'ativo'
     participant System
-    ThisClass->>System: println(... + this.nomeBanco)
+    ThisClass->>System: println('Usuario validado com sucesso no banco ' + this.nomeBanco)
     ThisClass-->>Caller: return true
     end
-    ThisClass->>System: println(...)
+    ThisClass->>System: println('Falha na validacao')
     ThisClass-->>Caller: return false
 
 ```
 
-**Parameters:**
-
-- **idade** (`int`)
-
-- **status** (`String`)
-
-
 **Step-by-Step Logic:**
 
 
-
-1. If idade is greater than or equal to 18 AND status is equal to "ativo"
+1. If idade >= 18 && status == "ativo"
    then:
-      - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'
+      - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " + this.nomeBanco'
       - Return the result of: true
 
 1. Invoke 'System.out.println' with parameters: '"Falha na validacao"'
 
 1. Return the result of: false
-
 
 
 </details>
@@ -160,19 +141,12 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **acao** (`String`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Set 'this.conexaoAtiva' to 'false'
 
 1. Invoke 'System.out.println' with parameters: 'acao'
-
 
 
 </details>

@@ -17,7 +17,87 @@ func extractClassName(importPath string) string {
 	return importPath
 }
 
-// getDependencyCalls varre os métodos de uma classe e mapeia: NomeDaDependencia -> "metodo(arg1, arg2)"
+// formatModifiers transforma a slice de modificadores em string
+// func formatModifiers(modifiers []Modifier) string {
+// 	var sb strings.Builder
+// 	for _, m := range modifiers {
+// 		sb.WriteString(m.Modifier)
+// 		sb.WriteString(" ")
+// 	}
+// 	return sb.String()
+// }
+
+// exprToText é uma função auxiliar para formatar expressões em texto legível
+func exprToText(expr Expression) string {
+	if expr == nil {
+		return ""
+	}
+	defer func() { recover() }() // Evita panic em tipos inesperados
+	switch e := expr.(type) {
+	case Identifier:
+		return e.Name
+	case Literal:
+		return e.Value
+	case Access:
+		obj := exprToText(e.Object)
+		if obj != "" {
+			return obj + "." + e.Identifier.Name
+		}
+		return e.Identifier.Name
+	case MethodInvocation:
+		var args []string
+		for _, a := range e.Args {
+			args = append(args, exprToText(a))
+		}
+		return fmt.Sprintf("%s(%s)", exprToText(e.Accessed), strings.Join(args, ", "))
+	case Binary:
+		return fmt.Sprintf("%s %s %s", exprToText(e.Left), e.Operator, exprToText(e.Right))
+	case Assignment:
+		return fmt.Sprintf("%s = %s", exprToText(e.Left), exprToText(e.Right))
+	case ReturnNode:
+		return exprToText(e.Value)
+	case Variable:
+		if e.Value != nil {
+			return fmt.Sprintf("%s %s = %s", e.TypeName, e.Declarator, exprToText(e.Value))
+		}
+		return fmt.Sprintf("%s %s", e.TypeName, e.Declarator)
+	case ThrowNode:
+		return fmt.Sprintf("throw %s", exprToText(e.Value))
+	default:
+		return "..."
+	}
+}
+
+// // formatExpression formata o node para uma string pseudo-code clean na lista de Step-by-Step
+// func formatExpression(expr Expression) string {
+// 	if expr == nil {
+// 		return ""
+// 	}
+// 	switch e := expr.(type) {
+// 	case IfNode:
+// 		return fmt.Sprintf("If %s then execute block", exprToText(e.Condition))
+// 	case ForNode:
+// 		return fmt.Sprintf("Loop (for %s)", exprToText(e.Condition))
+// 	case EnhancedForNode:
+// 		return fmt.Sprintf("Loop (for each %s in %s)", e.Name, exprToText(e.Value))
+// 	case WhileNode:
+// 		return fmt.Sprintf("Loop (while %s)", exprToText(e.Condition))
+// 	case TryNode:
+// 		return "Try executing block"
+// 	case ThrowNode:
+// 		return fmt.Sprintf("Throw exception: %s", exprToText(e.Value))
+// 	case BreakNode:
+// 		return "Break loop"
+// 	case Variable:
+// 		return fmt.Sprintf("Declare variable: %s", exprToText(e))
+// 	case ReturnNode:
+// 		return fmt.Sprintf("Return: %s", exprToText(e.Value))
+// 	default:
+// 		return exprToText(e)
+// 	}
+// }
+
+// getDependencyCalls varre os métodos de uma classe e mapeia dependências
 func getDependencyCalls(c ClassJava) map[string]string {
 	fieldsMap := make(map[string]string)
 	for _, f := range c.Fields {
@@ -35,6 +115,8 @@ func getDependencyCalls(c ClassJava) map[string]string {
 		case Assignment:
 			traverse(e.Left)
 			traverse(e.Right)
+		case Variable:
+			traverse(e.Value) // Extrai chamadas dentro de var = obj.metodo()
 		case Binary:
 			traverse(e.Left)
 			traverse(e.Right)
@@ -45,6 +127,53 @@ func getDependencyCalls(c ClassJava) map[string]string {
 					traverse(ex)
 				}
 			}
+			if e.Alternative != nil {
+				for _, s := range e.Alternative.Statements {
+					for _, ex := range s.Expressions {
+						traverse(ex)
+					}
+				}
+			}
+		case ForNode:
+			traverse(e.Init)
+			traverse(e.Condition)
+			traverse(e.Update)
+			for _, s := range e.Body.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+		case EnhancedForNode:
+			traverse(e.Value)
+			for _, s := range e.Body.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+		case WhileNode:
+			traverse(e.Condition)
+			for _, s := range e.Body.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+		case TryNode:
+			for _, s := range e.Body.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+			for _, c := range e.Catches {
+				for _, s := range c.Body.Statements {
+					for _, ex := range s.Expressions {
+						traverse(ex)
+					}
+				}
+			}
+		case ThrowNode:
+			traverse(e.Value)
+		case ReturnNode:
+			traverse(e.Value)
 		case MethodInvocation:
 			targetObj := ""
 			if e.Accessed.Object != nil {
@@ -78,8 +207,6 @@ func getDependencyCalls(c ClassJava) map[string]string {
 			for _, arg := range e.Args {
 				traverse(arg)
 			}
-		case ReturnNode:
-			traverse(e.Value)
 		}
 	}
 
@@ -103,7 +230,6 @@ func getDependencyCalls(c ClassJava) map[string]string {
 }
 
 // generateSequenceDiagram constrói dinamicamente um diagrama de sequência Mermaid
-// generateSequenceDiagram constrói dinamicamente um diagrama de sequência Mermaid
 func generateSequenceDiagram(m Executable) string {
 	var sb strings.Builder
 	participants := make(map[string]bool)
@@ -122,13 +248,10 @@ func generateSequenceDiagram(m Executable) string {
 		}
 	}
 
-	// NOVO: Limpa quebras de linha que destroem o Mermaid e resume textos gigantes
 	cleanForMermaid := func(s string) string {
 		s = strings.ReplaceAll(s, "\n", " ")
 		s = strings.ReplaceAll(s, "\r", "")
-		s = strings.ReplaceAll(s, "\"", "'") // Evita conflito de aspas duplas no Mermaid
-
-		// Se o texto for absurdamente grande (ex: instanciação de objetos enormes), trunca para o diagrama ficar legível
+		s = strings.ReplaceAll(s, "\"", "'")
 		if len(s) > 60 {
 			s = s[:57] + "..."
 		}
@@ -156,52 +279,23 @@ func generateSequenceDiagram(m Executable) string {
 		}
 	}
 
-	var exprToString func(expr Expression) string
-	exprToString = func(expr Expression) string {
-		if expr == nil {
-			return ""
-		}
-		defer func() { recover() }()
-		switch e := expr.(type) {
-		case Identifier:
-			return e.Name
-		case Access:
-			obj := exprToString(e.Object)
-			if obj != "" {
-				return obj + "." + e.Identifier.Name
-			}
-			return e.Identifier.Name
-		case MethodInvocation:
-			var args []string
-			for _, a := range e.Args {
-				args = append(args, exprToString(a))
-			}
-			return fmt.Sprintf("%s(%s)", exprToString(e.Accessed), strings.Join(args, ", "))
-		case Binary:
-			return fmt.Sprintf("%s %s %s", exprToString(e.Left), e.Operator, exprToString(e.Right))
-		case Assignment:
-			return exprToString(e.Right)
-		case ReturnNode:
-			return exprToString(e.Value)
-		default:
-			return "..."
-		}
-	}
-
 	var traverse func(expr Expression)
 	traverse = func(expr Expression) {
 		if expr == nil {
 			return
 		}
 		defer func() { recover() }()
+
 		switch e := expr.(type) {
 		case Assignment:
 			traverse(e.Right)
+		case Variable:
+			traverse(e.Value)
 		case Binary:
 			traverse(e.Left)
 			traverse(e.Right)
 		case IfNode:
-			cond := cleanForMermaid(exprToString(e.Condition))
+			cond := cleanForMermaid(exprToText(e.Condition))
 			if cond == "" {
 				cond = "condition"
 			}
@@ -211,33 +305,78 @@ func generateSequenceDiagram(m Executable) string {
 					traverse(ex)
 				}
 			}
+			if e.Alternative != nil {
+				sb.WriteString("    else\n")
+				for _, s := range e.Alternative.Statements {
+					for _, ex := range s.Expressions {
+						traverse(ex)
+					}
+				}
+			}
 			sb.WriteString("    end\n")
+		case ForNode:
+			cond := cleanForMermaid(exprToText(e.Condition))
+			sb.WriteString(fmt.Sprintf("    loop for %s\n", cond))
+			for _, s := range e.Body.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+			sb.WriteString("    end\n")
+		case EnhancedForNode:
+			val := cleanForMermaid(exprToText(e.Value))
+			sb.WriteString(fmt.Sprintf("    loop for each %s in %s\n", e.Name, val))
+			for _, s := range e.Body.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+			sb.WriteString("    end\n")
+		case WhileNode:
+			cond := cleanForMermaid(exprToText(e.Condition))
+			sb.WriteString(fmt.Sprintf("    loop while %s\n", cond))
+			for _, s := range e.Body.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+			sb.WriteString("    end\n")
+		case TryNode:
+			sb.WriteString("    alt try\n")
+			for _, s := range e.Body.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+			for _, c := range e.Catches {
+				sb.WriteString(fmt.Sprintf("    else catch %s\n", cleanForMermaid(c.Parameter)))
+				for _, s := range c.Body.Statements {
+					for _, ex := range s.Expressions {
+						traverse(ex)
+					}
+				}
+			}
+			sb.WriteString("    end\n")
+		case ThrowNode:
+			val := cleanForMermaid(exprToText(e.Value))
+			sb.WriteString(fmt.Sprintf("    ThisClass-->>Caller: throw %s\n", val))
 		case MethodInvocation:
 			target := resolveTarget(e.Accessed.Object)
 			if target != "" {
 				ensureParticipant(target)
 				var args []string
 				for _, a := range e.Args {
-					args = append(args, exprToString(a))
+					args = append(args, exprToText(a))
 				}
-
 				callArgs := cleanForMermaid(strings.Join(args, ", "))
-
-				sb.WriteString(fmt.Sprintf(
-					"    ThisClass->>%s: %s(%s)\n",
-					target,
-					e.Accessed.Identifier.Name,
-					callArgs,
-				))
+				sb.WriteString(fmt.Sprintf("    ThisClass->>%s: %s(%s)\n", target, e.Accessed.Identifier.Name, callArgs))
 			}
 			for _, a := range e.Args {
 				traverse(a)
 			}
 		case ReturnNode:
-			val := cleanForMermaid(exprToString(e.Value))
+			val := cleanForMermaid(exprToText(e.Value))
 			sb.WriteString(fmt.Sprintf("    ThisClass-->>Caller: return %s\n", val))
-		default:
-			// Nó não mapeado: ignorado silenciosamente
 		}
 	}
 
@@ -283,7 +422,7 @@ A high-level overview of the class, its internal state, and available methods.
 
 **Available Methods:**
 {{if not .Methods}}> *No methods defined.*
-{{else}}{{range .Methods}}- **{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}})** ➞ returns {{bt}}{{.ReturnType}}{{bt}}
+{{else}}{{range .Methods}}- **{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}})** ➞ returns {{bt}}{{.ReturnType}}{{bt}}{{if .Throws}} (throws {{.Throws}}){{end}}
 {{end}}{{end}}
 
 ---
@@ -293,14 +432,12 @@ Visual representation of the internal state and external dependencies this class
 
 {{bt}}{{bt}}{{bt}}mermaid
 flowchart LR
-    %% Styling
     classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
     ThisClass["{{.Name}}"]:::classNode
 
-    %% State vs External Dependencies
     {{range .Fields}}
     {{if or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double") (eq .TypeName "long") (eq .TypeName "float")}}
     ThisClass -- "Maintains State" --- State_{{.Declarator}}(["{{.TypeName}}<br>{{.Declarator}}"]):::stateNode
@@ -313,7 +450,6 @@ flowchart LR
 ---
 
 ## 3. Deep Dive (Constructors & Methods)
-Expand the sections below to read the exact pseudo-code and business rules.
 
 {{if .Constructors}}
 ### 🛠️ Constructors
@@ -323,27 +459,19 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 {{range .Annotations}}> {{bt}}{{.}}{{bt}}
-{{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
+{{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{if .Throws}} throws {{.Throws}}{{end}}{{bt}}
 
 **Sequence Diagram:**
 {{bt}}{{bt}}{{bt}}mermaid
 {{generateSequenceDiagram .}}
 {{bt}}{{bt}}{{bt}}
 
-**Parameters:**
-{{if not .Parameters}}> *None.*
-{{else}}{{range .Parameters}}
-- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}}){{if .Annotations}} - {{range .Annotations}}*{{.}}* {{end}}{{end}}
-{{end}}{{end}}
-
 **Step-by-Step Logic:**
 {{if not .Body.Statements}}> *Empty body.*
 {{else}}
-
 {{range .Body.Statements}}{{range .Expressions}}
 1. {{formatExpression .}}
 {{end}}{{end}}
-
 {{end}}
 </details>
 {{end}}
@@ -357,27 +485,19 @@ Expand the sections below to read the exact pseudo-code and business rules.
 
 > **Signature:**
 {{range .Annotations}}> {{bt}}{{.}}{{bt}}
-{{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
+{{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{if .Throws}} throws {{.Throws}}{{end}}{{bt}}
 
 **Sequence Diagram:**
 {{bt}}{{bt}}{{bt}}mermaid
 {{generateSequenceDiagram .}}
 {{bt}}{{bt}}{{bt}}
 
-**Parameters:**
-{{if not .Parameters}}> *None.*
-{{else}}{{range .Parameters}}
-- **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}}){{if .Annotations}} - {{range .Annotations}}*{{.}}* {{end}}{{end}}
-{{end}}{{end}}
-
 **Step-by-Step Logic:**
 {{if not .Body.Statements}}> *Empty body.*
 {{else}}
-
 {{range .Body.Statements}}{{range .Expressions}}
 1. {{formatExpression .}}
 {{end}}{{end}}
-
 {{end}}
 </details>
 {{end}}
@@ -391,10 +511,8 @@ const globalDocTemplate = `
 
 {{bt}}{{bt}}{{bt}}mermaid
 flowchart LR
-    %% Styling
     classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    %% Nodes Creation Grouped by Package
     {{range $pkgName, $pkgClasses := .GroupedClasses}}
     subgraph {{$pkgName}}
         {{range $pkgClasses}}
@@ -403,32 +521,25 @@ flowchart LR
     end
     {{end}}
 
-    %% Relationships / Dependencies
     {{range .AllClasses}}
     {{$className := .Name}}
     {{$callsMap := getDependencyCalls .}}
     
     {{range .Fields}}
     {{if not (or (eq .TypeName "String") (eq .TypeName "int") (eq .TypeName "boolean") (eq .TypeName "double") (eq .TypeName "long") (eq .TypeName "float"))}}
-        
         {{$usedMethods := index $callsMap .TypeName}}
-        
         {{if $usedMethods}}
             {{$className}} -->|"Calls:<br><b>{{$usedMethods}}</b>"| {{.TypeName}}
         {{else}}
             {{$className}} -->|"Depends on"| {{.TypeName}}
         {{end}}
-
     {{end}}
     {{end}}
     {{end}}
 {{bt}}{{bt}}{{bt}}
 `
 
-// GenerateMarkdown cria o arquivo .md de especificação técnica de cada classe individual
 func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilename string) {
-
-	// isProjectClass verifica se a classe importada foi varrida no projeto
 	isProjectClass := func(importPath string) bool {
 		className := extractClassName(importPath)
 		for _, c := range allClasses {
@@ -464,7 +575,6 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 	}
 }
 
-// GenerateGlobalArchitecture gera o arquivo global agrupando as classes por pacote
 func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	tmpl, err := template.New("globalDoc").Funcs(template.FuncMap{
 		"bt":                 func() string { return "`" },
@@ -481,7 +591,6 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	}
 	defer file.Close()
 
-	// Agrupa as classes pelo nome completo do pacote obtido na AST
 	groupedClasses := make(map[string][]ClassJava)
 	for _, c := range classes {
 		pkgName := "Default Package"

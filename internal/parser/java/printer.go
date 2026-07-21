@@ -130,6 +130,7 @@ func translateOperator(op string) string {
 }
 
 // 3. ENGLISH NATURAL LANGUAGE ENGINE
+// 3. ENGLISH NATURAL LANGUAGE ENGINE
 func formatExpression(expr Expression) string {
 	if expr == nil {
 		return ""
@@ -140,8 +141,10 @@ func formatExpression(expr Expression) string {
 		return fmt.Sprintf("Set '%s' to '%s'", formatExpression(e.Left), formatExpression(e.Right))
 
 	case Binary:
-		op := translateOperator(e.Operator)
-		return fmt.Sprintf("%s %s %s", formatExpression(e.Left), op, formatExpression(e.Right))
+		// Assumindo que você tem a função translateOperator em algum lugar
+		// op := translateOperator(e.Operator)
+		return fmt.Sprintf("%s %s %s", formatExpression(e.Left), e.Operator, formatExpression(e.Right))
+
 	case IfNode:
 		condStr := formatExpression(e.Condition)
 
@@ -152,13 +155,45 @@ func formatExpression(expr Expression) string {
 		result := fmt.Sprintf("If %s\n   then:\n", condStr)
 		for _, stmt := range e.Consequence.Statements {
 			for _, subExpr := range stmt.Expressions {
-				// Usa apenas espaços para recuar os itens do IF
 				result += "      - " + formatExpression(subExpr) + "\n"
 			}
 		}
 
-		// Remove a última quebra de linha
+		if e.Alternative != nil && len(e.Alternative.Statements) > 0 {
+			result += "   else:\n"
+			for _, stmt := range e.Alternative.Statements {
+				for _, subExpr := range stmt.Expressions {
+					result += "      - " + formatExpression(subExpr) + "\n"
+				}
+			}
+		}
+
 		return result[:len(result)-1]
+
+	case ForNode:
+		return fmt.Sprintf("Start loop (for) initializing '%s', continuing while '%s' is true, and updating '%s'",
+			formatExpression(e.Init), formatExpression(e.Condition), formatExpression(e.Update))
+
+	case EnhancedForNode:
+		return fmt.Sprintf("Loop through each '%s' in the collection '%s'", e.Name, formatExpression(e.Value))
+
+	case WhileNode:
+		return fmt.Sprintf("Start loop (while) as long as '%s' is true", formatExpression(e.Condition))
+
+	case TryNode:
+		return "Execute a safe block (try) catching potential exceptions"
+
+	case ThrowNode:
+		return fmt.Sprintf("Throw exception: %s", formatExpression(e.Value))
+
+	case BreakNode:
+		return "Break the current loop execution"
+
+	case Variable:
+		if e.Value != nil {
+			return fmt.Sprintf("Declare variable '%s' of type '%s' and initialize it with '%s'", e.Declarator, e.TypeName, formatExpression(e.Value))
+		}
+		return fmt.Sprintf("Declare variable '%s' of type '%s'", e.Declarator, e.TypeName)
 
 	case MethodInvocation:
 		var argsStr string
@@ -169,7 +204,6 @@ func formatExpression(expr Expression) string {
 			}
 		}
 
-		// Resolve the target (with or without the owning object)
 		target := e.Accessed.Identifier.Name
 		if e.Accessed.Object != nil {
 			target = fmt.Sprintf("%s.%s", formatExpression(e.Accessed.Object), e.Accessed.Identifier.Name)
@@ -202,6 +236,7 @@ func formatExpression(expr Expression) string {
 		return fmt.Sprintf("%v", expr)
 	}
 }
+
 func formatModifiers(mods []Modifier) string {
 	if len(mods) == 0 {
 		return ""

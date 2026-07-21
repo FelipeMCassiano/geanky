@@ -32,14 +32,12 @@ Visual representation of the internal state and external dependencies this class
 
 ```mermaid
 flowchart LR
-    %% Styling
     classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
     ThisClass["UserModel"]:::classNode
 
-    %% State vs External Dependencies
     
     
     ThisClass -- "Maintains State" --- State_nome(["String<br>nome"]):::stateNode
@@ -54,7 +52,6 @@ flowchart LR
 ---
 
 ## 3. Deep Dive (Constructors & Methods)
-Expand the sections below to read the exact pseudo-code and business rules.
 
 
 ### 🛠️ Constructors
@@ -75,21 +72,12 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **nome** (`String`)
-
-- **idade** (`int`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Set 'this.nome' to 'nome'
 
 1. Set 'this.idade' to 'idade'
-
 
 
 </details>
@@ -115,17 +103,10 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **nome** (`String`)
-
-
 **Step-by-Step Logic:**
 
 
-
 1. Set 'this.nome' to 'nome'
-
 
 
 </details>
@@ -146,17 +127,10 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **idade** (`int`)
-
-
 **Step-by-Step Logic:**
 
 
-
 1. Set 'this.idade' to 'idade'
-
 
 
 </details>
@@ -178,16 +152,10 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-> *None.*
-
-
 **Step-by-Step Logic:**
 
 
-
 1. Return the result of: this.idade
-
 
 
 </details>
@@ -209,16 +177,10 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-> *None.*
-
-
 **Step-by-Step Logic:**
 
 
-
 1. Return the result of: this.nome
-
 
 
 </details>

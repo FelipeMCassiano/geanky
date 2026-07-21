@@ -5,10 +5,8 @@
 
 ```mermaid
 flowchart LR
-    %% Styling
     classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
-    %% Nodes Creation Grouped by Package
     
     subgraph controllers
         
@@ -19,6 +17,12 @@ flowchart LR
     subgraph models
         
         UserModel["UserModel"]:::classNode
+        
+    end
+    
+    subgraph parser
+        
+        ParserTestCase["ParserTestCase"]:::classNode
         
     end
     
@@ -37,7 +41,6 @@ flowchart LR
     end
     
 
-    %% Relationships / Dependencies
     
     
     
@@ -46,22 +49,10 @@ flowchart LR
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-        
-        
         
         
             UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)<br>registrarLog(...)</b>"| UsuarioService
         
-
     
     
     
@@ -79,63 +70,63 @@ flowchart LR
     
     
     
-        
-        
-        
-        
-            BoatSyncController -->|"Depends on"| Logger
-        
-
     
     
     
-        
-        
-        
-        
-            BoatSyncController -->|"Depends on"| SyncService
-        
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
         
         
+            BoatSyncController -->|"Calls:<br><b>error(..., ...)</b>"| Logger
         
-        
-            BoatSyncController -->|"Depends on"| CloudSyncUploadService
-        
-
     
     
     
         
         
+            BoatSyncController -->|"Calls:<br><b>syncPortalReadingsPaginated(timestamp, id, principal)</b>"| SyncService
+        
+    
+    
+    
+        
+        
+            BoatSyncController -->|"Calls:<br><b>latestSync()</b>"| CloudSyncUploadService
+        
+    
+    
+    
         
         
             BoatSyncController -->|"Calls:<br><b>subscribe(uuid)</b>"| BoatSseSyncService
         
-
     
     
     
-        
-        
         
         
             BoatSyncController -->|"Depends on"| DownloadService
         
-
     
     
     
         
         
+            BoatSyncController -->|"Calls:<br><b>executeSync(true, ...)</b>"| MachineSync
         
-        
-            BoatSyncController -->|"Depends on"| MachineSync
-        
-
     
     
     
@@ -144,143 +135,101 @@ flowchart LR
     
     
     
-        
-        
         
         
             CloudSyncUploadService -->|"Depends on"| MachineClient
         
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>findStatusTransitions()<br>markAsSynced(situationIds)</b>"| InventorySituationRepository
         
-        
-            CloudSyncUploadService -->|"Calls:<br><b>markAsSynced(situationIds)</b>"| InventorySituationRepository
-        
-
     
     
     
-        
-        
         
         
             CloudSyncUploadService -->|"Calls:<br><b>markAsSyncedByNames(inventoryNames)</b>"| InventoryRepository
         
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>buildPendingMusteringsPayload()</b>"| SyncService
         
-        
-            CloudSyncUploadService -->|"Depends on"| SyncService
-        
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>sendChunk(chunk, master, currentToken, ...)</b>"| CloudSyncIntegrationClient
         
-        
-            CloudSyncUploadService -->|"Depends on"| CloudSyncIntegrationClient
-        
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>findFirstByOrderByIdDesc()<br>saveAndFlush(newControl)<br>findFirstByEventKeyOrderByIdDesc(eventKey)</b>"| SyncControlRepository
         
-        
-            CloudSyncUploadService -->|"Calls:<br><b>saveAndFlush(newControl)</b>"| SyncControlRepository
-        
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(..., ..., ...)<br>sendSyncStatusOnChange(eventKey, ..., ...)<br>sendSyncStatusOnChange(eventKey, uiMessage, ...)</b>"| BoatSseSyncService
         
-        
-            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(..., ..., ...)<br>sendSyncStatusOnChange(eventKey, ..., ...)</b>"| BoatSseSyncService
-        
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>download(eventKey, request, token, locationId, ...)</b>"| DownloadService
         
-        
-            CloudSyncUploadService -->|"Depends on"| DownloadService
-        
-
     
     
     
-        
-        
         
         
             CloudSyncUploadService -->|"Depends on"| Executor
         
-
     
     
     
-        
-        
         
         
             CloudSyncUploadService -->|"Depends on"| ItemRepository
         
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>deleteAll(oldMasters)<br>findFirstPending()<br>save(master)<br>findOldMastersToCleanup()</b>"| SyncPacketMasterRepository
         
-        
-            CloudSyncUploadService -->|"Calls:<br><b>save(master)</b>"| SyncPacketMasterRepository
-        
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>findUnsyncedByMasterId(...)<br>save(chunk)</b>"| SyncPacketChunkRepository
         
-        
-            CloudSyncUploadService -->|"Depends on"| SyncPacketChunkRepository
-        
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>sliceIntoChunks(gzipPayload)<br>calculateSha256(gzipPayload)<br>compressToGzip(pbPackage)</b>"| PacketChunkerEngine
         
-        
-            CloudSyncUploadService -->|"Depends on"| PacketChunkerEngine
-        
-
     
     
     
         
         
+            CloudSyncUploadService -->|"Calls:<br><b>exchange(url, ..., requestEntity, String.class)</b>"| RestTemplate
         
-        
-            CloudSyncUploadService -->|"Depends on"| RestTemplate
-        
-
     
     
     

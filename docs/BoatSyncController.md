@@ -59,8 +59,8 @@ A high-level overview of the class, its internal state, and available methods.
 
 **Available Methods:**
 - **subscEmitter(UUID uuid)** ➞ returns `Flux<ServerSentEvent<String>>`
-- **portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)** ➞ returns `ResponseEntity<?>`
-- **latestSync(Principal principal)** ➞ returns `ResponseEntity<?>`
+- **portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)** ➞ returns `ResponseEntity<?>` (throws IOException)
+- **latestSync(Principal principal)** ➞ returns `ResponseEntity<?>` (throws IOException)
 - **triggerCloudSync(SyncRequest request, Principal principal)** ➞ returns `ResponseEntity<?>`
 
 
@@ -71,14 +71,12 @@ Visual representation of the internal state and external dependencies this class
 
 ```mermaid
 flowchart LR
-    %% Styling
     classDef classNode fill:#2b3137,stroke:#fff,stroke-width:2px,color:#fff;
     classDef stateNode fill:#f4f6f8,stroke:#d0d7de,color:#24292f;
     classDef extNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
     ThisClass["BoatSyncController"]:::classNode
 
-    %% State vs External Dependencies
     
     
     ThisClass -- "Depends on" ---> Dep_log["Logger"]:::extNode
@@ -109,7 +107,6 @@ flowchart LR
 ---
 
 ## 3. Deep Dive (Constructors & Methods)
-Expand the sections below to read the exact pseudo-code and business rules.
 
 
 ### 🛠️ Constructors
@@ -130,21 +127,7 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **service** (`SyncService`)
-
-- **syncService** (`CloudSyncUploadService`)
-
-- **sseSyncService** (`BoatSseSyncService`)
-
-- **downloadService** (`DownloadService`)
-
-- **machineSync** (`MachineSync`)
-
-
 **Step-by-Step Logic:**
-
 
 
 1. Set 'this.service' to 'service'
@@ -156,7 +139,6 @@ sequenceDiagram
 1. Set 'this.downloadService' to 'downloadService'
 
 1. Set 'this.machineSync' to 'machineSync'
-
 
 
 </details>
@@ -184,17 +166,10 @@ sequenceDiagram
 
 ```
 
-**Parameters:**
-
-- **uuid** (`UUID`)
-
-
 **Step-by-Step Logic:**
 
 
-
 1. Return the result of: Invoke 'sseSyncService.subscribe' with parameters: 'uuid'
-
 
 
 </details>
@@ -204,7 +179,7 @@ sequenceDiagram
 
 > **Signature:**
 > `@GetMapping("/portal-readings")`
-> `public ResponseEntity<?> portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)`
+> `public ResponseEntity<?> portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal) throws IOException`
 
 **Sequence Diagram:**
 ```mermaid
@@ -213,29 +188,30 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: portalReadingsSyncPaginated(timestamp, id, principal)
-    alt readings.size() < SyncService.MAX_ITEMS + ...
+    participant service
+    ThisClass->>service: syncPortalReadingsPaginated(timestamp, id, principal)
+    alt readings.size() < SyncService.MAX_ITEMS + 1
+    ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, Htt...
+    else
+    participant readings
+    ThisClass->>readings: remove(SyncService.MAX_ITEMS)
     ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, Htt...
     end
 
 ```
 
-**Parameters:**
-
-- **timestamp** (`Long`)
-
-- **id** (`Long`)
-
-- **principal** (`Principal`)
-
-
 **Step-by-Step Logic:**
 
 
+1. Declare variable 'readings' of type 'List<Map<String, Object>>' and initialize it with 'Invoke 'service.syncPortalReadingsPaginated' with parameters: 'timestamp', 'id', 'principal''
 
-1. If Invoke 'readings.size' (no parameters) is less than SyncService.MAX_ITEMS plus 1
+1. If Invoke 'readings.size' (no parameters) < SyncService.MAX_ITEMS + 1
    then:
       - Return the result of: Invoke 'ContentLengthResponseBuilder.createResponse' with parameters: 'readings', 'HttpStatus.OK', 'principal'
-
+   else:
+      - Declare variable 'nextOffset' of type 'Long' and initialize it with '(Long) readings.get(SyncService.MAX_ITEMS).get("id")'
+      - Invoke 'readings.remove' with parameters: 'SyncService.MAX_ITEMS'
+      - Return the result of: Invoke 'ContentLengthResponseBuilder.createResponse' with parameters: 'readings', 'HttpStatus.PARTIAL_CONTENT', 'principal', '"v2/sync/portal-readings/page?timestamp=0&offset=" + nextOffset'
 
 
 </details>
@@ -245,7 +221,7 @@ sequenceDiagram
 
 > **Signature:**
 > `@GetMapping("/latest")`
-> `public ResponseEntity<?> latestSync(Principal principal)`
+> `public ResponseEntity<?> latestSync(Principal principal) throws IOException`
 
 **Sequence Diagram:**
 ```mermaid
@@ -254,21 +230,18 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: latestSync(principal)
+    participant syncService
+    ThisClass->>syncService: latestSync()
     ThisClass-->>Caller: return ContentLengthResponseBuilder.ok(response, principal)
 
 ```
 
-**Parameters:**
-
-- **principal** (`Principal`)
-
-
 **Step-by-Step Logic:**
 
 
+1. Declare variable 'response' of type 'SyncLastestResponse' and initialize it with 'Invoke 'syncService.latestSync' (no parameters)'
 
 1. Return the result of: Invoke 'ContentLengthResponseBuilder.ok' with parameters: 'response', 'principal'
-
 
 
 </details>
@@ -287,18 +260,23 @@ sequenceDiagram
     participant ThisClass
 
     Caller->>ThisClass: triggerCloudSync(request, principal)
+    alt try
+    ThisClass-->>Caller: return ContentLengthResponseBuilder.ok(machineSync.executeSync(t...
+    else catch 
+    participant log
+    ThisClass->>log: error('[REST] Erro ao tentar acionar o sync manual: {}', e.getM...)
+    participant e
+    ThisClass->>e: getMessage()
+    ThisClass-->>Caller: return ResponseEntity.internalServerError().body('Falha ao inici...
+    end
 
 ```
 
-**Parameters:**
-
-- **request** (`SyncRequest`)
-
-- **principal** (`Principal`)
-
-
 **Step-by-Step Logic:**
-> *Empty body.*
+
+
+1. Execute a safe block (try) catching potential exceptions
+
 
 </details>
 

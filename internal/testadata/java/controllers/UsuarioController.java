@@ -15,7 +15,8 @@ public class UsuarioController {
     }
 
     public boolean processarUsuario(UserModel userModel, String status) {
-        if (this.service.validarEAtivarUsuario(userModel.getIdade(), status)) {
+        boolean valido = this.service.validarEAtivarUsuario(userModel.getIdade(), status);
+        if (valido) {
             this.service.registrarLog("Processo concluido no sistema " + this.nomeSistema);
             return true;
         }

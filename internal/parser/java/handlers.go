@@ -2,6 +2,7 @@ package java
 
 import (
 	"fmt"
+	"strings"
 
 	tree_sitter "github.com/tree-sitter/go-tree-sitter"
 )
@@ -18,7 +19,10 @@ type Variable struct {
 	Modifiers   []Modifier `json:"modifiers"`
 	TypeName    string     `json:"typeName"`
 	Declarator  string     `json:"declarator"`
+	Value       Expression `json:"value"`
 }
+
+func (v Variable) isExpression() {}
 
 type ClassJava struct {
 	Annotations  []string     `json:"annotations"`
@@ -39,6 +43,7 @@ type Executable struct {
 	Body          Block      `json:"body"`
 	ReturnType    string     `json:"returnType"`
 	IsConstructor bool       `json:"isConstructor"`
+	Throws        string     `json:"throws"`
 }
 
 type Modifier struct {
@@ -161,7 +166,17 @@ func parseMethod(node *tree_sitter.Node, content []byte, classData *ClassJava) e
 	bodyNode := node.ChildByFieldName("body")
 
 	newMethod.Body = parseBlock(bodyNode, content)
+	for i := range node.ChildCount() {
+		child := node.Child(i)
+		if child.Kind() == "throws" {
+			rawText := child.Utf8Text(content)
 
+			cleanText := strings.Replace(rawText, "throws", "", 1)
+			newMethod.Throws = strings.TrimSpace(cleanText)
+			break
+		}
+	}
+	fmt.Println(newMethod.Throws)
 	classData.Methods = append(classData.Methods, newMethod)
 	return nil
 }

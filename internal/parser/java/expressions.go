@@ -21,6 +21,7 @@ type Binary struct {
 type IfNode struct {
 	Condition   Expression `json:"condition"`
 	Consequence Block      `json:"consequence"`
+	Alternative *Block     `json:"alternative"`
 }
 
 type MethodInvocation struct {
@@ -43,6 +44,41 @@ type Literal struct {
 type ReturnNode struct {
 	Value Expression `json:"value"`
 }
+type TryNode struct {
+	Body    Block       `json:"body"`
+	Catches []CatchNode `json:"catches"`
+}
+
+type CatchNode struct {
+	Parameter string `json:"parameter"`
+	Body      Block  `json:"body"`
+}
+type ForNode struct {
+	Init      Expression `json:"init"`
+	Condition Expression `json:"condition"`
+	Update    Expression `json:"update"`
+	Body      Block      `json:"body"`
+}
+
+type EnhancedForNode struct {
+	Modifiers []Modifier `json:"modifiers"`
+	Type      string     `json:"type"`
+	Name      string     `json:"name"`
+	Value     Expression `json:"value"`
+	Body      Block      `json:"body"`
+}
+
+type WhileNode struct {
+	Condition Expression `json:"condition"`
+	Body      Block      `json:"body"`
+}
+
+type ThrowNode struct {
+	Value Expression `json:"value"`
+}
+
+type BreakNode struct{}
+
 type ExpressionHandler func(node *tree_sitter.Node, content []byte) (Expression, error)
 
 var expressionHandlers map[string]ExpressionHandler
@@ -61,17 +97,20 @@ func init() {
 	}
 }
 
+func (t TryNode) isExpression()          {}
 func (b Binary) isExpression()           {}
 func (m MethodInvocation) isExpression() {}
 func (l Literal) isExpression()          {}
 func (i IfNode) isExpression()           {}
 func (r ReturnNode) isExpression()       {}
-
-func (a Access) isExpression() {}
-
-func (a Assignment) isExpression() {}
-
-func (i Identifier) isExpression() {}
+func (f ForNode) isExpression()          {}
+func (e EnhancedForNode) isExpression()  {}
+func (w WhileNode) isExpression()        {}
+func (t ThrowNode) isExpression()        {}
+func (b BreakNode) isExpression()        {}
+func (a Access) isExpression()           {}
+func (a Assignment) isExpression()       {}
+func (i Identifier) isExpression()       {}
 
 func routeExpression(node *tree_sitter.Node, content []byte) Expression {
 	if node == nil {
