@@ -63,6 +63,16 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public UsuarioService(String nomeBanco)`
 
+**Sequence Diagram:**
+```mermaid
+sequenceDiagram
+    actor Caller
+    participant ThisClass
+
+    Caller->>ThisClass: UsuarioService(nomeBanco)
+
+```
+
 **Parameters:**
 
 - **nomeBanco** (`String`)
@@ -91,31 +101,22 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public boolean validarEAtivarUsuario(int idade, String status)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["validarEAtivarUsuario(int idade, String status)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>boolean" .-> Caller
+    Caller->>ThisClass: validarEAtivarUsuario(idade, status)
+    alt idade >= ... && status == ...
+    participant System
+    ThisClass->>System: println(... + this.nomeBanco)
+    ThisClass-->>Caller: return true
+    end
+    ThisClass->>System: println(...)
+    ThisClass-->>Caller: return false
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. If idade is greater than or equal to 18 AND status is equal to "ativo"
-   then:
-      - Invoke 'System.out.println' with parameters: '"Usuario validado com sucesso no banco " plus this.nomeBanco'
-      - Return the result of: true
-
-1. Invoke 'System.out.println' with parameters: '"Falha na validacao"'
-
-1. Return the result of: false
-
-
 
 **Parameters:**
 
@@ -147,26 +148,17 @@ flowchart LR
 > **Signature:**
 > `public void registrarLog(String acao)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["registrarLog(String acao)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: registrarLog(acao)
+    participant System
+    ThisClass->>System: println(acao)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Set 'this.conexaoAtiva' to 'false'
-
-1. Invoke 'System.out.println' with parameters: 'acao'
-
-
 
 **Parameters:**
 

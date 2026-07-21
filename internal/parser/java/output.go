@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
-	"text/template" // Mudou de html para text!
+	"text/template"
 )
 
 // extractClassName pega um import completo (ex: java.util.List) e retorna só a classe (List)
@@ -102,6 +102,143 @@ func getDependencyCalls(c ClassJava) map[string]string {
 	return result
 }
 
+// generateSequenceDiagram constrói dinamicamente um diagrama de sequência Mermaid
+func generateSequenceDiagram(m Executable) string {
+	var sb strings.Builder
+	participants := make(map[string]bool)
+
+	sb.WriteString("sequenceDiagram\n")
+	sb.WriteString("    actor Caller\n")
+	sb.WriteString("    participant ThisClass\n")
+
+	ensureParticipant := func(name string) {
+		if name == "" || name == "this" || name == "ThisClass" || name == "Caller" {
+			return
+		}
+		if !participants[name] {
+			participants[name] = true
+			sb.WriteString(fmt.Sprintf("    participant %s\n", name))
+		}
+	}
+
+	var resolveTarget func(expr Expression) string
+	resolveTarget = func(expr Expression) string {
+		if expr == nil {
+			return ""
+		}
+		switch o := expr.(type) {
+		case Identifier:
+			if o.Name == "this" {
+				return ""
+			}
+			return o.Name
+		case Access:
+			if inner := resolveTarget(o.Object); inner != "" {
+				return inner
+			}
+			return o.Identifier.Name
+		default:
+			return ""
+		}
+	}
+
+	var exprToString func(expr Expression) string
+	exprToString = func(expr Expression) string {
+		if expr == nil {
+			return ""
+		}
+		defer func() { recover() }()
+		switch e := expr.(type) {
+		case Identifier:
+			return e.Name
+		case Access:
+			obj := exprToString(e.Object)
+			if obj != "" {
+				return obj + "." + e.Identifier.Name
+			}
+			return e.Identifier.Name
+		case MethodInvocation:
+			var args []string
+			for _, a := range e.Args {
+				args = append(args, exprToString(a))
+			}
+			return fmt.Sprintf("%s(%s)", exprToString(e.Accessed), strings.Join(args, ", "))
+		case Binary:
+			return fmt.Sprintf("%s %s %s", exprToString(e.Left), e.Operator, exprToString(e.Right))
+		case Assignment:
+			return exprToString(e.Right)
+		case ReturnNode:
+			return exprToString(e.Value)
+		default:
+			return "..."
+		}
+	}
+
+	var traverse func(expr Expression)
+	traverse = func(expr Expression) {
+		if expr == nil {
+			return
+		}
+		defer func() { recover() }()
+		switch e := expr.(type) {
+		case Assignment:
+			traverse(e.Right)
+		case Binary:
+			traverse(e.Left)
+			traverse(e.Right)
+		case IfNode:
+			cond := exprToString(e.Condition)
+			if cond == "" {
+				cond = "condição"
+			}
+			sb.WriteString(fmt.Sprintf("    alt %s\n", cond))
+			for _, s := range e.Consequence.Statements {
+				for _, ex := range s.Expressions {
+					traverse(ex)
+				}
+			}
+			sb.WriteString("    end\n")
+		case MethodInvocation:
+			target := resolveTarget(e.Accessed.Object)
+			if target != "" {
+				ensureParticipant(target)
+				var args []string
+				for _, a := range e.Args {
+					args = append(args, exprToString(a))
+				}
+				sb.WriteString(fmt.Sprintf(
+					"    ThisClass->>%s: %s(%s)\n",
+					target,
+					e.Accessed.Identifier.Name,
+					strings.Join(args, ", "),
+				))
+			}
+			for _, a := range e.Args {
+				traverse(a)
+			}
+		case ReturnNode:
+			val := exprToString(e.Value)
+			sb.WriteString(fmt.Sprintf("    ThisClass-->>Caller: return %s\n", val))
+		default:
+			// Nó não mapeado: ignorado silenciosamente para tolerância a falhas.
+		}
+	}
+
+	var params []string
+	for _, p := range m.Parameters {
+		params = append(params, p.Declarator)
+	}
+	sb.WriteString(fmt.Sprintf("\n    Caller->>ThisClass: %s(%s)\n", m.Name, strings.Join(params, ", ")))
+
+	for _, s := range m.Body.Statements {
+		for _, e := range s.Expressions {
+			traverse(e)
+		}
+	}
+
+	return sb.String()
+}
+
 const docTemplate = `
 {{range .Annotations}}> **{{.}}**
 {{end}}# 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
@@ -169,6 +306,11 @@ Expand the sections below to read the exact pseudo-code and business rules.
 {{range .Annotations}}> {{bt}}{{.}}{{bt}}
 {{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
 
+**Sequence Diagram:**
+{{bt}}{{bt}}{{bt}}mermaid
+{{generateSequenceDiagram .}}
+{{bt}}{{bt}}{{bt}}
+
 **Parameters:**
 {{if not .Parameters}}> *None.*
 {{else}}{{range .Parameters}}
@@ -198,26 +340,11 @@ Expand the sections below to read the exact pseudo-code and business rules.
 {{range .Annotations}}> {{bt}}{{.}}{{bt}}
 {{end}}> {{bt}}{{formatModifiers .Modifiers}}{{.ReturnType}} {{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{range $p.Annotations}}{{.}} {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}}){{bt}}
 
-**Data Flow:**
+**Sequence Diagram:**
 {{bt}}{{bt}}{{bt}}mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["{{.Name}}({{range $i, $p := .Parameters}}{{if $i}}, {{end}}{{$p.TypeName}} {{$p.Declarator}}{{end}})"]:::methodNode
-
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>{{.ReturnType}}" .-> Caller
+{{generateSequenceDiagram .}}
 {{bt}}{{bt}}{{bt}}
 
-**Step-by-Step Logic:**
-{{if not .Body.Statements}}> *Empty body.*
-{{else}}
-
-{{range .Body.Statements}}{{range .Expressions}}
-1. {{formatExpression .}}
-{{end}}{{end}}
-
-{{end}}
 **Parameters:**
 {{if not .Parameters}}> *None.*
 {{else}}{{range .Parameters}}
@@ -294,12 +421,12 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 	}
 
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
-		"bt":               func() string { return "`" },
-		"formatModifiers":  formatModifiers,
-		"formatExpression": formatExpression,
-		"extractClassName": extractClassName,
-		"isProjectClass":   isProjectClass,
-		// "generateMethodFlowchart": generateMethodFlowchart,
+		"bt":                      func() string { return "`" },
+		"formatModifiers":         formatModifiers,
+		"formatExpression":        formatExpression,
+		"extractClassName":        extractClassName,
+		"isProjectClass":          isProjectClass,
+		"generateSequenceDiagram": generateSequenceDiagram,
 	}).Parse(docTemplate)
 
 	if err != nil {
@@ -359,122 +486,4 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	}
 
 	fmt.Printf("🗺️ Diagrama de Arquitetura Global gerado em: %s\n", outputFilename)
-}
-
-// generateMethodFlowchart desenha um fluxograma detalhado da lógica interna do método
-func generateMethodFlowchart(m Executable) string {
-	var sb strings.Builder
-	// Configura o diagrama para Top-Down e adiciona estilos
-	sb.WriteString("flowchart TD\n")
-	sb.WriteString("    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;\n")
-	sb.WriteString("    classDef callNode fill:#f1f8ff,stroke:#0366d6,color:#24292f;\n")
-	sb.WriteString("    classDef ifNode fill:#fff8c5,stroke:#d73a49,color:#24292f;\n")
-	sb.WriteString("    classDef retNode fill:#28a745,stroke:#fff,color:#fff;\n\n")
-
-	// Formata os parâmetros para o nó de entrada
-	var params []string
-	for _, p := range m.Parameters {
-		params = append(params, p.TypeName+" "+p.Declarator)
-	}
-	methodSig := fmt.Sprintf("%s(%s)", m.Name, strings.Join(params, ", "))
-	sb.WriteString(fmt.Sprintf("    START((\"Caller\")) --> M_ENTRY[\"%s\"]:::methodNode\n", methodSig))
-
-	nodeCounter := 0
-	getNextID := func() string {
-		nodeCounter++
-		return fmt.Sprintf("N%d", nodeCounter)
-	}
-
-	// Função recursiva para varrer os statements e montar os nós
-	var traverse func(expr Expression, parentID string) string
-	traverse = func(expr Expression, parentID string) string {
-		if expr == nil {
-			return parentID
-		}
-		currentParent := parentID
-
-		switch e := expr.(type) {
-		case MethodInvocation:
-			id := getNextID()
-			targetObj := ""
-			if e.Accessed.Object != nil {
-				switch obj := e.Accessed.Object.(type) {
-				case Access:
-					targetObj = obj.Identifier.Name
-				case Identifier:
-					targetObj = obj.Name
-				}
-			}
-			var args []string
-			for _, arg := range e.Args {
-				switch a := arg.(type) {
-				case Identifier:
-					args = append(args, a.Name)
-				default:
-					args = append(args, "...")
-				}
-			}
-			callStr := fmt.Sprintf("%s(%s)", e.Accessed.Identifier.Name, strings.Join(args, ", "))
-			if targetObj != "" {
-				callStr = targetObj + "." + callStr
-			}
-			// Cria o nó de chamada
-			sb.WriteString(fmt.Sprintf("    %s --> %s>\"Call:<br>%s\"]:::callNode\n", currentParent, id, callStr))
-			return id
-
-		case IfNode:
-			id := getNextID()
-			condStr := formatExpression(e.Condition)
-			condStr = strings.ReplaceAll(condStr, "\"", "'")
-			if len(condStr) > 40 {
-				condStr = condStr[:37] + "..." // Trunca expressões gigantes
-			}
-			// Cria o nó condicional (Losango)
-			sb.WriteString(fmt.Sprintf("    %s --> %s{\"If:<br>%s\"}:::ifNode\n", currentParent, id, condStr))
-
-			consParent := id
-			for _, stmt := range e.Consequence.Statements {
-				for _, ex := range stmt.Expressions {
-					consParent = traverse(ex, consParent)
-				}
-			}
-			return consParent
-
-		case ReturnNode:
-			id := getNextID()
-			retStr := formatExpression(e.Value)
-			retStr = strings.ReplaceAll(retStr, "\"", "'")
-			if len(retStr) > 30 {
-				retStr = retStr[:27] + "..."
-			}
-			// Cria o nó de retorno
-			sb.WriteString(fmt.Sprintf("    %s --> %s((\"Return:<br>%s\")):::retNode\n", currentParent, id, retStr))
-			return id
-
-		case Assignment:
-			currentParent = traverse(e.Left, currentParent)
-			currentParent = traverse(e.Right, currentParent)
-			return currentParent
-		case Binary:
-			currentParent = traverse(e.Left, currentParent)
-			currentParent = traverse(e.Right, currentParent)
-			return currentParent
-		}
-		return currentParent
-	}
-
-	// Executa a varredura no corpo do método
-	lastNode := "M_ENTRY"
-	for _, stmt := range m.Body.Statements {
-		for _, expr := range stmt.Expressions {
-			lastNode = traverse(expr, lastNode)
-		}
-	}
-
-	// Se não finalizou com um Return explícito, adiciona um nó de Fim
-	if !strings.Contains(sb.String(), "Return:") {
-		sb.WriteString(fmt.Sprintf("    %s -.-> END((\"End\"))\n", lastNode))
-	}
-
-	return sb.String()
 }

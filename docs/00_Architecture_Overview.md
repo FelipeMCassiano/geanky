@@ -55,15 +55,6 @@ flowchart LR
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
         
         
         
@@ -71,6 +62,15 @@ flowchart LR
             UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)<br>registrarLog(...)</b>"| UsuarioService
         
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

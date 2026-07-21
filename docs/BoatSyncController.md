@@ -120,6 +120,16 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public BoatSyncController(SyncService service, CloudSyncUploadService syncService, BoatSseSyncService sseSyncService, DownloadService downloadService, MachineSync machineSync)`
 
+**Sequence Diagram:**
+```mermaid
+sequenceDiagram
+    actor Caller
+    participant ThisClass
+
+    Caller->>ThisClass: BoatSyncController(service, syncService, sseSyncService, downloadService, machineSync)
+
+```
+
 **Parameters:**
 
 - **service** (`SyncService`)
@@ -163,24 +173,16 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > `@GetMapping(value = "/events/{uuid}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)`
 > `public Flux<ServerSentEvent<String>> subscEmitter(UUID uuid)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["subscEmitter(UUID uuid)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>Flux<ServerSentEvent<String>>" .-> Caller
+    Caller->>ThisClass: subscEmitter(uuid)
+    ThisClass-->>Caller: return sseSyncService.subscribe(uuid)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Return the result of: Invoke 'sseSyncService.subscribe' with parameters: 'uuid'
-
-
 
 **Parameters:**
 
@@ -204,26 +206,18 @@ flowchart LR
 > `@GetMapping("/portal-readings")`
 > `public ResponseEntity<?> portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["portalReadingsSyncPaginated(Long timestamp, Long id, Principal principal)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>ResponseEntity<?>" .-> Caller
+    Caller->>ThisClass: portalReadingsSyncPaginated(timestamp, id, principal)
+    alt readings.size() < SyncService.MAX_ITEMS + ...
+    ThisClass-->>Caller: return ContentLengthResponseBuilder.createResponse(readings, HttpStatus.OK, principal)
+    end
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. If Invoke 'readings.size' (no parameters) is less than SyncService.MAX_ITEMS plus 1
-   then:
-      - Return the result of: Invoke 'ContentLengthResponseBuilder.createResponse' with parameters: 'readings', 'HttpStatus.OK', 'principal'
-
-
 
 **Parameters:**
 
@@ -253,24 +247,16 @@ flowchart LR
 > `@GetMapping("/latest")`
 > `public ResponseEntity<?> latestSync(Principal principal)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["latestSync(Principal principal)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>ResponseEntity<?>" .-> Caller
+    Caller->>ThisClass: latestSync(principal)
+    ThisClass-->>Caller: return ContentLengthResponseBuilder.ok(response, principal)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Return the result of: Invoke 'ContentLengthResponseBuilder.ok' with parameters: 'response', 'principal'
-
-
 
 **Parameters:**
 
@@ -294,19 +280,15 @@ flowchart LR
 > `@PostMapping("/cloud")`
 > `public ResponseEntity<?> triggerCloudSync(SyncRequest request, Principal principal)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["triggerCloudSync(SyncRequest request, Principal principal)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>ResponseEntity<?>" .-> Caller
+    Caller->>ThisClass: triggerCloudSync(request, principal)
+
 ```
-
-**Step-by-Step Logic:**
-> *Empty body.*
 
 **Parameters:**
 

@@ -65,6 +65,16 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public UserModel(String nome, int idade)`
 
+**Sequence Diagram:**
+```mermaid
+sequenceDiagram
+    actor Caller
+    participant ThisClass
+
+    Caller->>ThisClass: UserModel(nome, idade)
+
+```
+
 **Parameters:**
 
 - **nome** (`String`)
@@ -95,24 +105,15 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public void setNome(String nome)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["setNome(String nome)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: setNome(nome)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Set 'this.nome' to 'nome'
-
-
 
 **Parameters:**
 
@@ -135,24 +136,15 @@ flowchart LR
 > **Signature:**
 > `public void setIdade(int idade)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["setIdade(int idade)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: setIdade(idade)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Set 'this.idade' to 'idade'
-
-
 
 **Parameters:**
 
@@ -175,24 +167,16 @@ flowchart LR
 > **Signature:**
 > `public int getIdade()`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["getIdade()"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>int" .-> Caller
+    Caller->>ThisClass: getIdade()
+    ThisClass-->>Caller: return this.idade
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Return the result of: this.idade
-
-
 
 **Parameters:**
 > *None.*
@@ -214,24 +198,16 @@ flowchart LR
 > **Signature:**
 > `public String getNome()`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["getNome()"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>String" .-> Caller
+    Caller->>ThisClass: getNome()
+    ThisClass-->>Caller: return this.nome
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Return the result of: this.nome
-
-
 
 **Parameters:**
 > *None.*

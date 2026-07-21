@@ -238,6 +238,16 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public CloudSyncUploadService(InventorySituationRepository situationRepository, LocationRepository locationRepository, InventoryRepository inventoryRepository, SyncService musteringBuilderService, CloudSyncIntegrationClient httpClient, SyncControlRepository syncControlRepository, BoatSseSyncService sseSyncService, RestTemplate restTemplate, DownloadService downloadService, ItemRepository itemRepository, PacketChunkerEngine chunkerEngine, SyncPacketChunkRepository syncPacketChunkRepository, SyncPacketMasterRepository syncPacketMasterRepository, Executor parallelSyncExecutor, MachineClient machineClient)`
 
+**Sequence Diagram:**
+```mermaid
+sequenceDiagram
+    actor Caller
+    participant ThisClass
+
+    Caller->>ThisClass: CloudSyncUploadService(situationRepository, locationRepository, inventoryRepository, musteringBuilderService, httpClient, syncControlRepository, sseSyncService, restTemplate, downloadService, itemRepository, chunkerEngine, syncPacketChunkRepository, syncPacketMasterRepository, parallelSyncExecutor, machineClient)
+
+```
+
 **Parameters:**
 
 - **situationRepository** (`InventorySituationRepository`)
@@ -318,24 +328,15 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public void setDestination(String destination)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["setDestination(String destination)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: setDestination(destination)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Set 'this.destination' to 'destination'
-
-
 
 **Parameters:**
 
@@ -358,29 +359,20 @@ flowchart LR
 > **Signature:**
 > `public SyncLastestResponse latestSync()`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["latestSync()"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>SyncLastestResponse" .-> Caller
-```
-
-**Step-by-Step Logic:**
-
-
-
-1. If Invoke 'syncModelOpt.isEmpty' (no parameters)
-   then:
-      - Return the result of: new SyncLastestResponse("", ESyncStatus.NONE, 0L, "")
-
-1. Return the result of: new SyncLastestResponse(eventKey, syncControlModel.getStatus(),
+    Caller->>ThisClass: latestSync()
+    alt syncModelOpt.isEmpty()
+    ThisClass-->>Caller: return new SyncLastestResponse("", ESyncStatus.NONE, 0L, "")
+    end
+    ThisClass-->>Caller: return new SyncLastestResponse(eventKey, syncControlModel.getStatus(),
                 timestamp, syncControlModel.getErrorMessage())
 
-
+```
 
 **Parameters:**
 > *None.*
@@ -407,55 +399,45 @@ flowchart LR
 > **Signature:**
 > `public SyncEvent syncToCloud(SyncRequest request)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["syncToCloud(SyncRequest request)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>SyncEvent" .-> Caller
+    Caller->>ThisClass: syncToCloud(request)
+    participant log
+    ThisClass->>log: info(...)
+    alt ESyncStatus.UPLOAD_IN_PROGRESS.equals(control.getStatus()) || ESyncStatus.DOWNLOAD_IN_PROGRESS.equals(control.getStatus()) || ESyncStatus.IN_PROGRESS.equals(control.getStatus())
+    participant sseSyncService
+    ThisClass->>sseSyncService: sendSyncStatusOnChange(control.getEventKey(), ..., control.getStatus())
+    participant control
+    ThisClass->>control: getEventKey()
+    ThisClass->>control: getStatus()
+    ThisClass-->>Caller: return new SyncEvent(control.getEventKey().toString(), control.getStatus(), lastSync)
+    end
+    alt request.getEventKey() != null && !request.getEventKey().trim().isEmpty()
+    participant UUID
+    ThisClass->>UUID: fromString(request.getEventKey())
+    participant request
+    ThisClass->>request: getEventKey()
+    end
+    participant newControl
+    ThisClass->>newControl: setEventKey(targetEventKey)
+    ThisClass->>newControl: setStatus(ESyncStatus.UPLOAD_IN_PROGRESS)
+    ThisClass->>newControl: setLastSyncAt(lastSuccessfulSyncDate)
+    ThisClass->>newControl: setErrorMessage(...)
+    alt newControl.getCreatedAt() == null
+    ThisClass->>newControl: setCreatedAt(new java.util.Date())
+    end
+    participant syncControlRepository
+    ThisClass->>syncControlRepository: saveAndFlush(newControl)
+    ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, ..., ESyncStatus.IN_PROGRESS)
+    ThisClass->>request: getLocationId()
+    ThisClass->>log: info(..., eventKey)
+    ThisClass-->>Caller: return new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRESS, syncTimestamp)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Invoke 'log.info' with parameters: '"sync iniciado"'
-
-1. If Invoke 'ESyncStatus.UPLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' OR Invoke 'ESyncStatus.DOWNLOAD_IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)' OR Invoke 'ESyncStatus.IN_PROGRESS.equals' with parameters: 'Invoke 'control.getStatus' (no parameters)'
-   then:
-      - Invoke 'sseSyncService.sendSyncStatusOnChange' with parameters: 'Invoke 'control.getEventKey' (no parameters)', '"Sync já em andamento..."', 'Invoke 'control.getStatus' (no parameters)'
-      - Return the result of: new SyncEvent(control.getEventKey().toString(), control.getStatus(), lastSync)
-
-1. If Invoke 'request.getEventKey' (no parameters) is not equal to null AND !request.getEventKey().trim().isEmpty()
-   then:
-      - Set 'targetEventKey' to 'Invoke 'UUID.fromString' with parameters: 'Invoke 'request.getEventKey' (no parameters)''
-
-1. Invoke 'newControl.setEventKey' with parameters: 'targetEventKey'
-
-1. Invoke 'newControl.setStatus' with parameters: 'ESyncStatus.UPLOAD_IN_PROGRESS'
-
-1. Invoke 'newControl.setLastSyncAt' with parameters: 'lastSuccessfulSyncDate'
-
-1. Invoke 'newControl.setErrorMessage' with parameters: '""'
-
-1. If Invoke 'newControl.getCreatedAt' (no parameters) is equal to null
-   then:
-      - Invoke 'newControl.setCreatedAt' with parameters: 'new java.util.Date()'
-
-1. Invoke 'syncControlRepository.saveAndFlush' with parameters: 'newControl'
-
-1. Invoke 'sseSyncService.sendSyncStatusOnChange' with parameters: 'eventKey', '""', 'ESyncStatus.IN_PROGRESS'
-
-1. Invoke 'backgroundProcess' with parameters: 'eventKey', 'request', 'token', 'syncTimestamp', 'Invoke 'request.getLocationId' (no parameters)'
-
-1. Invoke 'log.info' with parameters: '"[SYNC] Retornando eventKey {} para o frontend conectar no SSE..."', 'eventKey'
-
-1. Return the result of: new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRESS, syncTimestamp)
-
-
 
 **Parameters:**
 
@@ -509,24 +491,17 @@ flowchart LR
 > **Signature:**
 > `public String authorizeSync()`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["authorizeSync()"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>String" .-> Caller
+    Caller->>ThisClass: authorizeSync()
+    participant headers
+    ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Invoke 'headers.setContentType' with parameters: 'MediaType.APPLICATION_JSON'
-
-
 
 **Parameters:**
 > *None.*
@@ -548,105 +523,15 @@ flowchart LR
 > **Signature:**
 > `private void backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["backgroundProcess(UUID eventKey, SyncRequest request, String token, Long syncTimestamp, Long locationId)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: backgroundProcess(eventKey, request, token, syncTimestamp, locationId)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Invoke 'Invoke 'Invoke 'Invoke 'CompletableFuture.runAsync' with parameters: '() -> {
-                    try {
-                        processCloudSyncInBackground(eventKey, token, syncTimestamp, locationId);
-                    } catch (Exception e) {
-                        throw new CompletionException(e);
-                    }
-                }', 'parallelSyncExecutor'.thenRunAsync' with parameters: '() -> {
-                    try {
-                        SyncControlModel control = getControlWithRetry(eventKey);
-                        control.setStatus(ESyncStatus.DOWNLOAD_IN_PROGRESS);
-                        syncControlRepository.save(control);
-                        sseSyncService.sendSyncStatusOnChange(eventKey,
-                                "Upload concluído. Verificando novidades na Nuvem...",
-                                ESyncStatus.DOWNLOAD_IN_PROGRESS);
-
-                        log.info("[SYNC-BACKGROUND] Iniciando Fase 2: DOWNLOAD. Verificando nuvem...");
-                        PingSyncResponse ping = httpClient.pingCloud(token, this.destination, syncTimestamp);
-
-                        if (ping != null && ping.isDownloadReady()) {
-                            log.info("[SYNC-BACKGROUND] Nuvem sinalizou que há dados. Baixando...");
-                            request.setTimestamp(ping.getTimestampToDownload());
-                            processDownload(eventKey, request, token, locationId);
-                        } else {
-                            log.info("[SYNC-BACKGROUND] Nenhuma novidade na nuvem. O barco já está atualizado!");
-                        }
-
-                    } catch (Exception e) {
-                        throw new CompletionException("Falha na etapa de Download: " + e.getMessage(), e);
-                    }
-                }', 'parallelSyncExecutor'.thenRun' with parameters: '() -> {
-                    SyncControlModel control = getControlWithRetry(eventKey);
-
-                    Instant now = Instant.now();
-                    control.setStatus(ESyncStatus.SUCCESS_PENDING);
-                    control.setErrorMessage("");
-                    control.setLastSyncAt(now);
-                    control = syncControlRepository.saveAndFlush(control);
-                    sseSyncService.sendSyncStatusOnChange(eventKey, "", ESyncStatus.SUCCESS);
-
-                    boolean sendApiSuccess = sendStatusToApi(eventKey, ESyncStatus.SUCCESS, "", token,
-                            now.toEpochMilli(),
-                            locationId);
-                    boolean sendMachineSuccess = machineClient.sendSuccessSync(
-                            this.destination == null ? cloudUrl : this.destination,
-                            eventKey.toString(),
-                            now.toEpochMilli());
-                    if (sendApiSuccess && sendMachineSuccess) {
-                        control.setStatus(ESyncStatus.SUCCESS);
-                        syncControlRepository.save(control);
-                    } else {
-                        log.error(
-                                "Error ao avisar sucesso para api ou machine, na proxima iteracao do machine havera outra tentativa");
-                    }
-
-                }'.exceptionally' with parameters: 'ex -> {
-                    Throwable rootCause = ex.getCause() != null ? ex.getCause() : ex;
-                    log.error("[SYNC-BACKGROUND] Erro durante a sincronização: {}", rootCause.getMessage(), rootCause);
-
-                    try {
-                        SyncControlModel control = getControlWithRetry(eventKey);
-                        control.setStatus(ESyncStatus.FAILED_PENDING);
-                        String errorMsg = rootCause.getMessage() != null ? rootCause.getMessage() : "Erro desconhecido";
-                        control.setErrorMessage(errorMsg.length() > 1000 ? errorMsg.substring(0, 1000) : errorMsg);
-                        control = syncControlRepository.saveAndFlush(control);
-                        sseSyncService.sendSyncStatusOnChange(eventKey, rootCause.getMessage(), ESyncStatus.FAILED);
-                        boolean sendApiStatusSuccessfully = sendStatusToApi(eventKey, ESyncStatus.FAILED,
-                                rootCause.getMessage(), token,
-                                0L, locationId);
-
-                        if (sendApiStatusSuccessfully) {
-                            control.setStatus(ESyncStatus.FAILED);
-                            syncControlRepository.save(control);
-                        } else {
-                            log.error(
-                                    "Error ao avisar falha para api, na proxima iteracao do machine havera outra tentativa");
-                        }
-
-                    } catch (Exception dbEx) {
-                        log.error("[SYNC-BACKGROUND] Falha crítica ao salvar status FAILED: {}", dbEx.getMessage());
-                    }
-                    return null;
-                }'
-
-
 
 **Parameters:**
 
@@ -758,19 +643,15 @@ flowchart LR
 > **Signature:**
 > `private void processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["processDownload(UUID eventKey, SyncRequest request, String token, Long locationId)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: processDownload(eventKey, request, token, locationId)
+
 ```
-
-**Step-by-Step Logic:**
-> *Empty body.*
 
 **Parameters:**
 
@@ -794,19 +675,15 @@ flowchart LR
 > **Signature:**
 > `private SyncControlModel getControlWithRetry(UUID eventKey)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["getControlWithRetry(UUID eventKey)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>SyncControlModel" .-> Caller
+    Caller->>ThisClass: getControlWithRetry(eventKey)
+
 ```
-
-**Step-by-Step Logic:**
-> *Empty body.*
 
 **Parameters:**
 
@@ -824,24 +701,17 @@ flowchart LR
 > **Signature:**
 > `private void processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["processCloudSyncInBackground(UUID eventKey, String token, Long syncTimestamp, Long locationId)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: processCloudSyncInBackground(eventKey, token, syncTimestamp, locationId)
+    participant log
+    ThisClass->>log: info(..., eventKey)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Invoke 'log.info' with parameters: '"[SYNC-BACKGROUND] Iniciando processamento em background para o eventKey: {}"', 'eventKey'
-
-
 
 **Parameters:**
 
@@ -870,38 +740,30 @@ flowchart LR
 > **Signature:**
 > `private SyncPacketMaster saveMasterAndChunksToDatabase(List<byte[]> slices, String checksum)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["saveMasterAndChunksToDatabase(List<byte[]> slices, String checksum)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>SyncPacketMaster" .-> Caller
+    Caller->>ThisClass: saveMasterAndChunksToDatabase(slices, checksum)
+    participant master
+    ThisClass->>master: setId(UUID.randomUUID())
+    participant UUID
+    ThisClass->>UUID: randomUUID()
+    ThisClass->>master: setStatus(EPacketStatus.PENDING)
+    ThisClass->>master: setTotalChunks(slices.size())
+    participant slices
+    ThisClass->>slices: size()
+    ThisClass->>master: setProcessedChunks(...)
+    ThisClass->>master: setChecksum(checksum)
+    ThisClass->>master: setNextRetryAt(Instant.now())
+    participant Instant
+    ThisClass->>Instant: now()
+    ThisClass->>master: setChunks(chunks)
+    ThisClass-->>Caller: return masterRepository.save(master)
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Invoke 'master.setId' with parameters: 'Invoke 'UUID.randomUUID' (no parameters)'
-
-1. Invoke 'master.setStatus' with parameters: 'EPacketStatus.PENDING'
-
-1. Invoke 'master.setTotalChunks' with parameters: 'Invoke 'slices.size' (no parameters)'
-
-1. Invoke 'master.setProcessedChunks' with parameters: '0'
-
-1. Invoke 'master.setChecksum' with parameters: 'checksum'
-
-1. Invoke 'master.setNextRetryAt' with parameters: 'Invoke 'Instant.now' (no parameters)'
-
-1. Invoke 'master.setChunks' with parameters: 'chunks'
-
-1. Return the result of: Invoke 'masterRepository.save' with parameters: 'master'
-
-
 
 **Parameters:**
 
@@ -940,19 +802,15 @@ flowchart LR
 > **Signature:**
 > `private void cleanupOldUploadPackages()`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["cleanupOldUploadPackages()"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: cleanupOldUploadPackages()
+
 ```
-
-**Step-by-Step Logic:**
-> *Empty body.*
 
 **Parameters:**
 > *None.*
@@ -969,38 +827,24 @@ flowchart LR
 > **Signature:**
 > `private SyncPackage buildProtobufPackage(List<ItemStatusSyncDTO> status, List<MusteringSyncDTO> mustering, List<ItemModificationStatusDTO> modifications)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["buildProtobufPackage(List<ItemStatusSyncDTO> status, List<MusteringSyncDTO> mustering, List<ItemModificationStatusDTO> modifications)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>SyncPackage" .-> Caller
+    Caller->>ThisClass: buildProtobufPackage(status, mustering, modifications)
+    participant pb
+    ThisClass->>pb: setTimestamp(Instant.now().toEpochMilli())
+    alt status != null
+    end
+    alt mustering != null
+    end
+    alt modifications != null
+    end
+    ThisClass-->>Caller: return pb.build()
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Invoke 'pb.setTimestamp' with parameters: 'Invoke 'Invoke 'Instant.now' (no parameters).toEpochMilli' (no parameters)'
-
-1. If status is not equal to null
-   then:
-      - (do nothing)
-
-1. If mustering is not equal to null
-   then:
-      - (do nothing)
-
-1. If modifications is not equal to null
-   then:
-      - (do nothing)
-
-1. Return the result of: Invoke 'pb.build' (no parameters)
-
-
 
 **Parameters:**
 
@@ -1041,24 +885,16 @@ flowchart LR
 > **Signature:**
 > `public boolean sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["sendStatusToApi(UUID eventKey, ESyncStatus status, String message, String token, Long timestamp, Long locationId)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>boolean" .-> Caller
+    Caller->>ThisClass: sendStatusToApi(eventKey, status, message, token, timestamp, locationId)
+    ThisClass-->>Caller: return false
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. Return the result of: false
-
-
 
 **Parameters:**
 
@@ -1091,22 +927,14 @@ flowchart LR
 > **Signature:**
 > `private List<ItemStatusSyncDTO> fetchItemStatusTransitions(List<ItemStatusTransitionProjection> transitions)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["fetchItemStatusTransitions(List<ItemStatusTransitionProjection> transitions)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>List<ItemStatusSyncDTO>" .-> Caller
-```
-
-**Step-by-Step Logic:**
-
-
-
-1. Return the result of: Invoke 'Invoke 'Invoke 'transitions.stream' (no parameters).map' with parameters: 't -> {
+    Caller->>ThisClass: fetchItemStatusTransitions(transitions)
+    ThisClass-->>Caller: return transitions.stream().map(t -> {
             ItemStatusSyncDTO dto = new ItemStatusSyncDTO();
             dto.setEpc(t.getEpc());
             dto.setStatus(t.getSituation());
@@ -1116,9 +944,9 @@ flowchart LR
             dto.setInventoryId(t.getInventoryId());
             dto.setItemId(t.getItemId());
             return dto;
-        }'.collect' with parameters: 'Invoke 'Collectors.toList' (no parameters)'
+        }).collect(Collectors.toList())
 
-
+```
 
 **Parameters:**
 
@@ -1151,30 +979,23 @@ flowchart LR
 > **Signature:**
 > `private void markDataAsSynced(List<ItemStatusTransitionProjection> transitions, List<MusteringSyncDTO> musterings)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["markDataAsSynced(List<ItemStatusTransitionProjection> transitions, List<MusteringSyncDTO> musterings)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>void" .-> Caller
+    Caller->>ThisClass: markDataAsSynced(transitions, musterings)
+    alt !transitions.isEmpty()
+    participant situationRepository
+    ThisClass->>situationRepository: markAsSynced(situationIds)
+    end
+    alt !musterings.isEmpty()
+    participant inventoryRepository
+    ThisClass->>inventoryRepository: markAsSyncedByNames(inventoryNames)
+    end
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. If !transitions.isEmpty()
-   then:
-      - Invoke 'situationRepository.markAsSynced' with parameters: 'situationIds'
-
-1. If !musterings.isEmpty()
-   then:
-      - Invoke 'inventoryRepository.markAsSyncedByNames' with parameters: 'inventoryNames'
-
-
 
 **Parameters:**
 

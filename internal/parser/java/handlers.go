@@ -38,7 +38,7 @@ type Executable struct {
 	Parameters    []Variable `json:"parameters"`
 	Body          Block      `json:"body"`
 	ReturnType    string     `json:"returnType"`
-	isConstructor bool
+	IsConstructor bool       `json:"isConstructor"`
 }
 
 type Modifier struct {
@@ -46,11 +46,11 @@ type Modifier struct {
 }
 
 type Block struct {
-	Statements []Statement
+	Statements []Statement `json:"statements"`
 }
 
 type Statement struct {
-	Expressions []Expression
+	Expressions []Expression `json:"expressions"`
 }
 
 var handlers = map[string]CaptureHandler{
@@ -106,7 +106,7 @@ func parseConstructor(node *tree_sitter.Node, content []byte, classData *ClassJa
 	newContructor := Executable{
 		Annotations:   annotations,
 		Modifiers:     modifiers,
-		isConstructor: true,
+		IsConstructor: true,
 	}
 
 	nameNode := node.ChildByFieldName("name")
@@ -154,7 +154,7 @@ func parseMethod(node *tree_sitter.Node, content []byte, classData *ClassJava) e
 		Modifiers:     modifiers,
 		ReturnType:    node.ChildByFieldName("type").Utf8Text(content),
 		Name:          node.ChildByFieldName("name").Utf8Text(content),
-		isConstructor: false,
+		IsConstructor: false,
 	}
 	parseParameters(node, content, &newMethod)
 

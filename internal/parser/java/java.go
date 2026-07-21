@@ -1,6 +1,7 @@
 package java
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"log"
@@ -78,6 +79,12 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 	}
 
 	fmt.Println("🚀 Varredura e Geração concluídas com sucesso!")
+
+	data, err := json.Marshal(allClasses)
+	if err != nil {
+		log.Fatal(err)
+	}
+	os.WriteFile(filepath.Join(outputDir, "classes.json"), data, os.ModePerm)
 }
 
 func Analyze(filePath string) ClassJava {

@@ -65,6 +65,16 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public UsuarioController(String nomeSistema, UsuarioService service)`
 
+**Sequence Diagram:**
+```mermaid
+sequenceDiagram
+    actor Caller
+    participant ThisClass
+
+    Caller->>ThisClass: UsuarioController(nomeSistema, service)
+
+```
+
 **Parameters:**
 
 - **nomeSistema** (`String`)
@@ -95,29 +105,21 @@ Expand the sections below to read the exact pseudo-code and business rules.
 > **Signature:**
 > `public boolean processarUsuario(UserModel userModel, String status)`
 
-**Data Flow:**
+**Sequence Diagram:**
 ```mermaid
-flowchart LR
-    classDef methodNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
-    Caller(("Caller"))
-    Method["processarUsuario(UserModel userModel, String status)"]:::methodNode
+sequenceDiagram
+    actor Caller
+    participant ThisClass
 
-    Caller -- "Calls" --> Method
-    Method -. "Returns<br>boolean" .-> Caller
+    Caller->>ThisClass: processarUsuario(userModel, status)
+    alt this.service.validarEAtivarUsuario(userModel.getIdade(), status)
+    participant service
+    ThisClass->>service: registrarLog(... + this.nomeSistema)
+    ThisClass-->>Caller: return true
+    end
+    ThisClass-->>Caller: return false
+
 ```
-
-**Step-by-Step Logic:**
-
-
-
-1. If Invoke 'this.service.validarEAtivarUsuario' with parameters: 'Invoke 'userModel.getIdade' (no parameters)', 'status'
-   then:
-      - Invoke 'this.service.registrarLog' with parameters: '"Processo concluido no sistema " plus this.nomeSistema'
-      - Return the result of: true
-
-1. Return the result of: false
-
-
 
 **Parameters:**
 
