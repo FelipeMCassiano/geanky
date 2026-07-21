@@ -469,8 +469,8 @@ const docTemplate = `
 
 {{if .Package.Name}}> **Package:** {{.Package.Name}}
 {{end}}{{if .Imports}}> **Dependencies (Imports):**
-{{range .Imports}}> - {{if isProjectClass .}}[{{.}}]({{extractClassName .}}.md) 🔗{{else}}{{.}}{{end}}
-{{end}}{{end}}> **Automatically generated documentation** by the Geanky tool.
+{{range .Imports}}> - {{if isProjectClass .}}[{{extractClassName .}}]({{getClassLink .}}) 🔗{{else}}{{.}}{{end}}
+{{end}}{{end}}{{end}}> 
 
 ---
 
@@ -481,7 +481,7 @@ A high-level overview of the class, its internal state, and available methods.
 {{if not .Fields}}> *No state properties defined.*
 {{else}}{{range .Fields}}
 {{if isProjectClass .TypeName}}
-- {{range .Annotations}}{{bt}}{{.}}{{bt}} {{end}}{{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ([{{.TypeName}}]({{.TypeName}}.md)) 🔗
+- {{range .Annotations}}{{bt}}{{.}}{{bt}} {{end}}{{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ([{{.TypeName}}]({{getClassLink .TypeName}})) 🔗
 {{else}}
 - {{range .Annotations}}{{bt}}{{.}}{{bt}} {{end}}{{bt}}{{formatModifiers .Modifiers}}{{bt}} **{{.Declarator}}** ({{bt}}{{.TypeName}}{{bt}})
 {{end}}{{end}}{{end}}

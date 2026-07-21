@@ -83,21 +83,14 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		allClasses = append(allClasses, job.Data)
 	}
 
-	// ETAPA 2: Agora que sabemos de TODAS as classes do projeto, geramos os Markdowns nos subdiretórios
 	for _, job := range jobs {
-		// Monta o caminho do subdiretório de saída espelhando a origem
 		targetDir := filepath.Join(outputDir, job.RelDir)
-		err := os.MkdirAll(targetDir, os.ModePerm)
-		if err != nil {
-			log.Printf("⚠️ Erro ao criar subdiretório %s: %v\n", targetDir, err)
-			continue
-		}
+		os.MkdirAll(targetDir, os.ModePerm)
 
 		outFileName := fmt.Sprintf("%s.md", job.Data.Name)
 		outFilePath := filepath.Join(targetDir, outFileName)
 
-		// Passamos a lista completa allClasses para a função!
-		GenerateMarkdown(job.Data, allClasses, outFilePath)
+		GenerateMarkdown(job.Data, jobs, outFilePath)
 	}
 
 	// O arquivo de arquitetura global e o JSON continuam indo para a raiz do outputDir
