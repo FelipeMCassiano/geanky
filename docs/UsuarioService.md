@@ -100,10 +100,10 @@ sequenceDiagram
 
     Caller->>ThisClass: validarEAtivarUsuario(idade, status)
     alt idade >= 18 && status == 'ativo'
-    ThisClass->>System: println('Usuario validado com sucesso no banco ' + this.nomeBanco)
+    ThisClass->>System: System.println('Usuario validado com sucesso no banco ' + this.nomeBanco)
     ThisClass-->>Caller: return true
     end
-    ThisClass->>System: println('Falha na validacao')
+    ThisClass->>System: System.println('Falha na validacao')
     ThisClass-->>Caller: return false
 
 ```
@@ -137,7 +137,7 @@ sequenceDiagram
     participant System
 
     Caller->>ThisClass: registrarLog(acao)
-    ThisClass->>System: println(acao)
+    ThisClass->>System: System.println(acao)
 
 ```
 

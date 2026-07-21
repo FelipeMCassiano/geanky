@@ -323,11 +323,11 @@ sequenceDiagram
     participant syncModelOpt
 
     Caller->>ThisClass: latestSync()
-    ThisClass->>syncControlRepository: findFirstByOrderByIdDesc()
+    ThisClass->>syncControlRepository: syncControlRepository.findFirstByOrderByIdDesc()
     alt syncModelOpt.isEmpty()
     ThisClass-->>Caller: return new SyncLastestResponse('', ESyncStatus.NONE, 0L, '')
     end
-    ThisClass->>syncModelOpt: get()
+    ThisClass->>syncModelOpt: syncModelOpt.get()
     ThisClass-->>Caller: return new SyncLastestResponse(eventKey, syncControlModel.getSta...
 
 ```
@@ -377,36 +377,36 @@ sequenceDiagram
     participant syncControlRepository
 
     Caller->>ThisClass: syncToCloud(request)
-    ThisClass->>log: info('sync iniciado')
+    ThisClass->>log: log.info('sync iniciado')
     ThisClass->>ThisClass: authorizeSync()
     ThisClass->>ThisClass: orElseGet(() -> { SyncControlModel newControl = new SyncControlMode...)
     alt ESyncStatus.UPLOAD_IN_PROGRESS.equals(control.getStatus()...
-    ThisClass->>sseSyncService: sendSyncStatusOnChange(control.getEventKey(), 'Sync já em andamento...', contro...)
-    ThisClass->>control: getEventKey()
-    ThisClass->>control: getStatus()
+    ThisClass->>sseSyncService: sseSyncService.sendSyncStatusOnChange(control.getEventKey(), 'Sync já em andamento...', contro...)
+    ThisClass->>control: control.getEventKey()
+    ThisClass->>control: control.getStatus()
     ThisClass-->>Caller: return new SyncEvent(control.getEventKey().toString(), control.g...
     end
-    ThisClass->>control: getLastSyncAt()
+    ThisClass->>control: control.getLastSyncAt()
     alt request.getEventKey() != null && !request.getEventKey().t...
-    ThisClass->>UUID: fromString(request.getEventKey())
-    ThisClass->>request: getEventKey()
+    ThisClass->>UUID: UUID.fromString(request.getEventKey())
+    ThisClass->>request: request.getEventKey()
     else
-    ThisClass->>UUID: randomUUID()
+    ThisClass->>UUID: UUID.randomUUID()
     end
     ThisClass->>ThisClass: orElseGet(() -> new SyncControlModel())
-    ThisClass->>newControl: setEventKey(targetEventKey)
-    ThisClass->>newControl: setStatus(ESyncStatus.UPLOAD_IN_PROGRESS)
-    ThisClass->>newControl: setLastSyncAt(lastSuccessfulSyncDate)
-    ThisClass->>newControl: setErrorMessage('')
+    ThisClass->>newControl: newControl.setEventKey(targetEventKey)
+    ThisClass->>newControl: newControl.setStatus(ESyncStatus.UPLOAD_IN_PROGRESS)
+    ThisClass->>newControl: newControl.setLastSyncAt(lastSuccessfulSyncDate)
+    ThisClass->>newControl: newControl.setErrorMessage('')
     alt newControl.getCreatedAt() == null
-    ThisClass->>newControl: setCreatedAt(new java.util.Date())
+    ThisClass->>newControl: newControl.setCreatedAt(new java.util.Date())
     end
-    ThisClass->>syncControlRepository: saveAndFlush(newControl)
-    ThisClass->>newControl: getEventKey()
-    ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, '', ESyncStatus.IN_PROGRESS)
+    ThisClass->>syncControlRepository: syncControlRepository.saveAndFlush(newControl)
+    ThisClass->>newControl: newControl.getEventKey()
+    ThisClass->>sseSyncService: sseSyncService.sendSyncStatusOnChange(eventKey, '', ESyncStatus.IN_PROGRESS)
     ThisClass->>ThisClass: backgroundProcess(eventKey, request, token, syncTimestamp, request.getLocat...)
-    ThisClass->>request: getLocationId()
-    ThisClass->>log: info('[SYNC] Retornando eventKey {} para o frontend conectar n...)
+    ThisClass->>request: request.getLocationId()
+    ThisClass->>log: log.info('[SYNC] Retornando eventKey {} para o frontend conectar n...)
     ThisClass-->>Caller: return new SyncEvent(eventKey.toString(), ESyncStatus.IN_PROGRES...
 
 ```
@@ -489,11 +489,11 @@ sequenceDiagram
     participant responseEntity
 
     Caller->>ThisClass: authorizeSync()
-    ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
+    ThisClass->>headers: headers.setContentType(MediaType.APPLICATION_JSON)
     alt try
-    ThisClass->>restTemplate: exchange(url, HttpMethod.POST, requestEntity, String.class)
-    ThisClass->>mapper: readTree(responseEntity.getBody())
-    ThisClass->>responseEntity: getBody()
+    ThisClass->>restTemplate: restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class)
+    ThisClass->>mapper: mapper.readTree(responseEntity.getBody())
+    ThisClass->>responseEntity: responseEntity.getBody()
     ThisClass->>ThisClass: asText()
     ThisClass-->>Caller: return token
     else catch 
@@ -646,7 +646,7 @@ sequenceDiagram
 
     Caller->>ThisClass: processDownload(eventKey, request, token, locationId)
     alt try
-    ThisClass->>downloadService: download(eventKey, request, token, locationId, this.destination)
+    ThisClass->>downloadService: downloadService.download(eventKey, request, token, locationId, this.destination)
     else catch 
     ThisClass-->>Caller: throw new AppException(500, e.getMessage())
     end
@@ -677,12 +677,12 @@ sequenceDiagram
 
     Caller->>ThisClass: getControlWithRetry(eventKey)
     loop for i < 15
-    ThisClass->>syncControlRepository: findFirstByEventKeyOrderByIdDesc(eventKey)
+    ThisClass->>syncControlRepository: syncControlRepository.findFirstByEventKeyOrderByIdDesc(eventKey)
     alt opt.isPresent()
     ThisClass-->>Caller: return opt.get()
     end
     alt try
-    ThisClass->>Thread: sleep(200)
+    ThisClass->>Thread: Thread.sleep(200)
     else catch 
     ThisClass->>ThisClass: interrupt()
     Note right of ThisClass: break loop
@@ -733,78 +733,78 @@ sequenceDiagram
     participant Thread
 
     Caller->>ThisClass: processCloudSyncInBackground(eventKey, token, syncTimestamp, locationId)
-    ThisClass->>log: info('[SYNC-BACKGROUND] Iniciando processamento em background ...)
+    ThisClass->>log: log.info('[SYNC-BACKGROUND] Iniciando processamento em background ...)
     alt try
-    ThisClass->>factory: setConnectTimeout(5000)
-    ThisClass->>factory: setReadTimeout(15000)
-    ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
-    ThisClass->>headers: setBearerAuth(token)
-    ThisClass->>localRestTemplate: exchange(url + '/events/trigger', HttpMethod.PUT, requestEntity, S...)
+    ThisClass->>factory: factory.setConnectTimeout(5000)
+    ThisClass->>factory: factory.setReadTimeout(15000)
+    ThisClass->>headers: headers.setContentType(MediaType.APPLICATION_JSON)
+    ThisClass->>headers: headers.setBearerAuth(token)
+    ThisClass->>localRestTemplate: localRestTemplate.exchange(url + '/events/trigger', HttpMethod.PUT, requestEntity, S...)
     alt !response.getStatusCode().is2xxSuccessful()
     ThisClass-->>Caller: throw new RuntimeException('Erro na resposta da nuvem: ' + resp...
     end
-    ThisClass->>masterRepository: findFirstPending()
+    ThisClass->>masterRepository: masterRepository.findFirstPending()
     alt pendingMaster.isPresent()
-    ThisClass->>pendingMaster: get()
-    ThisClass->>log: info('[SYNC-BACKGROUND] Retomando envio de pacote pendente ID:...)
-    ThisClass->>master: getId()
+    ThisClass->>pendingMaster: pendingMaster.get()
+    ThisClass->>log: log.info('[SYNC-BACKGROUND] Retomando envio de pacote pendente ID:...)
+    ThisClass->>master: master.getId()
     else
-    ThisClass->>situationRepository: findStatusTransitions()
+    ThisClass->>situationRepository: situationRepository.findStatusTransitions()
     ThisClass->>ThisClass: fetchItemStatusTransitions(transitions)
-    ThisClass->>musteringBuilderService: buildPendingMusteringsPayload()
+    ThisClass->>musteringBuilderService: musteringBuilderService.buildPendingMusteringsPayload()
     ThisClass->>ThisClass: toList()
     alt itemStatusPayload.isEmpty() && musteringPayload.isEmpty()...
-    ThisClass->>log: info('[SYNC-BACKGROUND] nenhum status, mustering ou alteraçã...)
+    ThisClass->>log: log.info('[SYNC-BACKGROUND] nenhum status, mustering ou alteraçã...)
     ThisClass-->>Caller: return 
     end
     ThisClass->>ThisClass: buildProtobufPackage(itemStatusPayload, musteringPayload, itemModificationStat...)
-    ThisClass->>chunkerEngine: compressToGzip(pbPackage)
-    ThisClass->>chunkerEngine: sliceIntoChunks(gzipPayload)
-    ThisClass->>chunkerEngine: calculateSha256(gzipPayload)
+    ThisClass->>chunkerEngine: chunkerEngine.compressToGzip(pbPackage)
+    ThisClass->>chunkerEngine: chunkerEngine.sliceIntoChunks(gzipPayload)
+    ThisClass->>chunkerEngine: chunkerEngine.calculateSha256(gzipPayload)
     ThisClass->>ThisClass: saveMasterAndChunksToDatabase(slices, checksum)
     ThisClass->>ThisClass: markDataAsSynced(transitions, musteringPayload)
-    ThisClass->>log: info('[SYNC-BACKGROUND] Empacotamento concluído. Gerados {} c...)
-    ThisClass->>slices: size()
+    ThisClass->>log: log.info('[SYNC-BACKGROUND] Empacotamento concluído. Gerados {} c...)
+    ThisClass->>slices: slices.size()
     end
-    ThisClass->>chunkRepository: findUnsyncedByMasterId(master.getId())
-    ThisClass->>master: getId()
-    ThisClass->>log: info('[SYNC-BACKGROUND] Enviando {} chunks restantes...', unse...)
-    ThisClass->>unsentChunks: size()
+    ThisClass->>chunkRepository: chunkRepository.findUnsyncedByMasterId(master.getId())
+    ThisClass->>master: master.getId()
+    ThisClass->>log: log.info('[SYNC-BACKGROUND] Enviando {} chunks restantes...', unse...)
+    ThisClass->>unsentChunks: unsentChunks.size()
     loop for each chunk in unsentChunks
     loop while !sucesso
-    ThisClass->>httpClient: sendChunk(chunk, master, currentToken, this.destination)
+    ThisClass->>httpClient: httpClient.sendChunk(chunk, master, currentToken, this.destination)
     alt !sucesso
     alt networkFailures % 3 == 0
     alt try
     ThisClass->>ThisClass: authorizeSync()
     else catch 
-    ThisClass->>log: warn('[SYNC-BACKGROUND] Tentativa de renovar token offline fal...)
+    ThisClass->>log: log.warn('[SYNC-BACKGROUND] Tentativa de renovar token offline fal...)
     end
     end
-    ThisClass->>log: warn('[SYNC-BACKGROUND] Rede falhou no fragmento {}. Retentand...)
-    ThisClass->>chunk: getSequenceNumber()
-    ThisClass->>String: format('Conexão instável. Reconectando e enviando pacote %d de...)
-    ThisClass->>chunk: getSequenceNumber()
-    ThisClass->>master: getTotalChunks()
-    ThisClass->>sseSyncService: sendSyncStatusOnChange(eventKey, uiMessage, ESyncStatus.IN_PROGRESS)
+    ThisClass->>log: log.warn('[SYNC-BACKGROUND] Rede falhou no fragmento {}. Retentand...)
+    ThisClass->>chunk: chunk.getSequenceNumber()
+    ThisClass->>String: String.format('Conexão instável. Reconectando e enviando pacote %d de...)
+    ThisClass->>chunk: chunk.getSequenceNumber()
+    ThisClass->>master: master.getTotalChunks()
+    ThisClass->>sseSyncService: sseSyncService.sendSyncStatusOnChange(eventKey, uiMessage, ESyncStatus.IN_PROGRESS)
     alt try
-    ThisClass->>Thread: sleep(delaySeconds * 1000)
+    ThisClass->>Thread: Thread.sleep(delaySeconds * 1000)
     else catch 
     ThisClass->>ThisClass: interrupt()
     ThisClass-->>Caller: throw new RuntimeException('A thread de sincronização foi mor...
     end
     end
     end
-    ThisClass->>chunk: setSynced(true)
-    ThisClass->>chunkRepository: save(chunk)
-    ThisClass->>master: setProcessedChunks(master.getProcessedChunks() + 1)
-    ThisClass->>master: getProcessedChunks()
-    ThisClass->>masterRepository: save(master)
+    ThisClass->>chunk: chunk.setSynced(true)
+    ThisClass->>chunkRepository: chunkRepository.save(chunk)
+    ThisClass->>master: master.setProcessedChunks(master.getProcessedChunks() + 1)
+    ThisClass->>master: master.getProcessedChunks()
+    ThisClass->>masterRepository: masterRepository.save(master)
     end
-    ThisClass->>master: setStatus(EPacketStatus.DONE)
-    ThisClass->>masterRepository: save(master)
+    ThisClass->>master: master.setStatus(EPacketStatus.DONE)
+    ThisClass->>masterRepository: masterRepository.save(master)
     ThisClass->>ThisClass: cleanupOldUploadPackages()
-    ThisClass->>log: info('[SYNC-BACKGROUND] Upload de chunks concluído com sucesso!')
+    ThisClass->>log: log.info('[SYNC-BACKGROUND] Upload de chunks concluído com sucesso!')
     else catch 
     ThisClass-->>Caller: throw new RuntimeException('Falha no upload: ' + e.getMessage()...
     end
@@ -840,26 +840,26 @@ sequenceDiagram
     participant chunks
 
     Caller->>ThisClass: saveMasterAndChunksToDatabase(slices, checksum)
-    ThisClass->>master: setId(UUID.randomUUID())
-    ThisClass->>UUID: randomUUID()
-    ThisClass->>master: setStatus(EPacketStatus.PENDING)
-    ThisClass->>master: setTotalChunks(slices.size())
-    ThisClass->>slices: size()
-    ThisClass->>master: setProcessedChunks(0)
-    ThisClass->>master: setChecksum(checksum)
-    ThisClass->>master: setNextRetryAt(Instant.now())
-    ThisClass->>Instant: now()
+    ThisClass->>master: master.setId(UUID.randomUUID())
+    ThisClass->>UUID: UUID.randomUUID()
+    ThisClass->>master: master.setStatus(EPacketStatus.PENDING)
+    ThisClass->>master: master.setTotalChunks(slices.size())
+    ThisClass->>slices: slices.size()
+    ThisClass->>master: master.setProcessedChunks(0)
+    ThisClass->>master: master.setChecksum(checksum)
+    ThisClass->>master: master.setNextRetryAt(Instant.now())
+    ThisClass->>Instant: Instant.now()
     loop for i < slices.size()
-    ThisClass->>chunk: setId(UUID.randomUUID())
-    ThisClass->>UUID: randomUUID()
-    ThisClass->>chunk: setMaster(master)
-    ThisClass->>chunk: setSequenceNumber(i + 1)
-    ThisClass->>chunk: setChunkData(slices.get(i))
-    ThisClass->>slices: get(i)
-    ThisClass->>chunk: setSynced(false)
-    ThisClass->>chunks: add(chunk)
+    ThisClass->>chunk: chunk.setId(UUID.randomUUID())
+    ThisClass->>UUID: UUID.randomUUID()
+    ThisClass->>chunk: chunk.setMaster(master)
+    ThisClass->>chunk: chunk.setSequenceNumber(i + 1)
+    ThisClass->>chunk: chunk.setChunkData(slices.get(i))
+    ThisClass->>slices: slices.get(i)
+    ThisClass->>chunk: chunk.setSynced(false)
+    ThisClass->>chunks: chunks.add(chunk)
     end
-    ThisClass->>master: setChunks(chunks)
+    ThisClass->>master: master.setChunks(chunks)
     ThisClass-->>Caller: return masterRepository.save(master)
 
 ```
@@ -910,15 +910,15 @@ sequenceDiagram
 
     Caller->>ThisClass: cleanupOldUploadPackages()
     alt try
-    ThisClass->>masterRepository: findOldMastersToCleanup()
+    ThisClass->>masterRepository: masterRepository.findOldMastersToCleanup()
     alt oldMasters != null && !oldMasters.isEmpty()
-    ThisClass->>log: info('[UPLOAD-CLEANUP] Deletando {} pacotes antigos (Master e ...)
-    ThisClass->>oldMasters: size()
-    ThisClass->>masterRepository: deleteAll(oldMasters)
+    ThisClass->>log: log.info('[UPLOAD-CLEANUP] Deletando {} pacotes antigos (Master e ...)
+    ThisClass->>oldMasters: oldMasters.size()
+    ThisClass->>masterRepository: masterRepository.deleteAll(oldMasters)
     end
     else catch 
-    ThisClass->>log: warn('[UPLOAD-CLEANUP] Falha ao tentar limpar pacotes antigos:...)
-    ThisClass->>e: getMessage()
+    ThisClass->>log: log.warn('[UPLOAD-CLEANUP] Falha ao tentar limpar pacotes antigos:...)
+    ThisClass->>e: e.getMessage()
     end
 
 ```
@@ -950,14 +950,14 @@ sequenceDiagram
     participant modBuilder
 
     Caller->>ThisClass: buildProtobufPackage(status, mustering, modifications)
-    ThisClass->>SyncPackage: newBuilder()
-    ThisClass->>pb: setTimestamp(Instant.now().toEpochMilli())
+    ThisClass->>SyncPackage: SyncPackage.newBuilder()
+    ThisClass->>pb: pb.setTimestamp(Instant.now().toEpochMilli())
     ThisClass->>ThisClass: toEpochMilli()
     alt status != null
     loop for each s in status
     ThisClass->>ThisClass: setItemId(s.getItemId() != null ? s.getItemId() : 0L)
-    ThisClass->>pb: addItemStatus(itemBuilder.build())
-    ThisClass->>itemBuilder: build()
+    ThisClass->>pb: pb.addItemStatus(itemBuilder.build())
+    ThisClass->>itemBuilder: itemBuilder.build()
     end
     end
     alt mustering != null
@@ -966,20 +966,20 @@ sequenceDiagram
     alt m.getSituations() != null
     loop for each sit in m.getSituations()
     ThisClass->>ThisClass: setReadingDate(sit.getReadingDate() != null ? sit.getReadingDate().toEpo...)
-    ThisClass->>musteringBuilder: addSituations(sitBuilder.build())
-    ThisClass->>sitBuilder: build()
+    ThisClass->>musteringBuilder: musteringBuilder.addSituations(sitBuilder.build())
+    ThisClass->>sitBuilder: sitBuilder.build()
     end
     end
-    ThisClass->>pb: addMustering(musteringBuilder.build())
-    ThisClass->>musteringBuilder: build()
+    ThisClass->>pb: pb.addMustering(musteringBuilder.build())
+    ThisClass->>musteringBuilder: musteringBuilder.build()
     end
     end
     alt modifications != null
     loop for each mod in modifications
     ThisClass->>ThisClass: setLastModifiedDate(mod.getLastMovedDate().toEpochMilli())
     ThisClass->>ThisClass: toEpochMilli()
-    ThisClass->>pb: addItemModifications(modBuilder.build())
-    ThisClass->>modBuilder: build()
+    ThisClass->>pb: pb.addItemModifications(modBuilder.build())
+    ThisClass->>modBuilder: modBuilder.build()
     end
     end
     ThisClass-->>Caller: return pb.build()
@@ -1028,16 +1028,16 @@ sequenceDiagram
 
     Caller->>ThisClass: sendStatusToApi(eventKey, status, message, token, timestamp, locationId)
     alt try
-    ThisClass->>headers: setContentType(MediaType.APPLICATION_JSON)
-    ThisClass->>headers: setBearerAuth(token)
-    ThisClass->>restTemplate: exchange(url, HttpMethod.PUT, requestEntity, String.class)
+    ThisClass->>headers: headers.setContentType(MediaType.APPLICATION_JSON)
+    ThisClass->>headers: headers.setBearerAuth(token)
+    ThisClass->>restTemplate: restTemplate.exchange(url, HttpMethod.PUT, requestEntity, String.class)
     alt response.getStatusCode().is2xxSuccessful()
-    ThisClass->>log: info('[SYNC-BACKGROUND] Status {} avisado para a API com suces...)
+    ThisClass->>log: log.info('[SYNC-BACKGROUND] Status {} avisado para a API com suces...)
     ThisClass-->>Caller: return true
     end
     else catch 
-    ThisClass->>log: error('[SYNC-BACKGROUND] Falha ao avisar a API sobre o status {...)
-    ThisClass->>e: getMessage()
+    ThisClass->>log: log.error('[SYNC-BACKGROUND] Falha ao avisar a API sobre o status {...)
+    ThisClass->>e: e.getMessage()
     ThisClass-->>Caller: return false
     end
     ThisClass-->>Caller: return false
@@ -1107,13 +1107,13 @@ sequenceDiagram
     Caller->>ThisClass: markDataAsSynced(transitions, musterings)
     alt !transitions.isEmpty()
     ThisClass->>ThisClass: collect(Collectors.toList())
-    ThisClass->>Collectors: toList()
-    ThisClass->>situationRepository: markAsSynced(situationIds)
+    ThisClass->>Collectors: Collectors.toList()
+    ThisClass->>situationRepository: situationRepository.markAsSynced(situationIds)
     end
     alt !musterings.isEmpty()
     ThisClass->>ThisClass: collect(Collectors.toList())
-    ThisClass->>Collectors: toList()
-    ThisClass->>inventoryRepository: markAsSyncedByNames(inventoryNames)
+    ThisClass->>Collectors: Collectors.toList()
+    ThisClass->>inventoryRepository: inventoryRepository.markAsSyncedByNames(inventoryNames)
     end
 
 ```

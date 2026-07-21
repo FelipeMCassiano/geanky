@@ -105,7 +105,7 @@ sequenceDiagram
     loop for each name in names
     alt !name.isEmpty()
     alt try
-    ThisClass->>users: add(new UserDTO(1, validName))
+    ThisClass->>users: users.add(new UserDTO(1, validName))
     else catch 
     ThisClass-->>Caller: throw new Exception('Erro interno', e)
     end
@@ -114,11 +114,11 @@ sequenceDiagram
     end
     end
     loop for i < 5
-    ThisClass->>System: println(i)
+    ThisClass->>System: System.println(i)
     end
     loop while counter < 3
     end
-    ThisClass->>names: forEach(String::toUpperCase)
+    ThisClass->>names: names.forEach(String::toUpperCase)
     ThisClass-->>Caller: return new UserDTO(0, defaultName.get())
 
 ```

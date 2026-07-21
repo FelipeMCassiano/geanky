@@ -51,7 +51,7 @@ flowchart LR
     
         
         
-            UsuarioController -->|"Calls:<br><b>registrarLog(...)<br>validarEAtivarUsuario(..., status)</b>"| UsuarioService
+            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)<br>registrarLog(...)</b>"| UsuarioService
         
     
     
@@ -179,7 +179,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(..., ..., ...)<br>sendSyncStatusOnChange(eventKey, ..., ...)<br>sendSyncStatusOnChange(eventKey, uiMessage, ...)</b>"| BoatSseSyncService
+            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(eventKey, uiMessage, ...)<br>sendSyncStatusOnChange(..., ..., ...)<br>sendSyncStatusOnChange(eventKey, ..., ...)</b>"| BoatSseSyncService
         
     
     
@@ -214,7 +214,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>findUnsyncedByMasterId(...)<br>save(chunk)</b>"| SyncPacketChunkRepository
+            CloudSyncUploadService -->|"Calls:<br><b>save(chunk)<br>findUnsyncedByMasterId(...)</b>"| SyncPacketChunkRepository
         
     
     

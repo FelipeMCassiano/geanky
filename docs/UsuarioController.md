@@ -102,10 +102,10 @@ sequenceDiagram
     participant userModel
 
     Caller->>ThisClass: processarUsuario(userModel, status)
-    ThisClass->>service: validarEAtivarUsuario(userModel.getIdade(), status)
-    ThisClass->>userModel: getIdade()
+    ThisClass->>service: service.validarEAtivarUsuario(userModel.getIdade(), status)
+    ThisClass->>userModel: userModel.getIdade()
     alt valido
-    ThisClass->>service: registrarLog('Processo concluido no sistema ' + this.nomeSistema)
+    ThisClass->>service: service.registrarLog('Processo concluido no sistema ' + this.nomeSistema)
     ThisClass-->>Caller: return true
     end
     ThisClass-->>Caller: return false

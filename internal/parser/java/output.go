@@ -238,7 +238,7 @@ func generateSequenceDiagram(m Executable) string {
 
 		s = strings.Join(strings.Fields(s), " ")
 
-		// Evita mensagens colossais que geram bugs visuais no diagrama
+		// Limita o tamanho para não estourar o diagrama visualmente
 		if len(s) > 60 {
 			s = s[:57] + "..."
 		}
@@ -401,7 +401,6 @@ func generateSequenceDiagram(m Executable) string {
 				target = strings.Split(target, ".")[0]
 				target = strings.Split(target, "(")[0]
 
-				// O mesmo escudo para o nome final
 				target = strings.ReplaceAll(target, "<", "")
 				target = strings.ReplaceAll(target, ">", "")
 				target = strings.ReplaceAll(target, "[", "")
@@ -415,10 +414,17 @@ func generateSequenceDiagram(m Executable) string {
 			}
 
 			callArgs := cleanForMermaid(strings.Join(args, ", "))
+
+			// AQUI É A MUDANÇA: Exibe objeto.metodo(...) se não for da própria classe
+			methodLabel := e.Accessed.Identifier.Name
+			if target != "ThisClass" {
+				methodLabel = target + "." + methodLabel
+			}
+
 			steps.WriteString(fmt.Sprintf(
 				"    ThisClass->>%s: %s(%s)\n",
 				target,
-				e.Accessed.Identifier.Name,
+				methodLabel,
 				callArgs,
 			))
 
@@ -451,7 +457,6 @@ func generateSequenceDiagram(m Executable) string {
 	return header.String()
 }
 
-// OS TEMPLATES AGORA USAM ESPAÇOS NORMAIS AO INVÉS DE NBSP
 const docTemplate = `
 {{range .Annotations}}> **{{.}}**
 {{end}}# 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
@@ -607,8 +612,8 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
 		"bt":                      func() string { return "`" },
-		"formatModifiers":         formatModifiers,  // (Descomente ou inclua a função original no seu build)
-		"formatExpression":        formatExpression, // (Descomente ou inclua a função original no seu build)
+		"formatModifiers":         formatModifiers,  // Certifique-se que você tem essa func no seu build
+		"formatExpression":        formatExpression, // Certifique-se que você tem essa func no seu build
 		"extractClassName":        extractClassName,
 		"isProjectClass":          isProjectClass,
 		"generateSequenceDiagram": generateSequenceDiagram,
