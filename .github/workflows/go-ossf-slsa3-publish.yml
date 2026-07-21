@@ -3,35 +3,38 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # O workflow será disparado apenas quando você criar uma tag (ex: v1.0.0)
+      - 'v*'
 
 permissions:
-  contents: write # Necessário para permitir que a Action crie a Release no repositório
+  contents: write
 
 jobs:
   build:
-    name: Build for ${{ matrix.os }}-${{ matrix.arch }}
-    runs-on: ubuntu-latest
+    name: Build for ${{ matrix.goos }}-${{ matrix.goarch }}
+    # Aqui é a mágica: Ele escolhe o sistema operacional nativo para compilar!
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         include:
-          # Linux
-          - os: linux
-            arch: amd64
+          # Linux (Intel/AMD)
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: amd64
             output: geanky-linux-amd64
-          - os: linux
-            arch: arm64
-            output: geanky-linux-arm64
-          # macOS
-          - os: darwin
-            arch: amd64
-            output: geanky-darwin-amd64
-          - os: darwin
-            arch: arm64
+          # macOS (Apple Silicon / M1, M2, etc)
+          - runner: macos-latest
+            goos: darwin
+            goarch: arm64
             output: geanky-darwin-arm64
-          # Windows
-          - os: windows
-            arch: amd64
+          # macOS (Intel)
+          - runner: macos-13
+            goos: darwin
+            goarch: amd64
+            output: geanky-darwin-amd64
+          # Windows (Intel/AMD)
+          - runner: windows-latest
+            goos: windows
+            goarch: amd64
             output: geanky-windows-amd64.exe
 
     steps:
@@ -41,15 +44,18 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21' # Altere se estiver usando uma versão diferente do Go
+          go-version: '1.22' # É sempre bom garantir uma versão recente
 
       - name: Build Executable
         env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 1 # Força o CGO a ficar ligado!
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
         run: |
           mkdir -p bin
           go build -o bin/${{ matrix.output }} .
+        # Usamos o bash para garantir que comandos como 'mkdir' e barras '/' funcionem no Windows
+        shell: bash 
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
