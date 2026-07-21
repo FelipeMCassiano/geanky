@@ -17,16 +17,6 @@ func extractClassName(importPath string) string {
 	return importPath
 }
 
-// formatModifiers transforma a slice de modificadores em string
-// func formatModifiers(modifiers []Modifier) string {
-// 	var sb strings.Builder
-// 	for _, m := range modifiers {
-// 		sb.WriteString(m.Modifier)
-// 		sb.WriteString(" ")
-// 	}
-// 	return sb.String()
-// }
-
 // exprToText é uma função auxiliar para formatar expressões em texto legível
 func exprToText(expr Expression) string {
 	if expr == nil {
@@ -68,35 +58,6 @@ func exprToText(expr Expression) string {
 	}
 }
 
-// // formatExpression formata o node para uma string pseudo-code clean na lista de Step-by-Step
-// func formatExpression(expr Expression) string {
-// 	if expr == nil {
-// 		return ""
-// 	}
-// 	switch e := expr.(type) {
-// 	case IfNode:
-// 		return fmt.Sprintf("If %s then execute block", exprToText(e.Condition))
-// 	case ForNode:
-// 		return fmt.Sprintf("Loop (for %s)", exprToText(e.Condition))
-// 	case EnhancedForNode:
-// 		return fmt.Sprintf("Loop (for each %s in %s)", e.Name, exprToText(e.Value))
-// 	case WhileNode:
-// 		return fmt.Sprintf("Loop (while %s)", exprToText(e.Condition))
-// 	case TryNode:
-// 		return "Try executing block"
-// 	case ThrowNode:
-// 		return fmt.Sprintf("Throw exception: %s", exprToText(e.Value))
-// 	case BreakNode:
-// 		return "Break loop"
-// 	case Variable:
-// 		return fmt.Sprintf("Declare variable: %s", exprToText(e))
-// 	case ReturnNode:
-// 		return fmt.Sprintf("Return: %s", exprToText(e.Value))
-// 	default:
-// 		return exprToText(e)
-// 	}
-// }
-
 // getDependencyCalls varre os métodos de uma classe e mapeia dependências
 func getDependencyCalls(c ClassJava) map[string]string {
 	fieldsMap := make(map[string]string)
@@ -116,7 +77,7 @@ func getDependencyCalls(c ClassJava) map[string]string {
 			traverse(e.Left)
 			traverse(e.Right)
 		case Variable:
-			traverse(e.Value) // Extrai chamadas dentro de var = obj.metodo()
+			traverse(e.Value)
 		case Binary:
 			traverse(e.Left)
 			traverse(e.Right)
@@ -248,6 +209,12 @@ func generateSequenceDiagram(m Executable) string {
 		cleanName = strings.Split(cleanName, ".")[0]
 		cleanName = strings.Split(cleanName, "(")[0]
 
+		// Remove colchetes e símbolos de genéricos que quebram a engine do Mermaid
+		cleanName = strings.ReplaceAll(cleanName, "<", "")
+		cleanName = strings.ReplaceAll(cleanName, ">", "")
+		cleanName = strings.ReplaceAll(cleanName, "[", "")
+		cleanName = strings.ReplaceAll(cleanName, "]", "")
+
 		if cleanName == "" {
 			return
 		}
@@ -258,27 +225,24 @@ func generateSequenceDiagram(m Executable) string {
 		}
 	}
 
-	// NOVO E CORRIGIDO: Limpa sem usar entidades HTML que destroem o Mermaid!
 	cleanForMermaid := func(s string) string {
 		s = strings.ReplaceAll(s, "\n", " ")
 		s = strings.ReplaceAll(s, "\r", "")
 		s = strings.ReplaceAll(s, "\t", " ")
 
-		// Troca aspas duplas por simples (MUITO importante para não quebrar mensagens de Exception)
 		s = strings.ReplaceAll(s, "\"", "'")
 
-		// Remove qualquer entidade HTML se o código java original já tiver
 		s = strings.ReplaceAll(s, "&lt;", "<")
 		s = strings.ReplaceAll(s, "&gt;", ">")
 		s = strings.ReplaceAll(s, "&amp;", "&")
 
-		// Colapsa espaços duplos
 		s = strings.Join(strings.Fields(s), " ")
 
+		// Evita mensagens colossais que geram bugs visuais no diagrama
 		if len(s) > 60 {
 			s = s[:57] + "..."
 		}
-		return s
+		return strings.TrimSpace(s)
 	}
 
 	var resolveTarget func(expr Expression) string
@@ -436,6 +400,12 @@ func generateSequenceDiagram(m Executable) string {
 				target = strings.Split(target, " ")[0]
 				target = strings.Split(target, ".")[0]
 				target = strings.Split(target, "(")[0]
+
+				// O mesmo escudo para o nome final
+				target = strings.ReplaceAll(target, "<", "")
+				target = strings.ReplaceAll(target, ">", "")
+				target = strings.ReplaceAll(target, "[", "")
+				target = strings.ReplaceAll(target, "]", "")
 			}
 			ensureParticipant(target)
 
@@ -481,6 +451,7 @@ func generateSequenceDiagram(m Executable) string {
 	return header.String()
 }
 
+// OS TEMPLATES AGORA USAM ESPAÇOS NORMAIS AO INVÉS DE NBSP
 const docTemplate = `
 {{range .Annotations}}> **{{.}}**
 {{end}}# 📄 Technical Specification: {{bt}}{{.Name}}{{bt}}
@@ -636,8 +607,8 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJava, outputFilenam
 
 	tmpl, err := template.New("classDoc").Funcs(template.FuncMap{
 		"bt":                      func() string { return "`" },
-		"formatModifiers":         formatModifiers,
-		"formatExpression":        formatExpression,
+		"formatModifiers":         formatModifiers,  // (Descomente ou inclua a função original no seu build)
+		"formatExpression":        formatExpression, // (Descomente ou inclua a função original no seu build)
 		"extractClassName":        extractClassName,
 		"isProjectClass":          isProjectClass,
 		"generateSequenceDiagram": generateSequenceDiagram,

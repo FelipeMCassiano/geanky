@@ -49,19 +49,19 @@ flowchart LR
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
         
         
-            UsuarioController -->|"Calls:<br><b>validarEAtivarUsuario(..., status)<br>registrarLog(...)</b>"| UsuarioService
+            UsuarioController -->|"Calls:<br><b>registrarLog(...)<br>validarEAtivarUsuario(..., status)</b>"| UsuarioService
         
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -144,7 +144,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>markAsSynced(situationIds)<br>findStatusTransitions()</b>"| InventorySituationRepository
+            CloudSyncUploadService -->|"Calls:<br><b>findStatusTransitions()<br>markAsSynced(situationIds)</b>"| InventorySituationRepository
         
     
     
@@ -179,7 +179,7 @@ flowchart LR
     
         
         
-            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(eventKey, uiMessage, ...)<br>sendSyncStatusOnChange(..., ..., ...)<br>sendSyncStatusOnChange(eventKey, ..., ...)</b>"| BoatSseSyncService
+            CloudSyncUploadService -->|"Calls:<br><b>sendSyncStatusOnChange(..., ..., ...)<br>sendSyncStatusOnChange(eventKey, ..., ...)<br>sendSyncStatusOnChange(eventKey, uiMessage, ...)</b>"| BoatSseSyncService
         
     
     
