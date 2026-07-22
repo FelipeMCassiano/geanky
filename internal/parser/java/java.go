@@ -17,7 +17,6 @@ import (
 
 const maxGoroutines = 8
 
-// ClassJob é uma estrutura auxiliar para guardar a classe e de qual diretório ela veio
 type ClassJob struct {
 	Data   ClassJava
 	RelDir string
@@ -49,7 +48,6 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		log.Fatalf("Erro ao varrer diretórios: %v", err)
 	}
 
-	// ETAPA 1: Parseia todos os arquivos e popula os jobs com a classe e seu diretório
 	for _, path := range filePaths {
 		wg.Add(1)
 		sem <- struct{}{}
@@ -89,7 +87,7 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		outFileName := fmt.Sprintf("%s.md", job.Data.Name)
 		outFilePath := filepath.Join(targetDir, outFileName)
 
-		GenerateMarkdown(job.Data, jobs, outFilePath)
+		GenerateMarkdown(job, jobs, outFilePath)
 	}
 
 	if len(allClasses) > 0 {

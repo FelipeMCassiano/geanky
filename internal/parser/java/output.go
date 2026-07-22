@@ -605,7 +605,9 @@ flowchart LR
 {{bt}}{{bt}}{{bt}}
 `
 
-func GenerateMarkdown(classData ClassJava, allClasses []ClassJob, currentFilePath string) {
+func GenerateMarkdown(currentJob ClassJob, allClasses []ClassJob, currentFilePath string) {
+	classData := currentJob.Data
+
 	isProjectClass := func(importPath string) bool {
 		className := extractClassName(importPath)
 		for _, job := range allClasses {
@@ -621,10 +623,11 @@ func GenerateMarkdown(classData ClassJava, allClasses []ClassJob, currentFilePat
 
 		for _, job := range allClasses {
 			if job.Data.Name == cleanTypeName {
-				targetFilePath := filepath.Join(job.RelDir, fmt.Sprintf("%s.md", job.Data.Name))
+				targetRelPath := filepath.Join(job.RelDir, fmt.Sprintf("%s.md", job.Data.Name))
 
-				currentDir := filepath.Dir(currentFilePath)
-				relPath, err := filepath.Rel(currentDir, targetFilePath)
+				currentRelDir := currentJob.RelDir
+
+				relPath, err := filepath.Rel(currentRelDir, targetRelPath)
 				if err == nil {
 					return filepath.ToSlash(relPath)
 				}
