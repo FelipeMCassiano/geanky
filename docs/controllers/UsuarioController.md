@@ -3,8 +3,8 @@
 
 > **Package:** controllers
 > **Dependencies (Imports):**
-> - [UserModel](../../models/UserModel.md) 🔗
-> - [UsuarioService](../../services/UsuarioService.md) 🔗
+> - [UserModel](../models/UserModel.md) 🔗
+> - [UsuarioService](../services/UsuarioService.md) 🔗
 > **Automatically generated documentation** by the Geanky tool.
 
 ---
@@ -18,7 +18,7 @@ A high-level overview of the class, its internal state, and available methods.
 - `private ` **nomeSistema** (`String`)
 
 
-- `private ` **service** ([UsuarioService](../../services/UsuarioService.md)) 🔗
+- `private ` **service** ([UsuarioService](../services/UsuarioService.md)) 🔗
 
 
 **Available Methods:**
