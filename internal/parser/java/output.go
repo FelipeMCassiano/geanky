@@ -59,7 +59,6 @@ func exprToText(expr Expression) string {
 	}
 }
 
-// getDependencyCalls varre os métodos de uma classe e mapeia dependências
 func getDependencyCalls(c ClassJava) map[string]string {
 	fieldsMap := make(map[string]string)
 	for _, f := range c.Fields {
