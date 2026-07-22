@@ -75,9 +75,8 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		}(path)
 	}
 
-	wg.Wait() // Espera todas as classes serem processadas
+	wg.Wait()
 
-	// Monta a lista completa de classes puras para passar para a doc global e dependências
 	var allClasses []ClassJava
 	for _, job := range jobs {
 		allClasses = append(allClasses, job.Data)
@@ -93,7 +92,6 @@ func AnalyzeDirectory(rootDir string, outputDir string) {
 		GenerateMarkdown(job.Data, jobs, outFilePath)
 	}
 
-	// O arquivo de arquitetura global e o JSON continuam indo para a raiz do outputDir
 	if len(allClasses) > 0 {
 		globalOutPath := filepath.Join(outputDir, "00_Architecture_Overview.md")
 		GenerateGlobalArchitecture(allClasses, globalOutPath)

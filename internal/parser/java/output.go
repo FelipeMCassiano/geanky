@@ -470,7 +470,7 @@ const docTemplate = `
 {{if .Package.Name}}> **Package:** {{.Package.Name}}
 {{end}}{{if .Imports}}> **Dependencies (Imports):**
 {{range .Imports}}> - {{if isProjectClass .}}[{{extractClassName .}}]({{getClassLink .}}) 🔗{{else}}{{.}}{{end}}
-{{end}}{{end}}{{end}}> 
+{{end}}{{end}}> **Automatically generated documentation** by the Geanky tool.
 
 ---
 
@@ -580,7 +580,8 @@ flowchart LR
     classDef classNode fill:#0366d6,stroke:#fff,stroke-width:2px,color:#fff;
     
     {{range $pkgName, $pkgClasses := .GroupedClasses}}
-    subgraph {{$pkgName}}
+    subgraph {{cleanId $pkgName}} ["📦 {{$pkgName}}"]
+        direction TB
         {{range $pkgClasses}}
         {{.Name}}["{{.Name}}"]:::classNode
         {{end}}
@@ -663,6 +664,11 @@ func GenerateGlobalArchitecture(classes []ClassJava, outputFilename string) {
 	tmpl, err := template.New("globalDoc").Funcs(template.FuncMap{
 		"bt":                 func() string { return "`" },
 		"getDependencyCalls": getDependencyCalls,
+		"cleanId": func(s string) string {
+			s = strings.ReplaceAll(s, ".", "_")
+			s = strings.ReplaceAll(s, " ", "_")
+			return s
+		},
 	}).Parse(globalDocTemplate)
 
 	if err != nil {
